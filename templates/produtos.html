@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Gerenciar Produtos</h2>
+
+    <form method="POST">
+        <h3>Adicionar Novo Produto</h3>
+        <input type="text" name="nome" placeholder="Nome do Produto (Ex: Arroz 5kg)" required>
+        <input type="text" name="marca" placeholder="Marca (Ex: Tio João)">
+        <button type="submit">Adicionar Produto</button>
+    </form>
+
+    <hr>
+
+    <h2>Produtos Cadastrados</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Marca</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produto in produtos %}
+            <tr>
+                <td>{{ produto.nome }}</td>
+                <td>{{ produto.marca }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2">Nenhum produto cadastrado ainda.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
