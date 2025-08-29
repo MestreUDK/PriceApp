@@ -2,5 +2,9 @@
 
 {% block content %}
     <h1>Bem-vindo ao Gerenciador de Preços!</h1>
-    <p>Use o menu de navegação para adicionar produtos, mercados e registrar os preços.</p>
-{% endblock %}
+    <p>Use o menu de navegação para gerenciar seus dados ou clique abaixo para registrar um novo preço rapidamente.</p>
+    <a href="{{ url_for('registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+        + Registrar um Novo Preço
+    </a>
+
+    {% endblock %}
