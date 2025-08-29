@@ -1,4 +1,4 @@
-# app.py
+# app.py (versão atualizada)
 
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
@@ -30,7 +30,7 @@ class Preco(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     valor = db.Column(db.Float, nullable=False)
     data_cadastro = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    
+
     # Chaves estrangeiras para ligar com as outras tabelas
     produto_id = db.Column(db.Integer, db.ForeignKey('produto.id'), nullable=False)
     supermercado_id = db.Column(db.Integer, db.ForeignKey('supermercado.id'), nullable=False)
@@ -48,7 +48,7 @@ def gerenciar_produtos():
         # Lógica para adicionar um novo produto
         nome_produto = request.form.get('nome')
         marca_produto = request.form.get('marca')
-        
+
         # Cria um novo objeto Produto e salva no banco
         novo_produto = Produto(nome=nome_produto, marca=marca_produto)
         db.session.add(novo_produto)
@@ -59,9 +59,25 @@ def gerenciar_produtos():
     produtos = Produto.query.order_by(Produto.nome).all()
     return render_template('produtos.html', produtos=produtos)
 
+# --- NOVA ROTA PARA GERENCIAR SUPERMERCADOS ---
+@app.route('/mercados', methods=['GET', 'POST'])
+def gerenciar_mercados():
+    if request.method == 'POST':
+        nome_mercado = request.form.get('nome')
+        
+        novo_mercado = Supermercado(nome=nome_mercado)
+        db.session.add(novo_mercado)
+        db.session.commit()
+        return redirect(url_for('gerenciar_mercados'))
+
+    mercados = Supermercado.query.order_by(Supermercado.nome).all()
+    return render_template('mercados.html', mercados=mercados)
+# --- FIM DA NOVA ROTA ---
+
+
 # --- INICIAR O APLICATIVO ---
 if __name__ == '__main__':
     with app.app_context():
         # Cria as tabelas no banco de dados se elas não existirem
         db.create_all()
-    app.run(debug=True) # debug=True reinicia o servidor automaticamente quando você salva o código
+    app.run(debug=True)
