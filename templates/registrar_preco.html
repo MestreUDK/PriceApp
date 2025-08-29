@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Registrar Novo Preço</h2>
+
+    <form method="POST">
+        <label for="produto">Produto:</label>
+        <select name="produto" id="produto" required>
+            <option value="" disabled selected>-- Selecione um produto --</option>
+            {% for produto in produtos %}
+                <option value="{{ produto.id }}">{{ produto.nome }} ({{ produto.marca }})</option>
+            {% endfor %}
+        </select>
+
+        <label for="supermercado">Supermercado:</label>
+        <select name="supermercado" id="supermercado" required>
+            <option value="" disabled selected>-- Selecione um supermercado --</option>
+            {% for mercado in supermercados %}
+                <option value="{{ mercado.id }}">{{ mercado.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="valor">Preço (R$):</label>
+        <input type="number" step="0.01" name="valor" id="valor" placeholder="Ex: 25.99" required>
+
+        <button type="submit">Salvar Preço</button>
+    </form>
+{% endblock %}
