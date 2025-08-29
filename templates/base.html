@@ -19,9 +19,11 @@
   </head>
   <body>
     <nav>
-        <a href="{{ url_for('index') }}">Início</a>
-        <a href="{{ url_for('gerenciar_produtos') }}">Produtos</a>
-        <a href="{{ url_for('gerenciar_mercados') }}">Mercados</a> </nav>
+    <a href="{{ url_for('index') }}">Início</a>
+    <a href="{{ url_for('registrar_preco') }}"><b>Registrar Preço</b></a> <a href="{{ url_for('gerenciar_produtos') }}">Produtos</a>
+    <a href="{{ url_for('gerenciar_mercados') }}">Mercados</a>
+</nav>
+
     <div class="container">
         {% block content %}{% endblock %}
     </div>
