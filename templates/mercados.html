@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Gerenciar Supermercados</h2>
+
+    <form method="POST">
+        <h3>Adicionar Novo Supermercado</h3>
+        <input type="text" name="nome" placeholder="Nome do Supermercado" required>
+        <button type="submit">Adicionar Supermercado</button>
+    </form>
+
+    <hr>
+
+    <h2>Supermercados Cadastrados</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mercado in mercados %}
+            <tr>
+                <td>{{ mercado.nome }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>Nenhum supermercado cadastrado ainda.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
