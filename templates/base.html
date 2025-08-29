@@ -13,26 +13,42 @@
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
         th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: #f2f2f2; }
-        form input, form button { width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        form input, form select, form button { width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
         form button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+        form label { margin-bottom: 0.5rem; display: block; font-weight: bold; }
+
+        /* --- CSS PARA AS MENSAGENS --- */
+        .flash {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            color: white;
+            text-align: center;
+        }
+        .flash.success { background-color: #28a745; }
+        .flash.error { background-color: #dc3545; }
     </style>
   </head>
   <body>
     <nav>
-    <a href="{{ url_for('index') }}">Início</a>
-    <a href="{{ url_for('registrar_preco') }}"><b>Registrar Preço</b></a> <a href="{{ url_for('gerenciar_produtos') }}">Produtos</a>
-    <a href="{{ url_for('gerenciar_mercados') }}">Mercados</a>
-</nav>
+        <a href="{{ url_for('index') }}">Início</a>
+        <a href="{{ url_for('registrar_preco') }}"><b>Registrar Preço</b></a>
+        <a href="{{ url_for('gerenciar_produtos') }}">Produtos</a>
+        <a href="{{ url_for('gerenciar_mercados') }}">Mercados</a>
+    </nav>
 
     <div class="container">
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div class="flash {{ category }}">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
+        
+        <!-- Bloco para exibir as mensagens flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
+        <!-- Conteúdo da página é injetado aqui -->
         {% block content %}{% endblock %}
     </div>
   </body>
