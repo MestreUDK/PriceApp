@@ -7,4 +7,32 @@
         + Registrar um Novo Preço
     </a>
 
-    {% endblock %}
+    <hr>
+    <h3>Últimos Preços Registrados</h3>
+    
+    {% if ultimos_precos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Supermercado</th>
+                    <th>Preço</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for preco in ultimos_precos %}
+                <tr>
+                    <td>{{ preco.produto.nome }} ({{ preco.produto.marca }})</td>
+                    <td>{{ preco.supermercado.nome }}</td>
+                    <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
+                    <td>{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum preço registrado ainda.</p>
+    {% endif %}
+
+{% endblock %}
