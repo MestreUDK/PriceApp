@@ -23,14 +23,22 @@
                 <tr>
                     <th>Preço (R$)</th>
                     <th>Registrado em</th>
-                </tr>
+                    <th>Registrado por</th> </tr>
             </thead>
             <tbody>
                 {% for preco in precos %}
                 <tr>
                     <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
                     <td>{{ preco.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</td>
-                </tr>
+                    
+                    <td>
+                        {% if preco.criado_por %}
+                            {{ preco.criado_por.username }}
+                        {% else %}
+                            N/D
+                        {% endif %}
+                    </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -38,35 +46,26 @@
         <p>Ainda não há histórico de preços para este item neste mercado.</p>
     {% endif %}
 
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-    // Pegamos os dados que o Flask (Python) enviou
-    // O filtro '| safe' é importante para o Jinja não "quebrar" o JSON
     const labels = {{ labels_json | safe }};
     const dataValues = {{ valores_json | safe }};
-
-    // Pegamos o "quadro" (canvas) que criamos lá em cima
     const ctx = document.getElementById('graficoHistorico');
-
-    // Criamos o novo gráfico
     new Chart(ctx, {
-        type: 'line', // Tipo: gráfico de linha
+        type: 'line', 
         data: {
-            labels: labels, // Nossas datas no eixo X
+            labels: labels, 
             datasets: [{
-                label: 'Preço (R$)', // Rótulo do dado
-                data: dataValues, // Nossos preços no eixo Y
+                label: 'Preço (R$)', 
+                data: dataValues, 
                 fill: false,
-                borderColor: 'rgb(0, 123, 255)', // Cor da linha
-                tension: 0.1 // Deixa a linha um pouco curva
+                borderColor: 'rgb(0, 123, 255)', 
+                tension: 0.1 
             }]
         },
         options: {
             scales: {
                 y: {
-                    // Formata o eixo Y para mostrar "R$ XX.XX"
                     ticks: {
                         callback: function(value, index, values) {
                             return 'R$ ' + value.toFixed(2);
@@ -76,7 +75,6 @@
             },
             plugins: {
                 tooltip: {
-                    // Formata a "caixinha" que aparece ao passar o mouse
                     callbacks: {
                         label: function(context) {
                             let label = context.dataset.label || '';
