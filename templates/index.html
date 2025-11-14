@@ -1,24 +1,25 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Bem-vindo ao Gerenciador de Preços!</h1>
-    <p>Use o menu de navegação para gerenciar seus dados ou clique abaixo para registrar um novo preço rapidamente.</p>
-    <!-- CORRIGIDO -->
-    <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
-        + Registrar um Novo Preço
-    </a>
+    <h1>Bem-vindo, {{ current_user.username }}!</h1>
+    <p>Use o menu de navegação para gerenciar seus dados.</p>
+    
+    {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+            + Registrar um Novo Preço
+        </a>
+    {% endif %}
 
     <hr>
     <h3>Últimos Preços Registrados</h3>
-
     {% if ultimos_precos %}
-        <table>
+         <table>
             <thead>
                 <tr>
                     <th>Produto</th>
                     <th>Supermercado</th>
                     <th>Preço</th>
-                    <th>Data</th>
+                     <th>Data</th>
                 </tr>
             </thead>
             <tbody>
