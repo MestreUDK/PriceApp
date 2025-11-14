@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{{ url_for('gerenciar_mercados') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <!-- CORRIGIDO -->
+    <a href="{{ url_for('markets.gerenciar_mercados') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Mercados
     </a>
     <h2>Editando Supermercado</h2>
@@ -10,10 +11,11 @@
         <label for="nome">Nome do Supermercado:</label>
         <input type="text" name="nome" id="nome" value="{{ mercado.nome }}" required>
         
-        <!-- --- CAMPOS CORRIGIDOS --- -->
         <label for="endereço">Endereço:</label>
         <input type="text" name="endereço" id="endereço" value="{{ mercado.endereço or '' }}" placeholder="Endereço (Opcional)">
         
         <button type="submit" style="background-color: #28a745;">Salvar Alterações</button>
     </form>
 {% endblock %}
+
+
