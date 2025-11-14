@@ -5,7 +5,7 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-from models import Supermercado, Preco  # <-- ALTERAÇÃO 1: Importa Preco
+from models import Supermercado, Preco  # Importa Preco
 
 # Cria o Blueprint
 markets_bp = Blueprint('markets', __name__, template_folder='../templates')
@@ -33,7 +33,7 @@ def gerenciar_mercados():
 def edit_mercado(mercado_id):
     mercado = db.session.get(Supermercado, mercado_id)
     if not mercado:
-        abort(4F)
+        abort(404)  # <-- ✨ CORRIGIDO AQUI (era 4F)
 
     if request.method == 'POST':
         mercado.nome = request.form.get('nome')
@@ -46,7 +46,7 @@ def edit_mercado(mercado_id):
     return render_template('edit_mercado.html', mercado=mercado)
 
 
-# --- ALTERAÇÃO 2: NOVA ROTA DE EXCLUSÃO DE MERCADO ---
+# --- NOVA ROTA DE EXCLUSÃO DE MERCADO ---
 @markets_bp.route('/delete-mercado/<int:mercado_id>', methods=['POST'])
 def delete_mercado(mercado_id):
     mercado = db.session.get(Supermercado, mercado_id)
