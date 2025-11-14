@@ -5,7 +5,7 @@ from app import app, db  # Importa o 'app' e 'db' do cérebro (app.py)
 from models import Supermercado, Produto, Preco # Importa nossos modelos
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort
 
-# --- *** IMPORTAÇÕES ADICIONADAS PARA A NOVA CONSULTA *** ---
+# --- IMPORTAÇÕES ADICIONADAS PARA A CONSULTA DE COMPARAÇÃO ---
 from sqlalchemy import func, desc
 
 # --- ROTA PARA O SERVICE WORKER ---
@@ -96,7 +96,7 @@ def gerenciar_mercados():
 def edit_mercado(mercado_id):
     mercado = db.session.get(Supermercado, mercado_id)
     if not mercado:
-        abort(404)
+        abort(4404)
         
     if request.method == 'POST':
         mercado.nome = request.form.get('nome')
@@ -132,16 +132,14 @@ def registrar_preco():
     return render_template('registrar_preco.html', produtos=produtos, supermercados=supermercados)
 
 
-# --- *** ROTA DE COMPARAÇÃO (TOTALMENTE CORRIGIDA) *** ---
+# --- ROTA DE COMPARAÇÃO (CORRIGIDA) ---
 @app.route('/comparar/<int:produto_id>')
 def comparar_produto(produto_id):
     produto = db.session.get(Produto, produto_id)
     if not produto:
         abort(404) 
         
-    # --- Início da Mágica ---
-    # 1. Cria uma sub-consulta (subquery)
-    #    Para cada 'supermercado_id' e 'produto_id', encontra a data de cadastro MAIS NOVA (max(data_cadastro))
+    # Sub-consulta para encontrar a data mais recente por supermercado
     subquery = db.session.query(
         Preco.supermercado_id,
         func.max(Preco.data_cadastro).label('max_data')
@@ -151,12 +149,7 @@ def comparar_produto(produto_id):
         Preco.supermercado_id
     ).subquery()
 
-    # 2. Faz a consulta principal
-    #    Busca na tabela Preco ONDE:
-    #    a) O produto_id é o que queremos
-    #    b) O supermercado_id E a data_cadastro correspondem EXATAMENTE
-    #       aos pares (supermercado, data_maxima) que encontramos na sub-consulta.
-    #    c) Ordena pelo valor mais barato (asc())
+    # Consulta principal para buscar os preços mais recentes
     precos_recentes = db.session.query(Preco).join(
         subquery,
         (Preco.supermercado_id == subquery.c.supermercado_id) &
@@ -166,8 +159,30 @@ def comparar_produto(produto_id):
     ).order_by(
         Preco.valor.asc()
     ).all()
-    # --- Fim da Mágica ---
     
     return render_template('comparar.html', produto=produto, precos=precos_recentes)
 
-# --- *** FIM DA ROTA CORRIGIDA *** ---
+# --- *** ROTA DE HISTÓRICO (NOVA) *** ---
+@app.route('/historico/<int:produto_id>/<int:supermercado_id>')
+def ver_historico(produto_id, supermercado_id):
+    # Busca o produto e mercado para mostrar os nomes
+    produto = db.session.get(Produto, produto_id)
+    supermercado = db.session.get(Supermercado, supermercado_id)
+    
+    if not produto or not supermercado:
+        abort(404) # Não encontrado
+    
+    # Busca todos os preços para esse par, do mais novo para o mais antigo
+    precos_historico = Preco.query.filter_by(
+        produto_id=produto_id,
+        supermercado_id=supermercado_id
+    ).order_by(
+        Preco.data_cadastro.desc() # .desc() = Do mais novo para o mais antigo
+    ).all()
+    
+    # Renderiza a nova página de histórico
+    return render_template('historico.html',
+                           produto=produto,
+                           supermercado=supermercado,
+                           precos=precos_historico)
+# --- *** FIM DA ROTA DE HISTÓRICO *** ---
