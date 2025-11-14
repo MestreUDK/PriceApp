@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="pt-br">
   <head>
-    <meta charset="utf-t-8">
+    <!-- ERRO CORRIGIDO AQUI -->
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- ATENÇÃO: url_for ATUALIZADO AQUI -->
-    <link rel="manifest" href="{{ url_for('core.static', filename='manifest.json') }}">
+    <!-- ERRO CORRIGIDO AQUI -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <title>Gerenciador de Preços</title>
     <style>
         body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; }
@@ -54,7 +55,7 @@
   </head>
   <body>
     <nav>
-        <!-- --- LINKS ATUALIZADOS --- -->
+        <!-- Links de Navegação (Corretos) -->
         <div class="nav-links">
             <a href="{{ url_for('core.index') }}">Início</a>
             <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar Preço</b></a>
@@ -62,7 +63,7 @@
             <a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>
         </div>
         
-        <!-- --- FORMULÁRIO DE BUSCA ATUALIZADO --- -->
+        <!-- Formulário de Busca (Correto) -->
         <form class="search-form" method="GET" action="{{ url_for('core.busca') }}">
             <input type="search" name="q" placeholder="Buscar produto ou mercado..." required>
             <button type="submit">Buscar</button>
@@ -84,7 +85,7 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-            // --- url_for ATUALIZADO ---
+            // url_for do Service Worker (Correto)
             navigator.serviceWorker.register("{{ url_for('core.service_worker') }}")
                 .then(function(registration) {
                     console.log('Service Worker registrado com sucesso:', registration);
@@ -96,3 +97,5 @@
     </script>
   </body>
 </html>
+
+
