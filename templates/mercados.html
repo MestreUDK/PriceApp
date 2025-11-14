@@ -19,7 +19,7 @@
             <tr>
                 <th>Nome</th>
                 <th>Endereço</th>
-                {% if current_user.role == 'admin' %}
+                <th>Criado por</th> {% if current_user.role == 'admin' %}
                     <th>Ações</th>
                 {% endif %}
             </tr>
@@ -28,8 +28,15 @@
             {% for mercado in mercados %}
             <tr>
                 <td>{{ mercado.nome }}</td>
-                 <td>{{ mercado.endereço or 'N/D' }}</td>
+                <td>{{ mercado.endereço or 'N/D' }}</td>
                 
+                <td>
+                    {% if mercado.criado_por %}
+                        {{ mercado.criado_por.username }}
+                    {% else %}
+                        N/D
+                    {% endif %}
+                </td>
                 {% if current_user.role == 'admin' %}
                     <td>
                         <a href="{{ url_for('markets.edit_mercado', mercado_id=mercado.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
@@ -40,7 +47,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="{% if current_user.role == 'admin' %}3{% else %}2{% endif %}">
+                <td colspan="{% if current_user.role == 'admin' %}4{% else %}3{% endif %}">
                     Nenhum supermercado cadastrado ainda.
                 </td>
             </tr>
