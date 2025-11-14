@@ -4,18 +4,16 @@ from flask import (
 )
 from extensions import db
 from models import Produto, Preco
-from flask_login import login_required, current_user # <-- MUDANÇA 1
+from flask_login import login_required, current_user 
 
 products_bp = Blueprint('products', __name__, template_folder='../templates')
 
 @products_bp.route('/produtos', methods=['GET', 'POST'])
-@login_required # <-- MUDANÇA 2
+@login_required 
 def gerenciar_produtos():
     if request.method == 'POST':
-        # --- MUDANÇA 3: CHECAGEM DE ADMIN ---
         if current_user.role != 'admin':
             abort(403)
-        # ------------------------------------
             
         nome_produto = request.form.get('nome')
         marca_produto = request.form.get('marca')
@@ -23,7 +21,11 @@ def gerenciar_produtos():
         if Produto.query.filter_by(nome=nome_produto).first():
             flash('Este produto já está cadastrado.', 'error')
         else:
-            novo_produto = Produto(nome=nome_produto, marca=marca_produto)
+            novo_produto = Produto(
+                nome=nome_produto, 
+                marca=marca_produto,
+                criado_por_id=current_user.id  # <-- MUDANÇA 1
+            )
             db.session.add(novo_produto)
             db.session.commit()
             flash('Produto adicionado com sucesso!', 'success')
@@ -33,9 +35,8 @@ def gerenciar_produtos():
     return render_template('produtos.html', produtos=produtos)
 
 @products_bp.route('/edit-produto/<int:produto_id>', methods=['GET', 'POST'])
-@login_required # <-- MUDANÇA 2
+@login_required 
 def edit_produto(produto_id):
-    # Apenas Admins podem ver a página de edição
     if current_user.role != 'admin':
         abort(403)
         
@@ -44,9 +45,10 @@ def edit_produto(produto_id):
         abort(404)
 
     if request.method == 'POST':
-        # (A checagem de admin já foi feita acima)
         produto.nome = request.form.get('nome')
         produto.marca = request.form.get('marca')
+        produto.editado_por_id = current_user.id  # <-- MUDANÇA 2
+        
         db.session.commit()
         flash('Produto atualizado com sucesso!', 'success')
         return redirect(url_for('products.gerenciar_produtos'))
@@ -54,12 +56,10 @@ def edit_produto(produto_id):
     return render_template('edit_produto.html', produto=produto)
 
 @products_bp.route('/delete-produto/<int:produto_id>', methods=['POST'])
-@login_required # <-- MUDANÇA 2
+@login_required 
 def delete_produto(produto_id):
-    # --- MUDANÇA 3: CHECAGEM DE ADMIN ---
     if current_user.role != 'admin':
         abort(403)
-    # ------------------------------------
         
     produto = db.session.get(Produto, produto_id)
     if not produto:
