@@ -5,20 +5,18 @@ from flask import (
 from extensions import db
 from models import Supermercado, Produto, Preco
 from sqlalchemy import func, desc
-from flask_login import login_required, current_user # <-- MUDANÇA 1
+from flask_login import login_required, current_user 
 import json
 
 prices_bp = Blueprint('prices', __name__, template_folder='../templates')
 
 @prices_bp.route('/registrar-preco', methods=['GET', 'POST'])
-@login_required # <-- MUDANÇA 2
+@login_required 
 def registrar_preco():
-    # Apenas Admins podem registrar preços
     if current_user.role != 'admin':
         abort(403)
         
     if request.method == 'POST':
-        # (A checagem de admin já foi feita acima)
         produto_id = request.form.get('produto')
         supermercado_id = request.form.get('supermercado')
         valor = request.form.get('valor')
@@ -26,7 +24,8 @@ def registrar_preco():
         novo_preco = Preco(
             produto_id=produto_id,
             supermercado_id=supermercado_id,
-            valor=float(valor)
+            valor=float(valor),
+            criado_por_id=current_user.id  # <-- MUDANÇA AQUI
         )
         db.session.add(novo_preco)
         db.session.commit()
@@ -38,10 +37,10 @@ def registrar_preco():
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
     return render_template('registrar_preco.html', produtos=produtos, supermercados=supermercados)
 
+# ... (o resto do arquivo 'comparar_produto' e 'ver_historico' não muda) ...
 @prices_bp.route('/comparar/<int:produto_id>')
-@login_required # <-- MUDANÇA 2
+@login_required 
 def comparar_produto(produto_id):
-    # Todos os usuários logados podem comparar
     produto = db.session.get(Produto, produto_id)
     if not produto:
         abort(404) 
@@ -68,9 +67,8 @@ def comparar_produto(produto_id):
     return render_template('comparar.html', produto=produto, precos=precos_recentes)
 
 @prices_bp.route('/historico/<int:produto_id>/<int:supermercado_id>')
-@login_required # <-- MUDANÇA 2
+@login_required 
 def ver_historico(produto_id, supermercado_id):
-    # Todos os usuários logados podem ver o histórico
     produto = db.session.get(Produto, produto_id)
     supermercado = db.session.get(Supermercado, supermercado_id)
     
