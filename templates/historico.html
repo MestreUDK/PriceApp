@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <!-- Link para voltar para a tela de comparação -->
+    <a href="{{ url_for('comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+        &larr; Voltar para Comparação
+    </a>
+
+    <h2>Histórico de Preço para:</h2>
+    <!-- Títulos do que está sendo visto -->
+    <h3>{{ produto.nome }} ({{ produto.marca }})</h3>
+    <h4>Em: {{ supermercado.nome }}</h4>
+    
+    <hr>
+
+    <!-- Verifica se a lista de preços não está vazia -->
+    {% if precos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Preço (R$)</th>
+                    <th>Registrado em</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Loop para exibir cada preço antigo -->
+                {% for preco in precos %}
+                <tr>
+                    <!-- Formata o valor para R$ XX.XX -->
+                    <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
+                    <!-- Formata a data para DD/MM/AAAA e a hora -->
+                    <td>{{ preco.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <!-- Mensagem se nenhum preço foi encontrado -->
+        <p>Ainda não há histórico de preços para este item neste mercado.</p>
+    {% endif %}
+
+{% endblock %}
+
