@@ -5,6 +5,9 @@ from app import app, db  # Importa o 'app' e 'db' do cérebro (app.py)
 from models import Supermercado, Produto, Preco # Importa nossos modelos
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort
 
+# --- *** IMPORTAÇÕES ADICIONADAS PARA A NOVA CONSULTA *** ---
+from sqlalchemy import func, desc
+
 # --- ROTA PARA O SERVICE WORKER ---
 @app.route('/sw.js')
 def service_worker():
@@ -129,12 +132,42 @@ def registrar_preco():
     return render_template('registrar_preco.html', produtos=produtos, supermercados=supermercados)
 
 
+# --- *** ROTA DE COMPARAÇÃO (TOTALMENTE CORRIGIDA) *** ---
 @app.route('/comparar/<int:produto_id>')
 def comparar_produto(produto_id):
     produto = db.session.get(Produto, produto_id)
     if not produto:
         abort(404) 
         
-    precos_ordenados = Preco.query.filter_by(produto_id=produto.id).order_by(Preco.valor.asc()).all()
+    # --- Início da Mágica ---
+    # 1. Cria uma sub-consulta (subquery)
+    #    Para cada 'supermercado_id' e 'produto_id', encontra a data de cadastro MAIS NOVA (max(data_cadastro))
+    subquery = db.session.query(
+        Preco.supermercado_id,
+        func.max(Preco.data_cadastro).label('max_data')
+    ).filter(
+        Preco.produto_id == produto_id
+    ).group_by(
+        Preco.supermercado_id
+    ).subquery()
+
+    # 2. Faz a consulta principal
+    #    Busca na tabela Preco ONDE:
+    #    a) O produto_id é o que queremos
+    #    b) O supermercado_id E a data_cadastro correspondem EXATAMENTE
+    #       aos pares (supermercado, data_maxima) que encontramos na sub-consulta.
+    #    c) Ordena pelo valor mais barato (asc())
+    precos_recentes = db.session.query(Preco).join(
+        subquery,
+        (Preco.supermercado_id == subquery.c.supermercado_id) &
+        (Preco.data_cadastro == subquery.c.max_data)
+    ).filter(
+        Preco.produto_id == produto_id
+    ).order_by(
+        Preco.valor.asc()
+    ).all()
+    # --- Fim da Mágica ---
     
-    return render_template('comparar.html', produto=produto, precos=precos_ordenados)
+    return render_template('comparar.html', produto=produto, precos=precos_recentes)
+
+# --- *** FIM DA ROTA CORRIGIDA *** ---
