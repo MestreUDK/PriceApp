@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Resultados da busca por: "{{ termo }}"</h2>
+    
+    <hr>
+
+    <h3>Produtos Encontrados ({{ produtos|length }})</h3>
+    {% if produtos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Marca</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for produto in produtos %}
+                <tr>
+                    <td>{{ produto.nome }}</td>
+                    <td>{{ produto.marca }}</td>
+                    <td>
+                        <a href="{{ url_for('comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em; display: inline-block; margin-bottom: 5px;">
+                            Ver Preços
+                        </a>
+                        <a href="{{ url_for('edit_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em; display: inline-block;">
+                            Editar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum produto encontrado.</p>
+    {% endif %}
+
+    <hr style="margin: 2rem 0;">
+
+    <h3>Supermercados Encontrados ({{ mercados|length }})</h3>
+    {% if mercados %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Endereço</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mercado in mercados %}
+                <tr>
+                    <td>{{ mercado.nome }}</td>
+                    <td>{{ mercado.endereco or 'N/D' }}</td>
+                    <td>
+                        <a href="{{ url_for('edit_mercado', mercado_id=mercado.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em; display: inline-block;">
+                            Editar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum supermercado encontrado.</p>
+    {% endif %}
+
+{% endblock %}
