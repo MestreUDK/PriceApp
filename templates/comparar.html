@@ -11,7 +11,7 @@
     
     <hr>
 
-    <h3>Preços Encontrados (do mais barato para o mais caro)</h3>
+    <h3>Preços Atuais (do mais barato para o mais caro)</h3>
 
     <!-- Verifica se a lista de preços não está vazia -->
     {% if precos %}
@@ -21,6 +21,7 @@
                     <th>Supermercado</th>
                     <th>Preço (R$)</th>
                     <th>Registrado em</th>
+                    <th>Ações</th> <!-- <-- NOVA COLUNA -->
                 </tr>
             </thead>
             <tbody>
@@ -28,10 +29,15 @@
                 {% for preco in precos %}
                 <tr style="{% if loop.first %}background-color: #d4edda; font-weight: bold;{% endif %}">
                     <td>{{ preco.supermercado.nome }}</td>
-                    <!-- Formata o valor para R$ XX.XX -->
                     <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
-                    <!-- Formata a data para DD/MM/AAAA -->
                     <td>{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
+                    <!-- --- NOVO BOTÃO --- -->
+                    <td>
+                        <a href="{{ url_for('ver_historico', produto_id=preco.produto_id, supermercado_id=preco.supermercado_id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #17a2b8; color: white; border-radius: 4px; font-size: 0.9em;">
+                            Histórico
+                        </a>
+                    </td>
+                    <!-- --- FIM DO BOTÃO --- -->
                 </tr>
                 {% endfor %}
             </tbody>
@@ -45,3 +51,5 @@
     {% endif %}
 
 {% endblock %}
+
+
