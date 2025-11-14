@@ -1,14 +1,13 @@
 # models.py
-# Responsável por definir as tabelas do banco de dados.
+# Define a estrutura de todas as tabelas do banco de dados
 
-from app import db  # Importa a instância 'db' do nosso cérebro (app.py)
+from extensions import db  # <-- MUDANÇA IMPORTANTE
 from datetime import datetime
 
-# --- MODELOS DO BANCO DE DADOS (as "tabelas") ---
 class Supermercado(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False, unique=True)
-    endereço = db.Column(db.String(300), nullable=True) # Campo opcional
+    endereço = db.Column(db.String(300), nullable=True)
     precos = db.relationship('Preco', backref='supermercado', lazy=True)
 
 class Produto(db.Model):
