@@ -12,9 +12,12 @@
     <header class="header-bar">
         <a href="{{ url_for('core.index') }}" class="logo">PriceApp</a>
         
-        <form class="search-form" method="GET" action="{{ url_for('core.busca') }}">
-            <input type="search" name="q" placeholder="Buscar..." required>
-            <button type="submit">Buscar</button> </form>
+        {% if current_user.is_authenticated %}
+            <form class="search-form" method="GET" action="{{ url_for('core.busca') }}">
+                <input type="search" name="q" placeholder="Buscar..." required>
+                <button type="submit">Buscar</button>
+            </form>
+        {% endif %}
     </header>
 
     <div class="container">
@@ -31,16 +34,22 @@
     </div>
 
     <nav class="bottom-nav">
-        <a href="{{ url_for('core.index') }}">Início</a>
-        <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar</b></a>
-        <a href="{{ url_for('products.gerenciar_produtos') }}">Produtos</a>
-        <a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>
-        
         {% if current_user.is_authenticated %}
-            <a href="{{ url_for('auth.logout') }}" style="color: #ffc107;">Sair</a>
-        {% endif %}
-        </nav>
+            <a href="{{ url_for('core.index') }}">Início</a>
 
+            {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar</b></a>
+                <a href="{{ url_for('products.gerenciar_produtos') }}">Produtos</a>
+                <a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>
+            {% endif %}
+            
+            <a href="{{ url_for('auth.logout') }}" style="color: #ffc107;">Sair</a>
+            
+        {% else %}
+            <a href="{{ url_for('auth.login') }}"><b>Entrar</b></a>
+            <a href="{{ url_for('auth.register') }}">Registrar</a>
+        {% endif %}
+    </nav>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register("{{ url_for('core.service_worker') }}")
@@ -51,6 +60,6 @@
                     console.log('Falha ao registrar Service Worker:', error);
                 });
         }
-    </GCRIPT>
+    </script>
   </body>
 </html>
