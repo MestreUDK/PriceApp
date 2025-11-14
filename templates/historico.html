@@ -1,20 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <!-- Link para voltar para a tela de comparação -->
-    <!-- CORRIGIDO -->
     <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Comparação
     </a>
 
     <h2>Histórico de Preço para:</h2>
-    <!-- Títulos do que está sendo visto -->
     <h3>{{ produto.nome }} ({{ produto.marca }})</h3>
     <h4>Em: {{ supermercado.nome }}</h4>
     
     <hr>
 
-    <!-- Verifica se a lista de preços não está vazia -->
+    <h3>Flutuação de Preço</h3>
+    <div style="width: 100%; max-width: 900px; margin-bottom: 2rem;">
+        <canvas id="graficoHistorico"></canvas>
+    </div>
+
+    <h3>Todos os Registros (do mais antigo ao mais novo)</h3>
     {% if precos %}
         <table>
             <thead>
@@ -24,20 +26,73 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Loop para exibir cada preço antigo -->
                 {% for preco in precos %}
                 <tr>
-                    <!-- Formata o valor para R$ XX.XX -->
                     <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
-                    <!-- Formata a data para DD/MM/AAAA e a hora -->
                     <td>{{ preco.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <!-- Mensagem se nenhum preço foi encontrado -->
         <p>Ainda não há histórico de preços para este item neste mercado.</p>
     {% endif %}
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Pegamos os dados que o Flask (Python) enviou
+    // O filtro '| safe' é importante para o Jinja não "quebrar" o JSON
+    const labels = {{ labels_json | safe }};
+    const dataValues = {{ valores_json | safe }};
+
+    // Pegamos o "quadro" (canvas) que criamos lá em cima
+    const ctx = document.getElementById('graficoHistorico');
+
+    // Criamos o novo gráfico
+    new Chart(ctx, {
+        type: 'line', // Tipo: gráfico de linha
+        data: {
+            labels: labels, // Nossas datas no eixo X
+            datasets: [{
+                label: 'Preço (R$)', // Rótulo do dado
+                data: dataValues, // Nossos preços no eixo Y
+                fill: false,
+                borderColor: 'rgb(0, 123, 255)', // Cor da linha
+                tension: 0.1 // Deixa a linha um pouco curva
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    // Formata o eixo Y para mostrar "R$ XX.XX"
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return 'R$ ' + value.toFixed(2);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    // Formata a "caixinha" que aparece ao passar o mouse
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += 'R$ ' + context.parsed.y.toFixed(2);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
 
 {% endblock %}
