@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{{ url_for('gerenciar_produtos') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <!-- CORRIGIDO -->
+    <a href="{{ url_for('products.gerenciar_produtos') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Produtos
     </a>
     <h2>Editando Produto</h2>
@@ -9,10 +10,11 @@
     <form method="POST">
         <label for="nome">Nome do Produto:</label>
         <input type="text" name="nome" id="nome" value="{{ produto.nome }}" required>
-        
+
         <label for="marca">Marca:</label>
         <input type="text" name="marca" id="marca" value="{{ produto.marca }}">
-        
+
         <button type="submit" style="background-color: #28a745;">Salvar Alterações</button>
     </form>
 {% endblock %}
+
