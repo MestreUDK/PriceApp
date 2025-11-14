@@ -1,4 +1,4 @@
-# app.py (O Cérebro Final)
+# app.py (O Cérebro Corrigido)
 # Responsável por criar e configurar o app.
 
 import os
@@ -21,15 +21,21 @@ else:
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- INICIALIZAÇÃO DO BANCO DE DADOS ---
+# Cria a instância 'db' e a liga ao 'app'
+# Nossos outros arquivos (models, routes) vão importar ESTE 'db'
 db = SQLAlchemy(app)
 
-# --- IMPORTAÇÃO DAS PEÇAS ---
-# Importa os modelos e o PACOTE de rotas.
-# O Python vai procurar o __init__.py dentro da pasta /routes
+# --- IMPORTAÇÃO DAS PEÇAS (MOVIDO PARA O FIM) ---
+# !!! ESTA É A MUDANÇA IMPORTANTE !!!
+# Importamos os modelos e rotas AQUI, no final do arquivo.
+# Isso garante que 'app' e 'db' já existem e estão prontos
+# antes que os outros arquivos (models.py, routes_core.py)
+# tentem importá-los, resolvendo o "circular import".
 import models
 import routes 
 
 # --- CRIAÇÃO DAS TABELAS ---
+# Isso só funciona DEPOIS que 'models' foi importado.
 with app.app_context():
     db.create_all()
 
