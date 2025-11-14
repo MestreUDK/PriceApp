@@ -3,9 +3,9 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, send_from_directory, current_app, Response
 )
 from extensions import db
-from models import Supermercado, Produto, Preco, User # <-- MUDANÇA 1
+from models import Supermercado, Produto, Preco, User 
 from flask_login import login_required 
-import json # <-- MUDANÇA 2
+import json 
 
 core_bp = Blueprint('core', __name__,
                     template_folder='../templates',
@@ -15,14 +15,12 @@ core_bp = Blueprint('core', __name__,
 def service_worker():
     return send_from_directory(current_app.static_folder, 'sw.js')
 
-# --- ROTA PRINCIPAL ---
 @core_bp.route('/')
 @login_required 
 def index():
     ultimos_precos = Preco.query.order_by(Preco.data_cadastro.desc()).limit(5).all()
     return render_template('index.html', ultimos_precos=ultimos_precos)
 
-# --- ROTA DE BUSCA ---
 @core_bp.route('/busca')
 @login_required 
 def busca():
@@ -41,7 +39,6 @@ def busca():
                            produtos=produtos_encontrados, 
                            mercados=mercados_encontrados)
 
-# --- MUDANÇA 3: NOVA ROTA DE BACKUP ---
 @core_bp.route('/backup/download')
 @login_required
 def download_backup():
@@ -52,22 +49,18 @@ def download_backup():
     precos = Preco.query.all()
 
     # 2. Converter para listas de dicionários
-    # (Excluímos o hash da senha por segurança)
     usuarios_list = [
         {"id": u.id, "username": u.username, "role": u.role}
         for u in usuarios
     ]
-    
     produtos_list = [
         {"id": p.id, "nome": p.nome, "marca": p.marca, "criado_por_id": p.criado_por_id, "editado_por_id": p.editado_por_id}
         for p in produtos
     ]
-    
     mercados_list = [
         {"id": m.id, "nome": m.nome, "endereço": m.endereço, "criado_por_id": m.criado_por_id, "editado_por_id": m.editado_por_id}
         for m in mercados
     ]
-    
     precos_list = [
         {"id": pr.id, "produto_id": pr.produto_id, "supermercado_id": pr.supermercado_id, 
          "valor": pr.valor, "data_cadastro": pr.data_cadastro.isoformat(), "criado_por_id": pr.criado_por_id}
@@ -90,3 +83,11 @@ def download_backup():
         mimetype="application/json",
         headers={"Content-Disposition": "attachment;filename=priceapp_backup.json"}
     )
+
+# --- MUDANÇA AQUI: ROTA PARA O LEITOR OFFLINE ---
+@core_bp.route('/leitor-offline')
+@login_required # Ainda precisa estar logado para ver (ou o sw.js o servirá do cache)
+def leitor_offline():
+    # Esta rota apenas renderiza o template.
+    # Toda a lógica está no JavaScript dentro do HTML.
+    return render_template('leitor_offline.html')
