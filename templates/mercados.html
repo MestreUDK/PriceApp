@@ -3,14 +3,15 @@
 {% block content %}
     <h2>Gerenciar Supermercados</h2>
 
-    <form method="POST">
-        <h3>Adicionar Novo Supermercado</h3>
-        <input type="text" name="nome" placeholder="Nome do Supermercado" required>
-        <input type="text" name="endereço" placeholder="Endereço (Opcional)">
-        <button type="submit">Adicionar Supermercado</button>
-    </form>
-
-    <hr>
+    {% if current_user.role == 'admin' %}
+        <form method="POST">
+            <h3>Adicionar Novo Supermercado</h3>
+            <input type="text" name="nome" placeholder="Nome do Supermercado" required>
+            <input type="text" name="endereço" placeholder="Endereço (Opcional)">
+            <button type="submit">Adicionar Supermercado</button>
+        </form>
+        <hr>
+    {% endif %}
 
     <h2>Supermercados Cadastrados</h2>
     <table>
@@ -18,24 +19,30 @@
             <tr>
                 <th>Nome</th>
                 <th>Endereço</th>
-                <th>Ações</th>
+                {% if current_user.role == 'admin' %}
+                    <th>Ações</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
             {% for mercado in mercados %}
             <tr>
                 <td>{{ mercado.nome }}</td>
-                <td>{{ mercado.endereço or 'N/D' }}</td>
-                <td>
-                    <!-- CORRIGIDO -->
-                    <a href="{{ url_for('markets.edit_mercado', mercado_id=mercado.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
-                        Editar
-                    </a>
-                </td>
+                 <td>{{ mercado.endereço or 'N/D' }}</td>
+                
+                {% if current_user.role == 'admin' %}
+                    <td>
+                        <a href="{{ url_for('markets.edit_mercado', mercado_id=mercado.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
+                            Editar
+                        </a>
+                    </td>
+                {% endif %}
             </tr>
             {% else %}
             <tr>
-                <td colspan="3">Nenhum supermercado cadastrado ainda.</td>
+                <td colspan="{% if current_user.role == 'admin' %}3{% else %}2{% endif %}">
+                    Nenhum supermercado cadastrado ainda.
+                </td>
             </tr>
             {% endfor %}
         </tbody>
