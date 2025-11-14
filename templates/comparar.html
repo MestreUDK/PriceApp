@@ -2,7 +2,8 @@
 
 {% block content %}
     <!-- Link para voltar para a lista de produtos -->
-    <a href="{{ url_for('gerenciar_produtos') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <!-- CORRIGIDO -->
+    <a href="{{ url_for('products.gerenciar_produtos') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Produtos
     </a>
 
@@ -33,7 +34,8 @@
                     <td>{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
                     <!-- --- NOVO BOTÃO --- -->
                     <td>
-                        <a href="{{ url_for('ver_historico', produto_id=preco.produto_id, supermercado_id=preco.supermercado_id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #17a2b8; color: white; border-radius: 4px; font-size: 0.9em;">
+                        <!-- CORRIGIDO -->
+                        <a href="{{ url_for('prices.ver_historico', produto_id=preco.produto_id, supermercado_id=preco.supermercado_id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #17a2b8; color: white; border-radius: 4px; font-size: 0.9em;">
                             Histórico
                         </a>
                     </td>
@@ -45,7 +47,8 @@
     {% else %}
         <!-- Mensagem se nenhum preço foi encontrado -->
         <p>Ainda não há preços cadastrados para este produto.</p>
-        <a href="{{ url_for('registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+        <!-- CORRIGIDO -->
+        <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
             + Registrar o primeiro preço
         </a>
     {% endif %}
