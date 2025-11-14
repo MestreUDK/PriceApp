@@ -1,0 +1,21 @@
+{
+  "name": "Gerenciador de Preços",
+  "short_name": "PriceApp",
+  "description": "App para comparar preços de supermercado.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#333333",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/007bff/white?text=Price",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://placehold.co/512x512/007bff/white?text=PriceApp",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
