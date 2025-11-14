@@ -1,7 +1,6 @@
-# app.py (versão com SECRET_KEY protegida e rota para PWA)
+# app.py (Corrigido para Render com Gunicorn + SQLite)
 
 import os
-# Importa o 'send_from_directory'
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -9,16 +8,22 @@ from datetime import datetime
 # --- CONFIGURAÇÃO ---
 app = Flask(__name__)
 
-# Chave secreta agora busca de uma variável de ambiente (mais seguro)
+# Chave secreta (lida do ambiente)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chave-padrao-apenas-para-testes-locais')
 
-# Configuração do banco de dados SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///precos.db' 
+# --- CONFIGURAÇÃO DO BANCO DE DADOS (SQLite) ---
+# Usamos 'var/data/precos.db' - O Render recomenda salvar arquivos de dados 
+# em um disco persistente gratuito na pasta 'var/data'
+data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'var', 'data')
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(data_dir, 'precos.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-
 # --- MODELOS DO BANCO DE DADOS (as "tabelas") ---
+# (Nenhuma mudança aqui)
 class Supermercado(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False, unique=True)
@@ -38,17 +43,23 @@ class Preco(db.Model):
     supermercado_id = db.Column(db.Integer, db.ForeignKey('supermercado.id'), nullable=False)
 
 
-# --- *** NOVA ROTA PARA O SERVICE WORKER *** ---
+# --- CRIAÇÃO DAS TABELAS ---
+# Isso agora é executado quando o Gunicorn importa o arquivo 'app'
+# garantindo que as tabelas existam ANTES do app começar.
+with app.app_context():
+    db.create_all()
+
+
+# --- ROTA PARA O SERVICE WORKER ---
 @app.route('/sw.js')
 def service_worker():
-    # Envia o arquivo 'sw.js' que está dentro da pasta 'static'
     return send_from_directory('static', 'sw.js')
-# --- *** FIM DA NOVA ROTA *** ---
 
 
 # --- ROTAS (as "páginas" do nosso site) ---
 @app.route('/')
 def index():
+    # Esta query agora vai funcionar, pois as tabelas existem
     ultimos_precos = Preco.query.order_by(Preco.data_cadastro.desc()).limit(5).all()
     return render_template('index.html', ultimos_precos=ultimos_precos)
 
@@ -109,9 +120,6 @@ def registrar_preco():
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
     return render_template('registrar_preco.html', produtos=produtos, supermercados=supermercados)
 
-# --- INICIAR O APLICATIVO ---
+# --- INICIAR O APLICATIVO (para testes locais) ---
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=True)
