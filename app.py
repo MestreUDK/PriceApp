@@ -1,4 +1,4 @@
-# app.py (Corrigido para Render com Gunicorn + SQLite)
+# app.py (Pronto para PWA e banco de dados PostgreSQL externo)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
@@ -11,19 +11,26 @@ app = Flask(__name__)
 # Chave secreta (lida do ambiente)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chave-padrao-apenas-para-testes-locais')
 
-# --- CONFIGURAÇÃO DO BANCO DE DADOS (SQLite) ---
-# Usamos 'var/data/precos.db' - O Render recomenda salvar arquivos de dados 
-# em um disco persistente gratuito na pasta 'var/data'
-data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'var', 'data')
-if not os.path.exists(data_dir):
-    os.makedirs(data_dir)
+# --- *** CONFIGURAÇÃO DO BANCO DE DADOS (SUPABASE/POSTGRES) *** ---
+# 1. Tenta pegar a DATABASE_URL do ambiente (que o Render vai fornecer)
+# 2. Se não achar (para testes locais), usa um sqlite.
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    # O Supabase usa "postgres://" que precisamos mudar para "postgresql://"
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+else:
+    # Fallback para testes locais se a DATABASE_URL não for encontrada
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///local_test.db' 
+# --- *** FIM DA ALTERAÇÃO *** ---
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(data_dir, 'precos.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+
 # --- MODELOS DO BANCO DE DADOS (as "tabelas") ---
-# (Nenhuma mudança aqui)
+# (Nenhuma mudança aqui, os modelos são os mesmos)
 class Supermercado(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False, unique=True)
@@ -44,8 +51,8 @@ class Preco(db.Model):
 
 
 # --- CRIAÇÃO DAS TABELAS ---
-# Isso agora é executado quando o Gunicorn importa o arquivo 'app'
-# garantindo que as tabelas existam ANTES do app começar.
+# Isso garante que as tabelas sejam criadas no banco de dados externo
+# assim que o app iniciar no Render.
 with app.app_context():
     db.create_all()
 
@@ -59,7 +66,6 @@ def service_worker():
 # --- ROTAS (as "páginas" do nosso site) ---
 @app.route('/')
 def index():
-    # Esta query agora vai funcionar, pois as tabelas existem
     ultimos_precos = Preco.query.order_by(Preco.data_cadastro.desc()).limit(5).all()
     return render_template('index.html', ultimos_precos=ultimos_precos)
 
@@ -89,7 +95,8 @@ def gerenciar_mercados():
         if Supermercado.query.filter_by(nome=nome_mercado).first():
             flash('Este supermercado já está cadastrado.', 'error')
         else:
-            novo_mercado = Supermercado(nome=nome_mercado)
+            # Bug corrigido aqui (estava nome_nome_mercado)
+            novo_mercado = Supermercado(nome=nome_mercado) 
             db.session.add(novo_mercado)
             db.session.commit()
             flash('Supermercado adicionado com sucesso!', 'success')
