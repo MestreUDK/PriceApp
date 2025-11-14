@@ -19,7 +19,7 @@
             color: #333;
             margin-top: 0;
         }
-        
+
         /* --- BARRA SUPERIOR FIXA (HEADER) --- */
         .header-bar {
             background-color: #fff;
@@ -28,7 +28,7 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #ddd;
-            
+
             /* ADICIONADO: Fixa no topo */
             position: fixed;
             top: 0;
@@ -70,7 +70,7 @@
             background-color: #333;
             display: flex;
             justify-content: space-around; /* Distribui os links igualmente */
-            
+
             /* ADICIONADO: Fixa na base */
             position: fixed;
             bottom: 0;
@@ -105,7 +105,7 @@
             border-radius: 8px; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
+
         /* --- ESTILOS DE FORMULÁRIO MELHORADOS --- */
         form input, form select, form button { 
             width: 100%; 
@@ -148,7 +148,7 @@
         th { 
             background-color: #f2f2f2;
         }
-        
+
         /* --- MENSAGENS FLASH --- */
         .flash {
             padding: 1rem;
@@ -176,7 +176,7 @@
     <header class="header-bar">
         <a href="{{ url_for('core.index') }}" class="logo">PriceApp</a>
         
-        [span_0](start_span)<form class="search-form" method="GET" action="{{ url_for('core.busca') }}">[span_0](end_span)
+        <form class="search-form" method="GET" action="{{ url_for('core.busca') }}">
             <input type="search" name="q" placeholder="Buscar..." required>
             <button type="submit">Buscar</button>
         </form>
@@ -184,13 +184,13 @@
 
     <div class="container">
         
-        [span_1](start_span){% with messages = get_flashed_messages(with_categories=true) %}[span_1](end_span)
+        {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
               <div class="flash {{ category }}">{{ message }}</div>
             {% endfor %}
           {% endif %}
-        [span_2](start_span){% endwith %}[span_2](end_span)
+        {% endwith %}
 
         {% block content %}{% endblock %}
     </div>
@@ -199,19 +199,19 @@
         <a href="{{ url_for('core.index') }}">Início</a>
         <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar</b></a>
         <a href="{{ url_for('products.gerenciar_produtos') }}">Produtos</a>
-        [span_3](start_span)<a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>[span_3](end_span)
+        <a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>
     </nav>
 
     <script>
         if ('serviceWorker' in navigator) {
-            [span_4](start_span)navigator.serviceWorker.register("{{ url_for('core.service_worker') }}")[span_4](end_span)
+            navigator.serviceWorker.register("{{ url_for('core.service_worker') }}")
                 .then(function(registration) {
                    console.log('Service Worker registrado com sucesso:', registration);
                 })
                 .catch(function(error) {
                     console.log('Falha ao registrar Service Worker:', error);
                 });
-        [span_5](start_span)}
+        }
     </script>
   </body>
 </html>
