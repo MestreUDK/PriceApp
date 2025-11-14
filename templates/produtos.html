@@ -27,11 +27,12 @@
                 <td>{{ produto.nome }}</td>
                 <td>{{ produto.marca }}</td>
                 <td>
-                    <a href="{{ url_for('comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em; display: inline-block; margin-bottom: 5px;">
+                    <!-- CORRIGIDO -->
+                    <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em; display: inline-block; margin-bottom: 5px;">
                         Ver Preços
                     </a>
-                    <!-- --- BOTÃO ADICIONADO --- -->
-                    <a href="{{ url_for('edit_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em; display: inline-block;">
+                    <!-- CORRIGIDO -->
+                    <a href="{{ url_for('products.edit_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em; display: inline-block;">
                         Editar
                     </a>
                 </td>
