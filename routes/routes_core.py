@@ -1,28 +1,35 @@
-# routes_core.py
+# routes/routes_core.py
 # Rotas principais e de navegação (Início, Busca, PWA)
 
-from app import app, db
-from models import Supermercado, Produto, Preco
-from flask import render_template, request, redirect, url_for, send_from_directory
+from flask import (
+    Blueprint, render_template, request, redirect, url_for, send_from_directory
+)
+from extensions import db  # Importa o db
+from models import Supermercado, Produto, Preco # Importa os modelos
+
+# Cria o Blueprint
+# O 'template_folder' diz ao Flask para procurar templates na pasta ../templates
+core_bp = Blueprint('core', __name__, template_folder='../templates')
 
 # --- ROTA PARA O SERVICE WORKER ---
-@app.route('/sw.js')
+# O static_folder diz ao Flask para procurar arquivos estáticos na pasta ../static
+@core_bp.route('/sw.js', static_folder='../static')
 def service_worker():
-    return send_from_directory('static', 'sw.js')
+    return send_from_directory(core_bp.static_folder, 'sw.js')
 
 # --- ROTA PRINCIPAL ---
-@app.route('/')
+@core_bp.route('/')
 def index():
     ultimos_precos = Preco.query.order_by(Preco.data_cadastro.desc()).limit(5).all()
     return render_template('index.html', ultimos_precos=ultimos_precos)
 
 # --- ROTA DE BUSCA ---
-@app.route('/busca')
+@core_bp.route('/busca')
 def busca():
     termo = request.args.get('q')
     
     if not termo:
-        return redirect(url_for('index'))
+        return redirect(url_for('core.index')) # Note: 'index' agora é 'core.index'
     
     termo_busca = f"%{termo}%"
     
