@@ -2,20 +2,24 @@
 # Rotas principais e de navegação (Início, Busca, PWA)
 
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, send_from_directory
+    Blueprint, render_template, request, redirect, url_for, send_from_directory, current_app
 )
 from extensions import db  # Importa o db
 from models import Supermercado, Produto, Preco # Importa os modelos
 
-# Cria o Blueprint
-# O 'template_folder' diz ao Flask para procurar templates na pasta ../templates
-core_bp = Blueprint('core', __name__, template_folder='../templates')
+# --- MUDANÇA IMPORTANTE AQUI ---
+# O 'static_folder' foi movido para DENTRO da criação do Blueprint
+core_bp = Blueprint('core', __name__,
+                    template_folder='../templates',
+                    static_folder='../static') # <--- O ARGUMENTO ESTÁ AQUI AGORA
 
 # --- ROTA PARA O SERVICE WORKER ---
-# O static_folder diz ao Flask para procurar arquivos estáticos na pasta ../static
-@core_bp.route('/sw.js', static_folder='../static')
+# O argumento 'static_folder' foi REMOVIDO daqui de baixo
+@core_bp.route('/sw.js') 
 def service_worker():
-    return send_from_directory(core_bp.static_folder, 'sw.js')
+    # E agora usamos a pasta estática global do 'current_app'
+    # que o Flask entende perfeitamente.
+    return send_from_directory(current_app.static_folder, 'sw.js')
 
 # --- ROTA PRINCIPAL ---
 @core_bp.route('/')
