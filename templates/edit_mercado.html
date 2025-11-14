@@ -10,8 +10,9 @@
         <label for="nome">Nome do Supermercado:</label>
         <input type="text" name="nome" id="nome" value="{{ mercado.nome }}" required>
         
-        <label for="endereco">Endereço:</label>
-        <input type="text" name="endereco" id="endereco" value="{{ mercado.endereco or '' }}" placeholder="Endereço (Opcional)">
+        <!-- --- CAMPOS CORRIGIDOS --- -->
+        <label for="endereço">Endereço:</label>
+        <input type="text" name="endereço" id="endereço" value="{{ mercado.endereço or '' }}" placeholder="Endereço (Opcional)">
         
         <button type="submit" style="background-color: #28a745;">Salvar Alterações</button>
     </form>
