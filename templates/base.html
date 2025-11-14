@@ -3,19 +3,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gerenciador de Preços</title>
-
-    <!-- *** NOVAS LINHAS PWA *** -->
-    <!-- Link para o Manifest -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <!-- Cor do tema para a barra do navegador (Android) -->
-    <meta name="theme-color" content="#333333">
-    <!-- *** FIM DAS NOVAS LINHAS *** -->
-
+    <title>Gerenciador de Preços</title>
     <style>
         body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; }
-        nav { background-color: #333; padding: 1rem; }
-        nav a { color: white; text-decoration: none; margin-right: 1rem; }
+        nav { background-color: #333; padding: 1rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+        nav a { color: white; text-decoration: none; margin-right: 1rem; padding: 0.5rem 0; }
+        .nav-links { display: flex; flex-wrap: wrap; align-items: center; }
         .container { max-width: 900px; margin: 2rem auto; padding: 2rem; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h1, h2 { color: #333; }
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
@@ -35,14 +29,45 @@
         }
         .flash.success { background-color: #28a745; }
         .flash.error { background-color: #dc3545; }
+
+        /* --- CSS PARA A BUSCA (NOVO) --- */
+        .search-form { display: flex; margin-left: auto; }
+        .search-form input { 
+            width: auto; 
+            min-width: 150px; 
+            margin-bottom: 0; 
+            border-radius: 4px 0 0 4px;
+            border-right: none;
+        }
+        .search-form button { 
+            width: auto; 
+            margin-bottom: 0; 
+            border-radius: 0 4px 4px 0;
+        }
+        
+        /* Ajuste para telas pequenas */
+        @media (max-width: 768px) {
+            .nav-links { width: 100%; margin-top: 0.5rem; }
+            .search-form { width: 100%; margin-left: 0; margin-top: 1rem; }
+            .search-form input { flex-grow: 1; }
+        }
+
     </style>
   </head>
   <body>
     <nav>
-        <a href="{{ url_for('index') }}">Início</a>
-        <a href="{{ url_for('registrar_preco') }}"><b>Registrar Preço</b></a>
-        <a href="{{ url_for('gerenciar_produtos') }}">Produtos</a>
-        <a href="{{ url_for('gerenciar_mercados') }}">Mercados</a>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Início</a>
+            <a href="{{ url_for('registrar_preco') }}"><b>Registrar Preço</b></a>
+            <a href="{{ url_for('gerenciar_produtos') }}">Produtos</a>
+            <a href="{{ url_for('gerenciar_mercados') }}">Mercados</a>
+        </div>
+        
+        <!-- --- FORMULÁRIO DE BUSCA (NOVO) --- -->
+        <form class="search-form" method="GET" action="{{ url_for('busca') }}">
+            <input type="search" name="q" placeholder="Buscar produto ou mercado..." required>
+            <button type="submit">Buscar</button>
+        </form>
     </nav>
 
     <div class="container">
@@ -60,25 +85,17 @@
         {% block content %}{% endblock %}
     </div>
 
-    <!-- *** NOVO SCRIPT PWA *** -->
-    <!-- Script para registrar o Service Worker -->
+    <!-- Script do Service Worker -->
     <script>
-      // Verifica se o navegador suporta Service Workers
-      if ('serviceWorker' in navigator) {
-        // Registra o nosso arquivo sw.js quando a página carregar
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}")
-            .then(registration => {
-              console.log('ServiceWorker registrado com sucesso:', registration.scope);
-            })
-            .catch(error => {
-              console.log('Falha ao registrar o ServiceWorker:', error);
-            });
-        });
-      }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("{{ url_for('service_worker') }}")
+                .then(function(registration) {
+                    console.log('Service Worker registrado com sucesso:', registration);
+                })
+                .catch(function(error) {
+                    console.log('Falha ao registrar Service Worker:', error);
+                });
+        }
     </script>
-    <!-- *** FIM DO NOVO SCRIPT *** -->
-
   </body>
 </html>
-
