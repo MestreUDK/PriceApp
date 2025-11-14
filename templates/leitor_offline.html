@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Leitor Offline</h1>
+    <p id="status_offline">Carregando dados sincronizados...</p>
+
+    <div id="app_offline" class="hidden">
+        <hr>
+        <h2>Busca de Produtos</h2>
+        <label for="searchInput_offline">Buscar Produto:</label>
+        <input type="search" id="searchInput_offline" placeholder="Digite o nome de um produto...">
+        
+        <div id="results_offline">
+            </div>
+        
+        <div id="comparison_offline" class="hidden">
+            </div>
+
+        <div id="historyView_offline" class="hidden">
+            <hr>
+            <h2 id="historyTitle_offline">Histórico de Preço</h2>
+            <h3 id="historySubtitle_offline"></h3>
+            
+            <div style="width: 100%; max-width: 900px; margin-bottom: 2rem;">
+                <canvas id="graficoHistorico_offline"></canvas>
+            </div>
+
+            <h3>Todos os Registros (do mais antigo ao mais novo)</h3>
+            <div id="historyTable_offline"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // --- LÓGICA DO LEITOR OFFLINE ---
+
+        // Nosso "banco de dados" global
+        let DB_OFFLINE = { usuarios: [], produtos: [], supermercados: [], precos: [] };
+        let myChart_offline = null;
+
+        // Mapeadores
+        let userMap_offline = new Map();
+        let produtoMap_offline = new Map();
+        let mercadoMap_offline = new Map();
+
+        // Elementos do HTML
+        const statusEl_offline = document.getElementById('status_offline');
+        const appEl_offline = document.getElementById('app_offline');
+        const searchInput_offline = document.getElementById('searchInput_offline');
+        const resultsEl_offline = document.getElementById('results_offline');
+        const comparisonEl_offline = document.getElementById('comparison_offline');
+        const historyViewEl_offline = document.getElementById('historyView_offline');
+        const historyTitleEl_offline = document.getElementById('historyTitle_offline');
+        const historySubtitleEl_offline = document.getElementById('historySubtitle_offline');
+        const historyTableEl_offline = document.getElementById('historyTable_offline');
+        const chartCanvas_offline = document.getElementById('graficoHistorico_offline');
+
+        // --- MUDANÇA PRINCIPAL: CARREGAR DO LOCALSTORAGE ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Tenta pegar os dados salvos
+            const jsonData = localStorage.getItem('priceapp_offline_db');
+            
+            if (!jsonData) {
+                statusEl_offline.textContent = 'Erro: Nenhum dado sincronizado. Vá para a página inicial e clique em "Sincronizar para Offline".';
+                statusEl_offline.style.color = 'red';
+                return;
+            }
+
+            try {
+                // 2. Tenta processar os dados
+                const data = JSON.parse(jsonData);
+                if (data.produtos && data.supermercados && data.precos) {
+                    DB_OFFLINE = data;
+                    
+                    // Preenche os mapeadores
+                    userMap_offline = new Map(DB_OFFLINE.usuarios.map(u => [u.id, u.username]));
+                    produtoMap_offline = new Map(DB_OFFLINE.produtos.map(p => [p.id, p]));
+                    mercadoMap_offline = new Map(DB_OFFLINE.supermercados.map(m => [m.id, m]));
+
+                    statusEl_offline.textContent = `Dados carregados com sucesso! (${DB_OFFLINE.produtos.length} produtos)`;
+                    statusEl_offline.style.color = 'green';
+                    appEl_offline.classList.remove('hidden');
+                    
+                    // Mostra todos os produtos
+                    renderSearchResults_offline('');
+                } else {
+                    throw new Error("Dados sincronizados estão corrompidos.");
+                }
+            } catch (error) {
+                statusEl_offline.textContent = `Erro ao ler dados: ${error.message}`;
+                statusEl_offline.style.color = 'red';
+            }
+        });
+        // --- FIM DA MUDANÇA ---
+
+        // Evento: Digitando na Busca
+        searchInput_offline.addEventListener('input', (e) => {
+            const termo = e.target.value.toLowerCase();
+            renderSearchResults_offline(termo);
+            comparisonEl_offline.classList.add('hidden');
+            historyViewEl_offline.classList.add('hidden');
+        });
+
+        // Função: Renderiza a Busca (Produtos)
+        function renderSearchResults_offline(termo) {
+            const produtosFiltrados = DB_OFFLINE.produtos.filter(p => 
+                p.nome.toLowerCase().includes(termo) ||
+                (p.marca && p.marca.toLowerCase().includes(termo))
+            );
+
+            if (produtosFiltrados.length === 0) {
+                resultsEl_offline.innerHTML = "<p>Nenhum produto encontrado.</p>";
+                return;
+            }
+
+            let html = `<table>... (código da tabela de produtos) ...</table>`; // (O HTML da tabela de busca)
+            // (Reutilizando a lógica da v2)
+            html = `
+                <table>
+                    <thead><tr><th>Produto</th><th>Marca</th><th>Criado por</th><th>Ações</th></tr></thead>
+                    <tbody>
+            `;
+            produtosFiltrados.forEach(p => {
+                const criadoPor = userMap_offline.get(p.criado_por_id) || 'N/D';
+                html += `
+                    <tr>
+                        <td>${p.nome}</td>
+                        <td>${p.marca || ''}</td>
+                        <td>${criadoPor}</td>
+                        <td>
+                            <button class="btn btn-green" onclick="showComparison_offline(${p.id})">Ver Preços</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            html += `</tbody></table>`;
+            resultsEl_offline.innerHTML = html;
+        }
+
+        // Função: Mostra a Comparação de Preços
+        window.showComparison_offline = function(produtoId) {
+            const produto = produtoMap_offline.get(produtoId);
+            if (!produto) return;
+            historyViewEl_offline.classList.add('hidden');
+
+            const precosProduto = DB_OFFLINE.precos.filter(p => p.produto_id === produtoId);
+            const precosRecentesMap = new Map();
+            precosProduto.forEach(preco => {
+                const key = preco.supermercado_id;
+                if (!precosRecentesMap.has(key) || new Date(preco.data_cadastro) > new Date(precosRecentesMap.get(key).data_cadastro)) {
+                    precosRecentesMap.set(key, preco);
+                }
+            });
+            const precosRecentes = Array.from(precosRecentesMap.values()).sort((a, b) => a.valor - b.valor);
+
+            let html = `<hr><h2>Comparando: ${produto.nome} (${produto.marca || ''})</h2>`;
+            if (precosRecentes.length === 0) {
+                html += "<p>Nenhum preço registrado para este produto.</p>";
+            } else {
+                html += `<table><thead><tr><th>Supermercado</th><th>Preço (R$)</th><th>Registrado em</th><th>Ações</th></tr></thead><tbody>`;
+                precosRecentes.forEach((preco, index) => {
+                    const mercado = mercadoMap_offline.get(preco.supermercado_id) || { nome: 'Desconhecido' };
+                    const dataFormatada = new Date(preco.data_cadastro).toLocaleDateString('pt-BR');
+                    const style = (index === 0) ? 'background-color: #d4edda; font-weight: bold;' : '';
+                    html += `
+                        <tr style="${style}">
+                            <td>${mercado.nome}</td>
+                            <td>R$ ${preco.valor.toFixed(2)}</td>
+                            <td>${dataFormatada}</td>
+                            <td>
+                                <button class="btn btn-cyan" onclick="showHistory_offline(${produtoId}, ${preco.supermercado_id})">Histórico</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+            }
+            comparisonEl_offline.innerHTML = html;
+            comparisonEl_offline.classList.remove('hidden');
+        }
+
+        // Função para Histórico e Gráfico
+        window.showHistory_offline = function(produtoId, supermercadoId) {
+            const produto = produtoMap_offline.get(produtoId);
+            const supermercado = mercadoMap_offline.get(supermercadoId);
+            if (!produto || !supermercado) return;
+
+            const precosHistorico = DB_OFFLINE.precos.filter(p => p.produto_id === produtoId && p.supermercado_id === supermercadoId)
+                                                      .sort((a, b) => new Date(a.data_cadastro) - new Date(b.data_cadastro));
+            
+            const labels = precosHistorico.map(p => new Date(p.data_cadastro).toLocaleDateString('pt-BR'));
+            const valores = precosHistorico.map(p => p.valor);
+            
+            let tableHtml = `<p>Nenhum histórico encontrado.</p>`;
+            if (precosHistorico.length > 0) {
+                tableHtml = `<table><thead><tr><th>Preço (R$)</th><th>Registrado em</th><th>Registrado por</th></tr></thead><tbody>`;
+                precosHistorico.forEach(preco => {
+                    const dataFormatada = new Date(preco.data_cadastro).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    const criadoPor = userMap_offline.get(preco.criado_por_id) || 'N/D';
+                    tableHtml += `
+                        <tr>
+                            <td>R$ ${preco.valor.toFixed(2)}</td>
+                            <td>${dataFormatada}</td>
+                            <td>${criadoPor}</td>
+                        </tr>
+                    `;
+                });
+                tableHtml += `</tbody></table>`;
+            }
+            historyTableEl_offline.innerHTML = tableHtml;
+            historyTitleEl_offline.textContent = `Histórico de Preço para: ${produto.nome}`;
+            historySubtitleEl_offline.textContent = `Em: ${supermercado.nome}`;
+
+            if (myChart_offline) myChart_offline.destroy();
+            myChart_offline = new Chart(chartCanvas_offline, {
+                type: 'line',
+                data: { labels: labels, datasets: [{ label: 'Preço (R$)', data: valores, fill: false, borderColor: 'rgb(0, 123, 255)', tension: 0.1 }] },
+                options: {
+                    scales: { y: { ticks: { callback: (value) => 'R$ ' + value.toFixed(2) } } },
+                    plugins: { tooltip: { callbacks: { label: (context) => `Preço: R$ ${context.parsed.y.toFixed(2)}` } } }
+                }
+            });
+
+            historyViewEl_offline.classList.remove('hidden');
+            historyViewEl_offline.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+{% endblock %}
