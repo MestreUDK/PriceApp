@@ -18,6 +18,7 @@
             <tr>
                 <th>Nome</th>
                 <th>Marca</th>
+                <th>Ações</th> <!-- Coluna Adicionada -->
             </tr>
         </thead>
         <tbody>
@@ -25,10 +26,17 @@
             <tr>
                 <td>{{ produto.nome }}</td>
                 <td>{{ produto.marca }}</td>
+                <td>
+                    <!-- Link Adicionado -->
+                    <a href="{{ url_for('comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em;">
+                        Ver Preços
+                    </a>
+                </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="2">Nenhum produto cadastrado ainda.</td>
+                <!-- Colspan atualizado para 3 -->
+                <td colspan="3">Nenhum produto cadastrado ainda.</td>
             </tr>
             {% endfor %}
         </tbody>
