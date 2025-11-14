@@ -5,11 +5,14 @@
     <p>Use o menu de navegação para gerenciar seus dados.</p>
     
     {% if current_user.role == 'admin' %}
-        <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+        <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-right: 10px; margin-bottom: 10px;">
             + Registrar um Novo Preço
         </a>
     {% endif %}
 
+    <a href="{{ url_for('core.download_backup') }}" style="display: inline-block; padding: 1rem; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 10px;">
+        Baixar Backup (JSON)
+    </a>
     <hr>
     <h3>Últimos Preços Registrados</h3>
     {% if ultimos_precos %}
@@ -20,7 +23,8 @@
                     <th>Supermercado</th>
                     <th>Preço</th>
                     <th>Data</th>
-                    <th>Registrado por</th> </tr>
+                    <th>Registrado por</th>
+                </tr>
             </thead>
             <tbody>
                 {% for preco in ultimos_precos %}
@@ -29,7 +33,6 @@
                     <td>{{ preco.supermercado.nome }}</td>
                     <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
                     <td>{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
-                    
                     <td>
                         {% if preco.criado_por %}
                             {{ preco.criado_por.username }}
@@ -37,12 +40,12 @@
                             N/D
                         {% endif %}
                     </td>
-                    </tr>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>Nenhum preço registrado ainda.</p>
+        <p>Nenhuma preço registrado ainda.</p>
     {% endif %}
 
 {% endblock %}
