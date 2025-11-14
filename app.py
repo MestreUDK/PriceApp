@@ -3,7 +3,8 @@
 
 import os
 from flask import Flask
-from extensions import db  # Importa o db do novo extensions.py
+from extensions import db, login_manager, bcrypt  # <-- MUDANÇA 1: Importa novas extensões
+from models import User # <-- MUDANÇA 2: Importa o novo modelo User
 
 # --- FUNÇÃO DE FÁBRICA ---
 # Nós colocamos a criação do app dentro de uma função
@@ -27,6 +28,11 @@ def create_app():
     # --- INICIALIZAÇÃO DAS EXTENSÕES ---
     # Liga o banco de dados ao nosso app
     db.init_app(app)
+    
+    # --- MUDANÇA 3: Inicializa o LoginManager e o Bcrypt ---
+    login_manager.init_app(app)
+    bcrypt.init_app(app)
+    # -----------------------------------------------------
 
     # --- IMPORTAÇÃO E REGISTRO DAS ROTAS (BLUEPRINTS) ---
     # Importamos as rotas AQUI, depois que o app e o db estão prontos
@@ -51,6 +57,14 @@ def create_app():
         db.create_all()
         
     return app
+
+# --- MUDANÇA 4: CONFIGURAÇÃO DO USER LOADER ---
+# Esta função é usada pelo Flask-Login para recarregar o objeto 
+# do usuário a partir do ID de usuário armazenado na sessão.
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+# ------------------------------------------------
 
 # --- INICIAR O APLICATIVO ---
 # Esta parte é o que o Gunicorn/Render vai usar
