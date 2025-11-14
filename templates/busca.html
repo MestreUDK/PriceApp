@@ -52,7 +52,8 @@
                 {% for mercado in mercados %}
                 <tr>
                     <td>{{ mercado.nome }}</td>
-                    <td>{{ mercado.endereco or 'N/D' }}</td>
+                    <!-- --- CAMPO CORRIGIDO --- -->
+                    <td>{{ mercado.endereço or 'N/D' }}</td>
                     <td>
                         <a href="{{ url_for('edit_mercado', mercado_id=mercado.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em; display: inline-block;">
                             Editar
