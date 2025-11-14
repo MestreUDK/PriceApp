@@ -6,8 +6,8 @@
     <form method="POST">
         <h3>Adicionar Novo Supermercado</h3>
         <input type="text" name="nome" placeholder="Nome do Supermercado" required>
-        <!-- --- CAMPO ADICIONADO --- -->
-        <input type="text" name="endereco" placeholder="Endereço (Opcional)">
+        <!-- --- CAMPO CORRIGIDO --- -->
+        <input type="text" name="endereço" placeholder="Endereço (Opcional)">
         <button type="submit">Adicionar Supermercado</button>
     </form>
 
@@ -18,7 +18,7 @@
         <thead>
             <tr>
                 <th>Nome</th>
-                <!-- --- COLUNA ADICIONADA --- -->
+                <!-- --- COLUNA CORRIGIDA --- -->
                 <th>Endereço</th>
                 <th>Ações</th>
             </tr>
@@ -27,8 +27,8 @@
             {% for mercado in mercados %}
             <tr>
                 <td>{{ mercado.nome }}</td>
-                <!-- --- COLUNA ADICIONADA --- -->
-                <td>{{ mercado.endereco or 'N/D' }}</td> <!-- 'or N/D' exibe N/D se o endereço for nulo -->
+                <!-- --- COLUNA CORRIGIDA --- -->
+                <td>{{ mercado.endereço or 'N/D' }}</td> <!-- 'or N/D' exibe N/D se o endereço for nulo -->
                 <td>
                     <!-- --- BOTÃO ADICIONADO --- -->
                     <a href="{{ url_for('edit_mercado', mercado_id=mercado.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
