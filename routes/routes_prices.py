@@ -8,6 +8,8 @@ from extensions import db
 from models import Supermercado, Produto, Preco
 from sqlalchemy import func, desc
 
+import json  # <-- MUDANÇA 1: Importa o JSON
+
 # Cria o Blueprint
 prices_bp = Blueprint('prices', __name__, template_folder='../templates')
 
@@ -61,7 +63,7 @@ def comparar_produto(produto_id):
     
     return render_template('comparar.html', produto=produto, precos=precos_recentes)
 
-# --- ROTA DE HISTÓRICO ---
+# --- ROTA DE HISTÓRICO (COM DADOS PARA O GRÁFICO) ---
 @prices_bp.route('/historico/<int:produto_id>/<int:supermercado_id>')
 def ver_historico(produto_id, supermercado_id):
     produto = db.session.get(Produto, produto_id)
@@ -70,14 +72,24 @@ def ver_historico(produto_id, supermercado_id):
     if not produto or not supermercado:
         abort(404)
     
+    # --- MUDANÇA 2: ORDEM ASCENDENTE PARA O GRÁFICO ---
     precos_historico = Preco.query.filter_by(
         produto_id=produto_id,
         supermercado_id=supermercado_id
     ).order_by(
-        Preco.data_cadastro.desc()
+        Preco.data_cadastro.asc()  # <-- Mudado de desc() para asc()
     ).all()
+    
+    # --- MUDANÇA 3: PREPARA OS DADOS PARA O JAVASCRIPT ---
+    labels = [preco.data_cadastro.strftime('%d/%m/%Y') for preco in precos_historico]
+    valores = [preco.valor for preco in precos_historico]
+    
+    labels_json = json.dumps(labels)
+    valores_json = json.dumps(valores)
     
     return render_template('historico.html',
                            produto=produto,
                            supermercado=supermercado,
-                           precos=precos_historico)
+                           precos=precos_historico,
+                           labels_json=labels_json,    # Envia os labels
+                           valores_json=valores_json)  # Envia os valores
