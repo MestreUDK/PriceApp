@@ -1,13 +1,18 @@
-# app.py (versão corrigida e completa)
+# app.py (versão com SECRET_KEY protegida)
 
+# Importa o 'os' para acessar variáveis de ambiente
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 # --- CONFIGURAÇÃO ---
 app = Flask(__name__)
-# Chave secreta para usar mensagens flash
-app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui' 
+
+# Chave secreta agora busca de uma variável de ambiente (mais seguro)
+# Se não encontrar (em teste local), usa uma chave padrão.
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chave-padrao-apenas-para-testes-locais')
+
 # Configuração do banco de dados SQLite
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///precos.db' 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -115,4 +120,8 @@ if __name__ == '__main__':
     with app.app_context():
         # Cria as tabelas no banco de dados se elas não existirem
         db.create_all()
-    app.run(debug=True)
+    # Pega a porta da variável de ambiente (para hospedagem) ou usa 5000 por padrão
+    port = int(os.environ.get('PORT', 5000))
+    # 'debug=True' é ótimo para desenvolver, mas mude para 'debug=False' quando for hospedar
+    # 'host='0.0.0.0'' permite que o app seja acessado pela rede
+    app.run(debug=True, host='0.0.0.0', port=port)
