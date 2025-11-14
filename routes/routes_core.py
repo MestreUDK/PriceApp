@@ -1,39 +1,35 @@
 # routes/routes_core.py
-# Rotas principais e de navegação (Início, Busca, PWA)
-
 from flask import (
     Blueprint, render_template, request, redirect, url_for, send_from_directory, current_app
 )
-from extensions import db  # Importa o db
-from models import Supermercado, Produto, Preco # Importa os modelos
+from extensions import db
+from models import Supermercado, Produto, Preco
+from flask_login import login_required # <-- MUDANÇA 1
 
-# --- MUDANÇA IMPORTANTE AQUI ---
-# O 'static_folder' foi movido para DENTRO da criação do Blueprint
 core_bp = Blueprint('core', __name__,
                     template_folder='../templates',
-                    static_folder='../static') # <--- O ARGUMENTO ESTÁ AQUI AGORA
+                    static_folder='../static') 
 
-# --- ROTA PARA O SERVICE WORKER ---
-# O argumento 'static_folder' foi REMOVIDO daqui de baixo
 @core_bp.route('/sw.js') 
 def service_worker():
-    # E agora usamos a pasta estática global do 'current_app'
-    # que o Flask entende perfeitamente.
+    # Esta rota NÃO PODE ser protegida, ou o PWA quebra
     return send_from_directory(current_app.static_folder, 'sw.js')
 
 # --- ROTA PRINCIPAL ---
 @core_bp.route('/')
+@login_required # <-- MUDANÇA 2
 def index():
     ultimos_precos = Preco.query.order_by(Preco.data_cadastro.desc()).limit(5).all()
     return render_template('index.html', ultimos_precos=ultimos_precos)
 
 # --- ROTA DE BUSCA ---
 @core_bp.route('/busca')
+@login_required # <-- MUDANÇA 3
 def busca():
     termo = request.args.get('q')
     
     if not termo:
-        return redirect(url_for('core.index')) # Note: 'index' agora é 'core.index'
+        return redirect(url_for('core.index'))
     
     termo_busca = f"%{termo}%"
     
