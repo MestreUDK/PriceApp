@@ -1,11 +1,16 @@
-# routes_products.py
+# routes/routes_products.py
 # Rotas para gerenciar produtos (CRUD)
 
-from app import app, db
+from flask import (
+    Blueprint, render_template, request, redirect, url_for, flash, abort
+)
+from extensions import db
 from models import Produto
-from flask import render_template, request, redirect, url_for, flash, abort
 
-@app.route('/produtos', methods=['GET', 'POST'])
+# Cria o Blueprint
+products_bp = Blueprint('products', __name__, template_folder='../templates')
+
+@products_bp.route('/produtos', methods=['GET', 'POST'])
 def gerenciar_produtos():
     if request.method == 'POST':
         nome_produto = request.form.get('nome')
@@ -18,13 +23,13 @@ def gerenciar_produtos():
             db.session.add(novo_produto)
             db.session.commit()
             flash('Produto adicionado com sucesso!', 'success')
-        return redirect(url_for('gerenciar_produtos'))
+        return redirect(url_for('products.gerenciar_produtos')) # url_for atualizado
 
     produtos = Produto.query.order_by(Produto.nome).all()
     return render_template('produtos.html', produtos=produtos)
 
 # --- ROTA DE EDIÇÃO DE PRODUTO ---
-@app.route('/edit-produto/<int:produto_id>', methods=['GET', 'POST'])
+@products_bp.route('/edit-produto/<int:produto_id>', methods=['GET', 'POST'])
 def edit_produto(produto_id):
     produto = db.session.get(Produto, produto_id)
     if not produto:
@@ -35,6 +40,6 @@ def edit_produto(produto_id):
         produto.marca = request.form.get('marca')
         db.session.commit()
         flash('Produto atualizado com sucesso!', 'success')
-        return redirect(url_for('gerenciar_produtos'))
+        return redirect(url_for('products.gerenciar_produtos')) # url_for atualizado
         
     return render_template('edit_produto.html', produto=produto)
