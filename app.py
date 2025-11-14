@@ -1,7 +1,7 @@
 # app.py (Pronto para PWA e banco de dados PostgreSQL externo)
 
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, abort
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -95,7 +95,6 @@ def gerenciar_mercados():
         if Supermercado.query.filter_by(nome=nome_mercado).first():
             flash('Este supermercado já está cadastrado.', 'error')
         else:
-            # Bug corrigido aqui (estava nome_nome_mercado)
             novo_mercado = Supermercado(nome=nome_mercado) 
             db.session.add(novo_mercado)
             db.session.commit()
@@ -126,6 +125,23 @@ def registrar_preco():
     produtos = Produto.query.order_by(Produto.nome).all()
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
     return render_template('registrar_preco.html', produtos=produtos, supermercados=supermercados)
+
+
+# --- *** ROTA DE COMPARAÇÃO (NOVA ROTA) *** ---
+@app.route('/comparar/<int:produto_id>')
+def comparar_produto(produto_id):
+    # 1. Busca o produto pelo ID ou retorna erro 404
+    produto = db.session.get(Produto, produto_id)
+    if not produto:
+        abort(404) # Produto não encontrado
+        
+    # 2. Busca todos os preços para esse produto, ordenados do mais barato (asc()) para o mais caro
+    precos_ordenados = Preco.query.filter_by(produto_id=produto.id).order_by(Preco.valor.asc()).all()
+    
+    # 3. Renderiza a nova página 'comparar.html'
+    return render_template('comparar.html', produto=produto, precos=precos_ordenados)
+# --- *** FIM DA NOVA ROTA *** ---
+
 
 # --- INICIAR O APLICATIVO (para testes locais) ---
 if __name__ == '__main__':
