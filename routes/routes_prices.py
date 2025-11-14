@@ -1,21 +1,24 @@
 # routes/routes_prices.py
-# Rotas para preços (Registro, Comparação, Histórico)
-
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
 from models import Supermercado, Produto, Preco
 from sqlalchemy import func, desc
+from flask_login import login_required, current_user # <-- MUDANÇA 1
+import json
 
-import json  # <-- MUDANÇA 1: Importa o JSON
-
-# Cria o Blueprint
 prices_bp = Blueprint('prices', __name__, template_folder='../templates')
 
 @prices_bp.route('/registrar-preco', methods=['GET', 'POST'])
+@login_required # <-- MUDANÇA 2
 def registrar_preco():
+    # Apenas Admins podem registrar preços
+    if current_user.role != 'admin':
+        abort(403)
+        
     if request.method == 'POST':
+        # (A checagem de admin já foi feita acima)
         produto_id = request.form.get('produto')
         supermercado_id = request.form.get('supermercado')
         valor = request.form.get('valor')
@@ -29,15 +32,16 @@ def registrar_preco():
         db.session.commit()
         
         flash('Preço registrado com sucesso!', 'success')
-        return redirect(url_for('core.index')) # Redireciona para o index (no core)
+        return redirect(url_for('core.index'))
 
     produtos = Produto.query.order_by(Produto.nome).all()
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
     return render_template('registrar_preco.html', produtos=produtos, supermercados=supermercados)
 
-# --- ROTA DE COMPARAÇÃO (CORRIGIDA) ---
 @prices_bp.route('/comparar/<int:produto_id>')
+@login_required # <-- MUDANÇA 2
 def comparar_produto(produto_id):
+    # Todos os usuários logados podem comparar
     produto = db.session.get(Produto, produto_id)
     if not produto:
         abort(404) 
@@ -63,24 +67,23 @@ def comparar_produto(produto_id):
     
     return render_template('comparar.html', produto=produto, precos=precos_recentes)
 
-# --- ROTA DE HISTÓRICO (COM DADOS PARA O GRÁFICO) ---
 @prices_bp.route('/historico/<int:produto_id>/<int:supermercado_id>')
+@login_required # <-- MUDANÇA 2
 def ver_historico(produto_id, supermercado_id):
+    # Todos os usuários logados podem ver o histórico
     produto = db.session.get(Produto, produto_id)
     supermercado = db.session.get(Supermercado, supermercado_id)
     
     if not produto or not supermercado:
         abort(404)
     
-    # --- MUDANÇA 2: ORDEM ASCENDENTE PARA O GRÁFICO ---
     precos_historico = Preco.query.filter_by(
         produto_id=produto_id,
         supermercado_id=supermercado_id
     ).order_by(
-        Preco.data_cadastro.asc()  # <-- Mudado de desc() para asc()
+        Preco.data_cadastro.asc()
     ).all()
     
-    # --- MUDANÇA 3: PREPARA OS DADOS PARA O JAVASCRIPT ---
     labels = [preco.data_cadastro.strftime('%d/%m/%Y') for preco in precos_historico]
     valores = [preco.valor for preco in precos_historico]
     
@@ -91,5 +94,5 @@ def ver_historico(produto_id, supermercado_id):
                            produto=produto,
                            supermercado=supermercado,
                            precos=precos_historico,
-                           labels_json=labels_json,    # Envia os labels
-                           valores_json=valores_json)  # Envia os valores
+                           labels_json=labels_json,
+                           valores_json=valores_json)
