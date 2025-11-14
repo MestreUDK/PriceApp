@@ -4,6 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Gerenciador de Preços</title>
+
+    <!-- *** NOVAS LINHAS PWA *** -->
+    <!-- Link para o Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <!-- Cor do tema para a barra do navegador (Android) -->
+    <meta name="theme-color" content="#333333">
+    <!-- *** FIM DAS NOVAS LINHAS *** -->
+
     <style>
         body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; }
         nav { background-color: #333; padding: 1rem; }
@@ -51,5 +59,26 @@
         <!-- Conteúdo da página é injetado aqui -->
         {% block content %}{% endblock %}
     </div>
+
+    <!-- *** NOVO SCRIPT PWA *** -->
+    <!-- Script para registrar o Service Worker -->
+    <script>
+      // Verifica se o navegador suporta Service Workers
+      if ('serviceWorker' in navigator) {
+        // Registra o nosso arquivo sw.js quando a página carregar
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}")
+            .then(registration => {
+              console.log('ServiceWorker registrado com sucesso:', registration.scope);
+            })
+            .catch(error => {
+              console.log('Falha ao registrar o ServiceWorker:', error);
+            });
+        });
+      }
+    </script>
+    <!-- *** FIM DO NOVO SCRIPT *** -->
+
   </body>
 </html>
+
