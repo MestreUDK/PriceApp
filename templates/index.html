@@ -19,8 +19,8 @@
                     <th>Produto</th>
                     <th>Supermercado</th>
                     <th>Preço</th>
-                     <th>Data</th>
-                </tr>
+                    <th>Data</th>
+                    <th>Registrado por</th> </tr>
             </thead>
             <tbody>
                 {% for preco in ultimos_precos %}
@@ -29,7 +29,15 @@
                     <td>{{ preco.supermercado.nome }}</td>
                     <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
                     <td>{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
-                </tr>
+                    
+                    <td>
+                        {% if preco.criado_por %}
+                            {{ preco.criado_por.username }}
+                        {% else %}
+                            N/D
+                        {% endif %}
+                    </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
