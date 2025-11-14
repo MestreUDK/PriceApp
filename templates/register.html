@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Criar Conta</h2>
+    <p>Crie sua conta para começar a colaborar.</p>
+
+    <form method="POST" action="{{ url_for('auth.register') }}">
+        
+        <label for="username">Nome de Usuário:</label>
+        <input type="text" name="username" id="username" required>
+
+        <label for="password">Senha:</label>
+        <input type="password" name="password" id="password" required>
+
+        <button type="submit">Registrar</button>
+    </form>
+    
+    <hr>
+    <p>Já tem uma conta?</p>
+    <a href="{{ url_for('auth.login') }}" style="text-decoration: none;">Faça login</a>
+{% endblock %}
