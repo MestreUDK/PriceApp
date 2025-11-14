@@ -3,43 +3,44 @@
 {% block content %}
     <h2>Gerenciar Produtos</h2>
 
-    <form method="POST">
-        <h3>Adicionar Novo Produto</h3>
-        <input type="text" name="nome" placeholder="Nome do Produto (Ex: Arroz 5kg)" required>
-        <input type="text" name="marca" placeholder="Marca (Ex: Tio João)">
-        <button type="submit">Adicionar Produto</button>
-    </form>
-
-    <hr>
+    {% if current_user.role == 'admin' %}
+        <form method="POST">
+            <h3>Adicionar Novo Produto</h3>
+            <input type="text" name="nome" placeholder="Nome do Produto (Ex: Arroz 5kg)" required>
+            <input type="text" name="marca" placeholder="Marca (Ex: Tio João)">
+            <button type="submit">Adicionar Produto</button>
+        </form>
+        <hr>
+    {% endif %}
 
     <h2>Produtos Cadastrados</h2>
     <table>
         <thead>
             <tr>
                 <th>Nome</th>
-                <th>Marca</th>
-                <th>Ações</th>
-            </tr>
+                 <th>Marca</th>
+                <th>Ações</th> </tr>
         </thead>
         <tbody>
             {% for produto in produtos %}
             <tr>
                 <td>{{ produto.nome }}</td>
-                <td>{{ produto.marca }}</td>
+                 <td>{{ produto.marca }}</td>
                 <td>
-                    <!-- CORRIGIDO -->
                     <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em; display: inline-block; margin-bottom: 5px;">
                         Ver Preços
                     </a>
-                    <!-- CORRIGIDO -->
-                    <a href="{{ url_for('products.edit_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em; display: inline-block;">
-                        Editar
-                    </a>
+                    
+                    {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('products.edit_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em; display: inline-block;">
+                            Editar
+                        </a>
+                    {% endif %}
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="3">Nenhum produto cadastrado ainda.</td>
+                 <td colspan="3">Nenhum produto cadastrado ainda.</td>
             </tr>
             {% endfor %}
         </tbody>
