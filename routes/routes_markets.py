@@ -4,18 +4,16 @@ from flask import (
 )
 from extensions import db
 from models import Supermercado, Preco
-from flask_login import login_required, current_user # <-- MUDANÇA 1
+from flask_login import login_required, current_user 
 
 markets_bp = Blueprint('markets', __name__, template_folder='../templates')
 
 @markets_bp.route('/mercados', methods=['GET', 'POST'])
-@login_required # <-- MUDANÇA 2
+@login_required 
 def gerenciar_mercados():
     if request.method == 'POST':
-        # --- MUDANÇA 3: CHECAGEM DE ADMIN ---
         if current_user.role != 'admin':
-            abort(403) # Erro "Forbidden" (Proibido)
-        # ------------------------------------
+            abort(403) 
             
         nome_mercado = request.form.get('nome')
         endereço = request.form.get('endereço') 
@@ -23,7 +21,11 @@ def gerenciar_mercados():
         if Supermercado.query.filter_by(nome=nome_mercado).first():
             flash('Este supermercado já está cadastrado.', 'error')
         else:
-            novo_mercado = Supermercado(nome=nome_mercado, endereço=endereço) 
+            novo_mercado = Supermercado(
+                nome=nome_mercado, 
+                endereço=endereço,
+                criado_por_id=current_user.id  # <-- MUDANÇA 1
+            ) 
             db.session.add(novo_mercado)
             db.session.commit()
             flash('Supermercado adicionado com sucesso!', 'success')
@@ -33,9 +35,8 @@ def gerenciar_mercados():
     return render_template('mercados.html', mercados=mercados)
 
 @markets_bp.route('/edit-mercado/<int:mercado_id>', methods=['GET', 'POST'])
-@login_required # <-- MUDANÇA 2
+@login_required 
 def edit_mercado(mercado_id):
-    # Apenas Admins podem ver a página de edição
     if current_user.role != 'admin':
         abort(403)
         
@@ -44,9 +45,10 @@ def edit_mercado(mercado_id):
         abort(404)
 
     if request.method == 'POST':
-        # (A checagem de admin já foi feita acima)
         mercado.nome = request.form.get('nome')
         mercado.endereço = request.form.get('endereço')
+        mercado.editado_por_id = current_user.id  # <-- MUDANÇA 2
+        
         db.session.commit()
         flash('Supermercado atualizado com sucesso!', 'success')
         return redirect(url_for('markets.gerenciar_mercados'))
@@ -54,12 +56,10 @@ def edit_mercado(mercado_id):
     return render_template('edit_mercado.html', mercado=mercado)
 
 @markets_bp.route('/delete-mercado/<int:mercado_id>', methods=['POST'])
-@login_required # <-- MUDANÇA 2
+@login_required 
 def delete_mercado(mercado_id):
-    # --- MUDANÇA 3: CHECAGEM DE ADMIN ---
     if current_user.role != 'admin':
         abort(403)
-    # ------------------------------------
         
     mercado = db.session.get(Supermercado, mercado_id)
     if not mercado:
