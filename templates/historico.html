@@ -2,7 +2,8 @@
 
 {% block content %}
     <!-- Link para voltar para a tela de comparação -->
-    <a href="{{ url_for('comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <!-- CORRIGIDO -->
+    <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Comparação
     </a>
 
@@ -40,4 +41,3 @@
     {% endif %}
 
 {% endblock %}
-
