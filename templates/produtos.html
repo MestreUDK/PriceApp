@@ -18,14 +18,23 @@
         <thead>
             <tr>
                 <th>Nome</th>
-                 <th>Marca</th>
-                <th>Ações</th> </tr>
+                <th>Marca</th>
+                <th>Criado por</th> <th>Ações</th>
+            </tr>
         </thead>
         <tbody>
             {% for produto in produtos %}
             <tr>
                 <td>{{ produto.nome }}</td>
-                 <td>{{ produto.marca }}</td>
+                <td>{{ produto.marca }}</td>
+                
+                <td>
+                    {% if produto.criado_por %}
+                        {{ produto.criado_por.username }}
+                    {% else %}
+                        N/D
+                    {% endif %}
+                </td>
                 <td>
                     <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em; display: inline-block; margin-bottom: 5px;">
                         Ver Preços
@@ -40,7 +49,7 @@
             </tr>
             {% else %}
             <tr>
-                 <td colspan="3">Nenhum produto cadastrado ainda.</td>
+                 <td colspan="4">Nenhum produto cadastrado ainda.</td>
             </tr>
             {% endfor %}
         </tbody>
