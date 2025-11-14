@@ -3,6 +3,19 @@
 
 from extensions import db  # <-- MUDANÇA IMPORTANTE
 from datetime import datetime
+from flask_login import UserMixin # <-- MUDANÇA 1: Importa o UserMixin
+
+# --- MUDANÇA 2: NOVO MODELO DE USUÁRIO ---
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), nullable=False, unique=True)
+    password_hash = db.Column(db.String(128), nullable=False)
+    
+    # Define o 'role' (papel) do usuário. 
+    # 'user' = Padrão, 'admin' = Pode gerenciar
+    role = db.Column(db.String(50), nullable=False, default='user')
+
+# ----------------------------------------
 
 class Supermercado(db.Model):
     id = db.Column(db.Integer, primary_key=True)
