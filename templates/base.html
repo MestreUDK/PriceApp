@@ -1,26 +1,155 @@
 <!doctype html>
 <html lang="pt-br">
   <head>
-    <!-- ERRO CORRIGIDO AQUI -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- ERRO CORRIGIDO AQUI -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <title>Gerenciador de Preços</title>
+    <title>PriceApp</title>
     <style>
-        body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; }
-        nav { background-color: #333; padding: 1rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; }
-        nav a { color: white; text-decoration: none; margin-right: 1rem; padding: 0.5rem 0; }
-        .nav-links { display: flex; flex-wrap: wrap; align-items: center; }
-        .container { max-width: 900px; margin: 2rem auto; padding: 2rem; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1, h2 { color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f2f2f2; }
-        form input, form select, form button { width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        form button { background-color: #007bff; color: white; border: none; cursor: pointer; }
-        form label { margin-bottom: 0.5rem; display: block; font-weight: bold; }
+        /* --- ESTILOS GERAIS --- */
+        body { 
+            font-family: sans-serif;
+            margin: 0; 
+            background-color: #f4f4f9;
+            /* ADICIONADO: Preenchimento para não ficar atrás das barras fixas */
+            padding-top: 60px; /* Altura da barra superior */
+            padding-bottom: 60px; /* Altura da barra inferior */
+        }
+        h1, h2 { 
+            color: #333;
+            margin-top: 0;
+        }
+        
+        /* --- BARRA SUPERIOR FIXA (HEADER) --- */
+        .header-bar {
+            background-color: #fff;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            
+            /* ADICIONADO: Fixa no topo */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            z-index: 100;
+            box-sizing: border-box;
+        }
+        .header-bar .logo {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #333;
+            text-decoration: none;
+        }
 
+        /* --- FORMULÁRIO DE BUSCA (NA BARRA SUPERIOR) --- */
+        .search-form { 
+            display: flex;
+        }
+        .search-form input { 
+            width: auto;
+            min-width: 150px; 
+            margin-bottom: 0; 
+            border: 1px solid #ccc;
+            border-radius: 4px 0 0 4px;
+            border-right: none;
+            padding: 0.5rem; /* Ajuste de padding */
+        }
+        .search-form button { 
+            width: auto; 
+            margin-bottom: 0; 
+            border-radius: 0 4px 4px 0;
+            padding: 0.5rem 0.75rem; /* Ajuste de padding */
+        }
+
+        /* --- BARRA INFERIOR FIXA (NAVEGAÇÃO) --- */
+        .bottom-nav {
+            background-color: #333;
+            display: flex;
+            justify-content: space-around; /* Distribui os links igualmente */
+            
+            /* ADICIONADO: Fixa na base */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            z-index: 100;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        }
+        .bottom-nav a { 
+            color: white; 
+            text-decoration: none;
+            padding: 0.5rem;
+            text-align: center;
+            flex-grow: 1; /* Faz todos ocuparem o mesmo espaço */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-size: 0.9em;
+        }
+        /* Efeito hover/foco para a navegação */
+        .bottom-nav a:hover, .bottom-nav a:focus {
+            background-color: #444;
+        }
+
+        /* --- CONTEÚDO PRINCIPAL --- */
+        .container { 
+            max-width: 900px; 
+            margin: 1rem auto; /* Espaçamento menor, já que o body tem padding */
+            padding: 1.5rem; 
+            background-color: white; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* --- ESTILOS DE FORMULÁRIO MELHORADOS --- */
+        form input, form select, form button { 
+            width: 100%; 
+            padding: 0.75rem;
+            margin-bottom: 1rem; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            box-sizing: border-box;
+            font-size: 1rem; /* Tamanho de fonte legível */
+        }
+        form button { 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s; /* Transição suave */
+        }
+        /* MELHORIA: Efeito hover nos botões */
+        form button:hover, .search-form button:hover {
+            background-color: #0056b3;
+        }
+        form label { 
+            margin-bottom: 0.5rem; 
+            display: block; 
+            font-weight: bold;
+        }
+
+        /* --- TABELAS --- */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 1rem;
+        }
+        th, td { 
+            padding: 0.75rem; 
+            text-align: left; 
+            border-bottom: 1px solid #ddd;
+        }
+        th { 
+            background-color: #f2f2f2;
+        }
+        
+        /* --- MENSAGENS FLASH --- */
         .flash {
             padding: 1rem;
             margin-bottom: 1rem;
@@ -31,71 +160,58 @@
         .flash.success { background-color: #28a745; }
         .flash.error { background-color: #dc3545; }
 
-        .search-form { display: flex; margin-left: auto; }
-        .search-form input { 
-            width: auto; 
-            min-width: 150px; 
-            margin-bottom: 0; 
-            border-radius: 4px 0 0 4px;
-            border-right: none;
+        /* --- RESPONSIVIDADE (Busca em telas pequenas) --- */
+        @media (max-width: 480px) {
+            .header-bar .logo {
+                display: none; /* Esconde o logo para dar espaço à busca */
+            }
+            .search-form {
+                flex-grow: 1; /* Faz a busca ocupar todo o espaço */
+            }
         }
-        .search-form button { 
-            width: auto; 
-            margin-bottom: 0; 
-            border-radius: 0 4px 4px 0;
-        }
-        
-        @media (max-width: 768px) {
-            .nav-links { width: 100%; margin-top: 0.5rem; }
-            .search-form { width: 100%; margin-left: 0; margin-top: 1rem; }
-            .search-form input { flex-grow: 1; }
-        }
-
     </style>
   </head>
   <body>
-    <nav>
-        <!-- Links de Navegação (Corretos) -->
-        <div class="nav-links">
-            <a href="{{ url_for('core.index') }}">Início</a>
-            <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar Preço</b></a>
-            <a href="{{ url_for('products.gerenciar_produtos') }}">Produtos</a>
-            <a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>
-        </div>
+    
+    <header class="header-bar">
+        <a href="{{ url_for('core.index') }}" class="logo">PriceApp</a>
         
-        <!-- Formulário de Busca (Correto) -->
-        <form class="search-form" method="GET" action="{{ url_for('core.busca') }}">
-            <input type="search" name="q" placeholder="Buscar produto ou mercado..." required>
+        [span_0](start_span)<form class="search-form" method="GET" action="{{ url_for('core.busca') }}">[span_0](end_span)
+            <input type="search" name="q" placeholder="Buscar..." required>
             <button type="submit">Buscar</button>
         </form>
-    </nav>
+    </header>
 
     <div class="container">
         
-        {% with messages = get_flashed_messages(with_categories=true) %}
+        [span_1](start_span){% with messages = get_flashed_messages(with_categories=true) %}[span_1](end_span)
           {% if messages %}
             {% for category, message in messages %}
               <div class="flash {{ category }}">{{ message }}</div>
             {% endfor %}
           {% endif %}
-        {% endwith %}
+        [span_2](start_span){% endwith %}[span_2](end_span)
 
         {% block content %}{% endblock %}
     </div>
 
+    <nav class="bottom-nav">
+        <a href="{{ url_for('core.index') }}">Início</a>
+        <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar</b></a>
+        <a href="{{ url_for('products.gerenciar_produtos') }}">Produtos</a>
+        [span_3](start_span)<a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>[span_3](end_span)
+    </nav>
+
     <script>
         if ('serviceWorker' in navigator) {
-            // url_for do Service Worker (Correto)
-            navigator.serviceWorker.register("{{ url_for('core.service_worker') }}")
+            [span_4](start_span)navigator.serviceWorker.register("{{ url_for('core.service_worker') }}")[span_4](end_span)
                 .then(function(registration) {
-                    console.log('Service Worker registrado com sucesso:', registration);
+                   console.log('Service Worker registrado com sucesso:', registration);
                 })
                 .catch(function(error) {
                     console.log('Falha ao registrar Service Worker:', error);
                 });
-        }
+        [span_5](start_span)}
     </script>
   </body>
 </html>
-
-
