@@ -42,8 +42,7 @@
             {% if current_user.role == 'admin' %}
                 <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar</b></a>
                 <a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>
-                
-                <a href="{{ url_for('suggestions.admin_sugestoes') }}" style="color: #ffc107;">Sugestões</a>
+                <a href="{{ url_for('brands.gerenciar_marcas') }}">Marcas</a> <a href="{{ url_for('suggestions.admin_sugestoes') }}" style="color: #ffc107;">Sugestões</a>
             {% endif %}
             
             <a href="{{ url_for('auth.logout') }}" style="color: #ffc107;">Sair</a>
@@ -65,7 +64,6 @@
                 });
         }
     </script>
-    
     <script>
         const syncButton = document.getElementById('syncButton');
         const syncStatus = document.getElementById('syncStatus');
