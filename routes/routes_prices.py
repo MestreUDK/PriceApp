@@ -3,9 +3,9 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-# MUDANÇA 1: Importa Marca
 from models import Supermercado, Produto, Preco, Marca
-from sqlalchemy import func, desc
+# MUDANÇA 1: Importa 'and_' e 'or_'
+from sqlalchemy import func, desc, and_, or_
 from flask_login import login_required, current_user 
 import json
 
@@ -22,16 +22,14 @@ def registrar_preco():
         supermercado_id = request.form.get('supermercado')
         valor = request.form.get('valor')
         
-        # --- MUDANÇA 2: Pega a marca_id (pode ser vazia) ---
         marca_id = request.form.get('marca')
-        if marca_id == "": # Trata string vazia como None
+        if marca_id == "": 
             marca_id = None
-        # --- FIM DA MUDANÇA ---
 
         novo_preco = Preco(
             produto_id=produto_id,
             supermercado_id=supermercado_id,
-            marca_id=marca_id, # <-- Adicionado
+            marca_id=marca_id, 
             valor=float(valor),
             criado_por_id=current_user.id
         )
@@ -41,14 +39,13 @@ def registrar_preco():
         flash('Preço registrado com sucesso!', 'success')
         return redirect(url_for('core.index'))
 
-    # --- MUDANÇA 3: Carrega as Marcas para o dropdown ---
     produtos = Produto.query.order_by(Produto.nome).all()
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
     marcas = Marca.query.order_by(Marca.nome).all()
     return render_template('registrar_preco.html', 
                            produtos=produtos, 
                            supermercados=supermercados,
-                           marcas=marcas) # <-- Enviado para o template
+                           marcas=marcas)
 
 @prices_bp.route('/comparar/<int:produto_id>')
 @login_required 
@@ -57,30 +54,43 @@ def comparar_produto(produto_id):
     if not produto:
         abort(404) 
     
-    # --- MUDANÇA 4: Lógica de subquery totalmente refeita ---
-    # Agora ela busca o preço mais recente por (supermercado_id, marca_id)
+    # Subquery (sem alteração)
     subquery = db.session.query(
         Preco.supermercado_id,
-        Preco.marca_id, # <-- Adicionado
+        Preco.marca_id,
         func.max(Preco.data_cadastro).label('max_data')
     ).filter(
         Preco.produto_id == produto_id
     ).group_by(
         Preco.supermercado_id,
-        Preco.marca_id # <-- Adicionado
+        Preco.marca_id
     ).subquery()
 
+    # --- MUDANÇA 2: Lógica de JOIN corrigida para NULOs ---
     precos_recentes = db.session.query(Preco).join(
         subquery,
-        (Preco.supermercado_id == subquery.c.supermercado_id) &
-        (Preco.marca_id == subquery.c.marca_id) & # <-- Adicionado
-        (Preco.data_cadastro == subquery.c.max_data)
+        and_(
+            # Junta pelo supermercado
+            Preco.supermercado_id == subquery.c.supermercado_id,
+            # Junta pela data
+            Preco.data_cadastro == subquery.c.max_data,
+            # Junta pela marca (considerando NULO)
+            or_(
+                # Opção A: Os IDs são iguais (Ex: 1 == 1)
+                Preco.marca_id == subquery.c.marca_id,
+                # Opção B: Os dois são NULO (Sem marca)
+                and_(
+                    Preco.marca_id.is_(None),
+                    subquery.c.marca_id.is_(None)
+                )
+            )
+        )
     ).filter(
         Preco.produto_id == produto_id
     ).order_by(
         Preco.valor.asc()
     ).all()
-    # --- FIM DA MUDANÇA 4 ---
+    # --- FIM DA MUDANÇA ---
     
     return render_template('comparar.html', produto=produto, precos=precos_recentes)
 
@@ -90,17 +100,14 @@ def ver_historico(produto_id, supermercado_id, marca_str):
     produto = db.session.get(Produto, produto_id)
     supermercado = db.session.get(Supermercado, supermercado_id)
     
-    # --- MUDANÇA 5: Lógica de marca para o histórico ---
     marca = None
     if marca_str == "sem-marca":
         marca_id = None
     else:
-        # Tenta encontrar a marca pelo nome
         marca = Marca.query.filter_by(nome=marca_str).first()
         if marca:
             marca_id = marca.id
         else:
-            # Se a marca não existe ou a URL está estranha, não mostre nada
             abort(404) 
 
     if not produto or not supermercado:
@@ -109,7 +116,7 @@ def ver_historico(produto_id, supermercado_id, marca_str):
     precos_historico = Preco.query.filter_by(
         produto_id=produto_id,
         supermercado_id=supermercado_id,
-        marca_id=marca_id # <-- Filtra pela marca_id correta
+        marca_id=marca_id
     ).order_by(
         Preco.data_cadastro.asc()
     ).all()
@@ -123,7 +130,7 @@ def ver_historico(produto_id, supermercado_id, marca_str):
     return render_template('historico.html',
                            produto=produto,
                            supermercado=supermercado,
-                           marca=marca, # <-- Envia a marca (ou None) para o template
+                           marca=marca, 
                            precos=precos_historico,
                            labels_json=labels_json,
                            valores_json=valores_json)
