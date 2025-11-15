@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <a href="{{ url_for('brands.gerenciar_marcas') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+        &larr; Voltar para Marcas
+    </a>
+    <h2>Editando Marca</h2>
+
+    <form method="POST">
+        <label for="nome">Nome da Marca:</label>
+        <input type="text" name="nome" id="nome" value="{{ marca.nome }}" required>
+        <button type="submit" style="background-color: #28a745;">Salvar Alterações</button>
+    </form>
+
+    <hr style="margin: 2rem 0;">
+
+    <h2>Zona de Perigo</h2>
+    <form method="POST" action="{{ url_for('brands.delete_marca', marca_id=marca.id) }}" onsubmit="return confirm('ATENÇÃO: Isso NÃO excluirá os preços, mas irá desvincular esta marca deles. Tem certeza?');">
+        <p>Esta ação não pode ser desfeita.</p>
+        <button type="submit" style="background-color: #dc3545;">Excluir Permanentemente esta Marca</button>
+    </form>
+    
+{% endblock %}
