@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Meu Perfil ({{ current_user.username }})</h2>
+    <p>Aqui você pode atualizar suas informações de contato e alterar sua senha.</p>
+
+    <hr style="margin: 2rem 0;">
+
+    <h3>Informações de Contato</h3>
+    <form method="POST" action=""> 
+        <label for="email">E-mail:</label>
+        <input type="email" name="email" id="email" value="{{ current_user.email or '' }}" placeholder="seu.email@exemplo.com">
+
+        <label for="telefone">Telefone (Opcional):</label>
+        <input type="tel" name="telefone" id="telefone" value="{{ current_user.telefone or '' }}" placeholder="(99) 99999-9999">
+
+        <button type="submit">Salvar Informações</button>
+    </form>
+
+    <hr style="margin: 2rem 0;">
+
+    <h3>Alterar Senha</h3>
+    <form method="POST" action=""> 
+        <label for="senha_antiga">Senha Antiga:</label>
+        <input type="password" name="senha_antiga" id="senha_antiga" required>
+
+        <label for="nova_senha">Nova Senha:</label>
+        <input type="password" name="nova_senha" id="nova_senha" required>
+
+        <label for="confirmar_senha">Confirmar Nova Senha:</label>
+        <input type="password" name="confirmar_senha" id="confirmar_senha" required>
+
+        <button type="submit" style="background-color: #ffc107; color: #333;">Alterar Senha</button>
+    </form>
+{% endblock %}
