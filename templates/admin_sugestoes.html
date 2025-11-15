@@ -9,7 +9,7 @@
             <thead>
                 <tr>
                     <th>Produto</th>
-                    <th>Supermercado</th>
+                    <th>Marca</th> <th>Supermercado</th>
                     <th>Valor (R$)</th>
                     <th>Sugerido por</th>
                     <th>Data</th>
@@ -19,7 +19,16 @@
             <tbody>
                 {% for sugestao in sugestoes %}
                 <tr>
-                    <td>{{ sugestao.produto.nome }} ({{ sugestao.produto.marca }})</td>
+                    <td>{{ sugestao.produto.nome }}</td>
+                    
+                    <td>
+                        {% if sugestao.marca %}
+                            {{ sugestao.marca.nome }}
+                        {% else %}
+                            Sem marca
+                        {% endif %}
+                    </td>
+                    
                     <td>{{ sugestao.supermercado.nome }}</td>
                     <td style="font-weight: bold; color: #28a745;">R$ {{ "%.2f"|format(sugestao.valor) }}</td>
                     <td>{{ sugestao.sugerido_por.username }}</td>
