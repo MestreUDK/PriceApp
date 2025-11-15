@@ -10,16 +10,13 @@
         <label for="nome">Nome do Produto:</label>
         <input type="text" name="nome" id="nome" value="{{ produto.nome }}" required>
 
-        <label for="marca">Marca:</label>
-        <input type="text" name="marca" id="marca" value="{{ produto.marca }}">
-
         <button type="submit" style="background-color: #28a745;">Salvar Alterações</button>
     </form>
 
     <hr style="margin: 2rem 0;">
 
     <h2>Zona de Perigo</h2>
-    <form method="POST" action="{{ url_for('products.delete_produto', produto_id=produto.id) }}" onsubmit="return confirm('ATENÇÃO: Isso excluirá este produto e TODOS os preços registrados para ele. Tem certeza?');">
+    <form method="POST" action="{{ url_for('products.delete_produto', produto_id=produto.id) }}" onsubmit="return confirm('ATENÇÃO: Isso excluirá este produto e TODOS os preços e sugestões registrados para ele. Tem certeza?');">
         <p>Esta ação não pode ser desfeita.</p>
         <button type="submit" style="background-color: #dc3545;">Excluir Permanentemente este Produto</button>
     </form>
