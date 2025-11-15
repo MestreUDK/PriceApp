@@ -4,8 +4,9 @@ from flask import (
 )
 from extensions import db
 from models import Supermercado, Produto, Preco, Marca
-# MUDANÇA 1: Importa 'and_' e 'or_'
+# MUDANÇA 1: Importa 'and_', 'or_' e 'datetime'
 from sqlalchemy import func, desc, and_, or_
+from datetime import datetime # <-- ADICIONADO
 from flask_login import login_required, current_user 
 import json
 
@@ -16,7 +17,7 @@ prices_bp = Blueprint('prices', __name__, template_folder='../templates')
 def registrar_preco():
     if current_user.role != 'admin':
         abort(403)
-        
+     
     if request.method == 'POST':
         produto_id = request.form.get('produto')
         supermercado_id = request.form.get('supermercado')
@@ -26,12 +27,37 @@ def registrar_preco():
         if marca_id == "": 
             marca_id = None
 
+        # --- MUDANÇA (ETAPA 11): Captura dados da promoção ---
+        e_promocao = request.form.get('e_promocao') == 'true' # Checkbox retorna 'true'
+        
+        data_expiracao_str = request.form.get('data_expiracao')
+        data_expiracao = None
+        
+        if data_expiracao_str:
+            # Converte 'YYYY-MM-DD' do input date para objeto datetime
+            try:
+                data_expiracao = datetime.strptime(data_expiracao_str, '%Y-%m-%d')
+            except ValueError:
+                flash('Formato de data de expiração inválido.', 'error')
+                return redirect(url_for('prices.registrar_preco'))
+        
+        # Validação: Se é promoção, DEVE ter data de expiração
+        if e_promocao and not data_expiracao:
+            flash('Promoções devem ter uma data de expiração obrigatória.', 'error')
+            # Precisaria recarregar os dados do form, mas simplificamos
+            return redirect(url_for('prices.registrar_preco'))
+        # --- FIM DA MUDANÇA ---
+
         novo_preco = Preco(
             produto_id=produto_id,
             supermercado_id=supermercado_id,
             marca_id=marca_id, 
             valor=float(valor),
-            criado_por_id=current_user.id
+            criado_por_id=current_user.id,
+            
+            # --- MUDANÇA (ETAPA 11): Salva no banco ---
+            e_promocao=e_promocao,
+            data_expiracao=data_expiracao
         )
         db.session.add(novo_preco)
         db.session.commit()
@@ -54,19 +80,31 @@ def comparar_produto(produto_id):
     if not produto:
         abort(404) 
     
-    # Subquery (sem alteração)
+    # Subquery (com filtro de promoção)
     subquery = db.session.query(
         Preco.supermercado_id,
         Preco.marca_id,
         func.max(Preco.data_cadastro).label('max_data')
     ).filter(
-        Preco.produto_id == produto_id
+        Preco.produto_id == produto_id,
+        
+        # --- MUDANÇA (ETAPA 11): Filtra promoções expiradas ---
+        # O preço só é "válido" se:
+        # 1. Ele NÃO é uma promoção
+        # OU
+        # 2. Ele É uma promoção E a data de expiração AINDA NÃO CHEGOU
+        or_(
+            Preco.e_promocao == False,
+            Preco.data_expiracao > datetime.utcnow()
+        )
+        # --- FIM DA MUDANÇA ---
+        
     ).group_by(
         Preco.supermercado_id,
         Preco.marca_id
     ).subquery()
 
-    # --- MUDANÇA 2: Lógica de JOIN corrigida para NULOs ---
+    # --- Lógica de JOIN corrigida para NULOs (SEM ALTERAÇÃO) ---
     precos_recentes = db.session.query(Preco).join(
         subquery,
         and_(
@@ -78,6 +116,7 @@ def comparar_produto(produto_id):
             or_(
                 # Opção A: Os IDs são iguais (Ex: 1 == 1)
                 Preco.marca_id == subquery.c.marca_id,
+                
                 # Opção B: Os dois são NULO (Sem marca)
                 and_(
                     Preco.marca_id.is_(None),
