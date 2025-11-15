@@ -3,7 +3,8 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-from models import Produto, Preco
+# MUDANÇA 1: Preco e Marca não são mais necessários aqui
+from models import Produto
 from flask_login import login_required, current_user 
 
 products_bp = Blueprint('products', __name__, template_folder='../templates')
@@ -16,22 +17,16 @@ def gerenciar_produtos():
             abort(403)
             
         nome_produto = request.form.get('nome')
-        marca_produto = request.form.get('marca')
 
-        # --- MUDANÇA 1: Trata marca vazia como None ---
-        if not marca_produto:
-            marca_produto = None
-        # --- FIM DA MUDANÇA ---
-
-        # --- MUDANÇA 2: Verifica a combinação de nome E marca ---
-        filtro = Produto.query.filter_by(nome=nome_produto, marca=marca_produto).first()
+        # --- MUDANÇA 2: Verificação muito mais simples ---
+        filtro = Produto.query.filter_by(nome=nome_produto).first()
         if filtro:
-            flash('Este produto (com esta marca) já está cadastrado.', 'error')
+            flash('Este produto já está cadastrado.', 'error')
         # --- FIM DA MUDANÇA ---
         else:
             novo_produto = Produto(
                 nome=nome_produto, 
-                marca=marca_produto,
+                # Marca foi removida daqui
                 criado_por_id=current_user.id
             )
             db.session.add(novo_produto)
@@ -54,15 +49,7 @@ def edit_produto(produto_id):
 
     if request.method == 'POST':
         produto.nome = request.form.get('nome')
-        
-        # --- MUDANÇA 3: Trata marca vazia como None na edição ---
-        marca_produto = request.form.get('marca')
-        if not marca_produto:
-            produto.marca = None
-        else:
-            produto.marca = marca_produto
-        # --- FIM DA MUDANÇA ---
-            
+        # --- MUDANÇA 3: Lógica da marca removida ---
         produto.editado_por_id = current_user.id
         
         db.session.commit()
@@ -81,10 +68,15 @@ def delete_produto(produto_id):
     if not produto:
         abort(404)
     
+    # --- MUDANÇA 4: Importa Preco e SugestaoPreco aqui ---
+    from models import Preco, SugestaoPreco
+    
+    # Exclui Preços e Sugestões associados
     Preco.query.filter_by(produto_id=produto.id).delete()
+    SugestaoPreco.query.filter_by(produto_id=produto.id).delete()
     
     db.session.delete(produto)
     db.session.commit()
     
-    flash(f'Produto "{produto.nome}" e todos os seus preços foram excluídos com sucesso!', 'success')
+    flash(f'Produto "{produto.nome}" e todos os seus preços/sugestões foram excluídos com sucesso!', 'success')
     return redirect(url_for('products.gerenciar_produtos'))
