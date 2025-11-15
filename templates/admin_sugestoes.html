@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Gerenciar Sugestões de Preços</h2>
+    <p>Revise as sugestões enviadas pelos usuários. Itens aprovados serão adicionados ao histórico de preços.</p>
+
+    {% if sugestoes %}
+        <table style="font-size: 0.9em;">
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Supermercado</th>
+                    <th>Valor (R$)</th>
+                    <th>Sugerido por</th>
+                    <th>Data</th>
+                    <th style="min-width: 150px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sugestao in sugestoes %}
+                <tr>
+                    <td>{{ sugestao.produto.nome }} ({{ sugestao.produto.marca }})</td>
+                    <td>{{ sugestao.supermercado.nome }}</td>
+                    <td style="font-weight: bold; color: #28a745;">R$ {{ "%.2f"|format(sugestao.valor) }}</td>
+                    <td>{{ sugestao.sugerido_por.username }}</td>
+                    <td>{{ sugestao.data_sugestao.strftime('%d/%m/%Y %H:%M') }}</td>
+                    
+                    <td>
+                        <form method="POST" action="{{ url_for('suggestions.aprovar_sugestao', sugestao_id=sugestao.id) }}" style="display: inline-block; margin-right: 5px;">
+                            <button type="submit" class="btn btn-green" style="width: auto;">Aprovar</button>
+                        </form>
+                        
+                        <form method="POST" action="{{ url_for('suggestions.rejeitar_sugestao', sugestao_id=sugestao.id) }}" style="display: inline-block;">
+                            <button type="submit" style="background-color: #dc3545; width: auto;" onclick="return confirm('Tem certeza que deseja rejeitar esta sugestão?');">Rejeitar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <hr>
+        <p style="text-align: center; font-size: 1.1em; color: #555;">Tudo limpo! Não há nenhuma sugestão pendente no momento.</p>
+    {% endif %}
+
+{% endblock %}
