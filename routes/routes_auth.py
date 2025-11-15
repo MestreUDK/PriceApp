@@ -1,4 +1,3 @@
-
 # routes/routes_auth.py
 # Rotas para Autenticação (Login, Registro, Logout)
 
