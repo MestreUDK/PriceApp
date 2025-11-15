@@ -7,8 +7,14 @@
 
     <h2>Histórico de Preço para:</h2>
     <h3>{{ produto.nome }} {% if marca %}({{ marca.nome }}){% else %}(Sem marca){% endif %}</h3>
-    <h4>Em: {{ supermercado.nome }}</h4>
     
+    <h4>Em: {{ supermercado.nome }}
+        {% if supermercado.endereço %}
+            <span style="font-weight: normal; font-size: 0.9em; color: #555;">
+                ({{ supermercado.endereço }})
+            </span>
+        {% endif %}
+    </h4>
     <hr>
 
     <h3>Flutuação de Preço</h3>
