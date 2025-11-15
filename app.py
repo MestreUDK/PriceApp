@@ -1,6 +1,4 @@
-# app.py (O Cérebro Corrigido com Blueprints)
-# Responsável por criar, configurar e montar o app.
-
+# app.py
 import os
 from flask import Flask
 from extensions import db, login_manager, bcrypt  
@@ -29,21 +27,21 @@ def create_app():
     login_manager.login_message = 'Por favor, faça login para acessar esta página.'
     login_manager.login_message_category = 'error' 
 
-    # --- IMPORTAÇÃO E REGISTRO DAS ROTAS (BLUEPRINTS) ---
     from routes.routes_core import core_bp
     from routes.routes_products import products_bp
     from routes.routes_markets import markets_bp
     from routes.routes_prices import prices_bp
     from routes.routes_auth import auth_bp
-    from routes.routes_suggestions import suggestions_bp # <-- MUDANÇA 1: Importa
+    from routes.routes_suggestions import suggestions_bp
+    from routes.routes_brands import brands_bp # <-- MUDANÇA 1: Importa
 
-    # Registra cada "planta" no app principal
     app.register_blueprint(core_bp)
     app.register_blueprint(products_bp)
     app.register_blueprint(markets_bp)
     app.register_blueprint(prices_bp)
     app.register_blueprint(auth_bp)
-    app.register_blueprint(suggestions_bp) # <-- MUDANÇA 2: Registra
+    app.register_blueprint(suggestions_bp)
+    app.register_blueprint(brands_bp) # <-- MUDANÇA 2: Registra
 
     import models
 
