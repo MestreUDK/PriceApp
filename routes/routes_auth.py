@@ -1,3 +1,4 @@
+
 # routes/routes_auth.py
 # Rotas para Autenticação (Login, Registro, Logout)
 
@@ -60,7 +61,7 @@ def login():
 
         user = User.query.filter_by(username=username).first()
 
-        # Verifica se o usuário já existe E se a senha está correta
+        # Verifica se o usuário existe E se a senha está correta
         if user and bcrypt.check_password_hash(user.password_hash, password):
             login_user(user) # O Flask-Login cuida da sessão
             flash('Login realizado com sucesso!', 'success')
@@ -80,9 +81,62 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
-# --- MUDANÇA: ROTA DE PERFIL (GET) ---
+# --- ROTAS DE PERFIL ---
 @auth_bp.route('/perfil', methods=['GET'])
 @login_required
 def perfil():
-    # A lógica POST (para salvar os formulários) será adicionada na próxima etapa
+    # Esta rota agora só MOSTRA a página
     return render_template('perfil.html')
+
+# --- MUDANÇA 1: Nova rota para SALVAR INFORMAÇÕES ---
+@auth_bp.route('/perfil/info', methods=['POST'])
+@login_required
+def update_info():
+    email = request.form.get('email')
+    telefone = request.form.get('telefone')
+
+    # Verifica se o email já está em uso por OUTRO usuário
+    if email:
+        user_exists = User.query.filter(User.email == email, User.id != current_user.id).first()
+        if user_exists:
+            flash('Este e-mail já está em uso por outra conta.', 'error')
+            return redirect(url_for('auth.perfil'))
+
+    # Atualiza o usuário atual
+    current_user.email = email
+    current_user.telefone = telefone
+    db.session.commit()
+    
+    flash('Informações de contato atualizadas com sucesso!', 'success')
+    return redirect(url_for('auth.perfil'))
+
+# --- MUDANÇA 2: Nova rota para ALTERAR SENHA ---
+@auth_bp.route('/perfil/senha', methods=['POST'])
+@login_required
+def update_senha():
+    senha_antiga = request.form.get('senha_antiga')
+    nova_senha = request.form.get('nova_senha')
+    confirmar_senha = request.form.get('confirmar_senha')
+
+    # 1. Verifica se a senha antiga está correta
+    if not bcrypt.check_password_hash(current_user.password_hash, senha_antiga):
+        flash('Sua senha antiga está incorreta.', 'error')
+        return redirect(url_for('auth.perfil'))
+    
+    # 2. Verifica se a nova senha e a confirmação são iguais
+    if nova_senha != confirmar_senha:
+        flash('A nova senha e a confirmação não são iguais.', 'error')
+        return redirect(url_for('auth.perfil'))
+        
+    # 3. Verifica se a nova senha tem pelo menos 4 caracteres (exemplo de regra)
+    if len(nova_senha) < 4:
+        flash('A nova senha deve ter pelo menos 4 caracteres.', 'error')
+        return redirect(url_for('auth.perfil'))
+
+    # 4. Tudo certo, atualiza a senha
+    hashed_password = bcrypt.generate_password_hash(nova_senha).decode('utf-8')
+    current_user.password_hash = hashed_password
+    db.session.commit()
+    
+    flash('Senha alterada com sucesso!', 'success')
+    return redirect(url_for('auth.perfil'))
