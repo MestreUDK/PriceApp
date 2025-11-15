@@ -25,27 +25,25 @@ def create_app():
     login_manager.init_app(app)
     bcrypt.init_app(app)
     
-    # --- MUDANÇA 1: Configura o Flask-Login ---
-    # Define para qual rota o usuário será enviado se tentar
-    # acessar uma página protegida sem estar logado.
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Por favor, faça login para acessar esta página.'
-    login_manager.login_message_category = 'error' # Mostra como erro (vermelho)
-    # -------------------------------------------
+    login_manager.login_message_category = 'error' 
 
     # --- IMPORTAÇÃO E REGISTRO DAS ROTAS (BLUEPRINTS) ---
     from routes.routes_core import core_bp
     from routes.routes_products import products_bp
     from routes.routes_markets import markets_bp
     from routes.routes_prices import prices_bp
-    from routes.routes_auth import auth_bp # <-- MUDANÇA 2: Importa o novo Blueprint
+    from routes.routes_auth import auth_bp
+    from routes.routes_suggestions import suggestions_bp # <-- MUDANÇA 1: Importa
 
     # Registra cada "planta" no app principal
     app.register_blueprint(core_bp)
     app.register_blueprint(products_bp)
     app.register_blueprint(markets_bp)
     app.register_blueprint(prices_bp)
-    app.register_blueprint(auth_bp) # <-- MUDANÇA 3: Registra o novo Blueprint
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(suggestions_bp) # <-- MUDANÇA 2: Registra
 
     import models
 
