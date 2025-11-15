@@ -1,17 +1,13 @@
 # routes/routes_suggestions.py
-# Rotas para usuários comuns sugerirem e admins gerenciarem
-
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-from models import Supermercado, Produto, SugestaoPreco, Preco # <-- MUDANÇA 1: Importa Preco
+# MUDANÇA 1: Importa Marca
+from models import Supermercado, Produto, SugestaoPreco, Preco, Marca
 from flask_login import login_required, current_user
 
-# Cria o Blueprint
 suggestions_bp = Blueprint('suggestions', __name__, template_folder='../templates')
-
-# --- ROTA DO USUÁRIO COMUM ---
 
 @suggestions_bp.route('/sugerir-preco', methods=['GET', 'POST'])
 @login_required
@@ -24,35 +20,42 @@ def sugerir_preco():
         produto_id = request.form.get('produto')
         supermercado_id = request.form.get('supermercado')
         valor = request.form.get('valor')
+        
+        # --- MUDANÇA 2: Pega a marca_id (pode ser vazia) ---
+        marca_id = request.form.get('marca')
+        if marca_id == "":
+            marca_id = None
+        # --- FIM DA MUDANÇA ---
 
         nova_sugestao = SugestaoPreco(
             produto_id=produto_id,
             supermercado_id=supermercado_id,
+            marca_id=marca_id, # <-- Adicionado
             valor=float(valor),
             sugerido_por_id=current_user.id,
             status='pendente' 
         )
-        
         db.session.add(nova_sugestao)
         db.session.commit()
         
         flash('Sugestão de preço enviada para aprovação. Obrigado por colaborar!', 'success')
         return redirect(url_for('core.index'))
 
+    # --- MUDANÇA 3: Carrega Marcas para o dropdown ---
     produtos = Produto.query.order_by(Produto.nome).all()
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
-    return render_template('sugerir_preco.html', produtos=produtos, supermercados=supermercados)
-
-# --- MUDANÇA 2: ROTAS DO PAINEL DE ADMIN ---
+    marcas = Marca.query.order_by(Marca.nome).all()
+    return render_template('sugerir_preco.html', 
+                           produtos=produtos, 
+                           supermercados=supermercados,
+                           marcas=marcas) # <-- Enviado
 
 @suggestions_bp.route('/admin/sugestoes')
 @login_required
 def admin_sugestoes():
-    # Protege a rota apenas para Admins
     if current_user.role != 'admin':
         abort(403)
     
-    # Busca todas as sugestões pendentes, das mais novas para as mais antigas
     sugestoes_pendentes = SugestaoPreco.query.filter_by(status='pendente').order_by(SugestaoPreco.data_sugestao.desc()).all()
     
     return render_template('admin_sugestoes.html', sugestoes=sugestoes_pendentes)
@@ -68,16 +71,17 @@ def aprovar_sugestao(sugestao_id):
         flash('Sugestão não encontrada ou já processada.', 'error')
         return redirect(url_for('suggestions.admin_sugestoes'))
     
-    # 1. Cria o novo Preço
+    # --- MUDANÇA 4: Adiciona marca_id ao aprovar ---
     novo_preco = Preco(
         produto_id=sugestao.produto_id,
         supermercado_id=sugestao.supermercado_id,
+        marca_id=sugestao.marca_id, # <-- Adicionado
         valor=sugestao.valor,
-        criado_por_id=sugestao.sugerido_por_id, # <-- Ponto chave: A "autoria" vai para quem sugeriu!
-        data_cadastro=sugestao.data_sugestao # <-- Usa a data da sugestão
+        criado_por_id=sugestao.sugerido_por_id,
+        data_cadastro=sugestao.data_sugestao
     )
+    # --- FIM DA MUDANÇA ---
     
-    # 2. Atualiza o status da sugestão
     sugestao.status = 'aprovado'
     
     db.session.add(novo_preco)
@@ -97,7 +101,6 @@ def rejeitar_sugestao(sugestao_id):
         flash('Sugestão não encontrada ou já processada.', 'error')
         return redirect(url_for('suggestions.admin_sugestoes'))
     
-    # Apenas atualiza o status
     sugestao.status = 'rejeitado'
     db.session.commit()
     
