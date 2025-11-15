@@ -53,7 +53,7 @@ def download_backup():
     marcas = Marca.query.all() # <-- MUDANÇA 3: Adiciona Marcas
 
     usuarios_list = [
-        {"id": u.id, "username": u.username, "role": u.role}
+       {"id": u.id, "username": u.username, "role": u.role}
         for u in usuarios
     ]
     # MUDANÇA 4: Produto agora é simples
@@ -65,13 +65,22 @@ def download_backup():
         {"id": m.id, "nome": m.nome, "endereço": m.endereço, "criado_por_id": m.criado_por_id, "editado_por_id": m.editado_por_id}
         for m in mercados
     ]
-    # MUDANÇA 5: Preco agora tem marca_id
+    
+    # MUDANÇA 5: Preco agora tem marca_id E DADOS DE PROMOÇÃO
     precos_list = [
         {"id": pr.id, "produto_id": pr.produto_id, "supermercado_id": pr.supermercado_id, 
          "marca_id": pr.marca_id, # <-- Adicionado
-         "valor": pr.valor, "data_cadastro": pr.data_cadastro.isoformat(), "criado_por_id": pr.criado_por_id}
+         "valor": pr.valor, "data_cadastro": pr.data_cadastro.isoformat(), "criado_por_id": pr.criado_por_id,
+         
+         # --- MUDANÇA (ETAPA 11): Adiciona dados de promoção ao backup ---
+         "e_promocao": pr.e_promocao,
+         # Converte data para string (ou None) para ser compatível com JSON
+         "data_expiracao": pr.data_expiracao.isoformat() if pr.data_expiracao else None
+         # --- FIM DA MUDANÇA ---
+        }
         for pr in precos
     ]
+    
     # MUDANÇA 6: Lista de Marcas
     marcas_list = [
         {"id": ma.id, "nome": ma.nome, "criado_por_id": ma.criado_por_id, "editado_por_id": ma.editado_por_id}
