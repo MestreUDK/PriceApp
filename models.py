@@ -9,7 +9,7 @@ from flask_login import UserMixin
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), nullable=False, unique=True)
-    password_hash = db.Column(db.String(128), nullable=False)
+    [span_0](start_span)password_hash = db.Column(db.String(128), nullable=False)[span_0](end_span)
     role = db.Column(db.String(50), nullable=False, default='user')
     
     # --- MUDANÇA 1: Novos campos de perfil ---
@@ -23,7 +23,7 @@ class User(db.Model, UserMixin):
     mercados_criados = db.relationship('Supermercado', backref='criado_por', lazy=True, foreign_keys='Supermercado.criado_por_id')
     marcas_criadas = db.relationship('Marca', backref='criado_por', lazy=True, foreign_keys='Marca.criado_por_id') # Novo
     
-    produtos_editados = db.relationship('Produto', backref='editado_por', lazy=True, foreign_keys='Produto.editado_por_id')
+    [span_1](start_span)produtos_editados = db.relationship('Produto', backref='editado_por', lazy=True, foreign_keys='Produto.editado_por_id')[span_1](end_span)
     mercados_editados = db.relationship('Supermercado', backref='editado_por', lazy=True, foreign_keys='Supermercado.editado_por_id')
     marcas_editadas = db.relationship('Marca', backref='editado_por', lazy=True, foreign_keys='Marca.editado_por_id') # Novo
 
@@ -41,7 +41,7 @@ class Supermercado(db.Model):
 
 class Produto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(200), nullable=False, unique=True) # Ex: "Arroz", "Feijão"
+    [span_2](start_span)nome = db.Column(db.String(200), nullable=False, unique=True) # Ex: "Arroz", "Feijão"[span_2](end_span)
     
     precos = db.relationship('Preco', backref='produto', lazy=True)
     criado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
@@ -57,13 +57,18 @@ class Marca(db.Model):
     
     precos = db.relationship('Preco', backref='marca', lazy=True)
     criado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    editado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    [span_3](start_span)editado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)[span_3](end_span)
 
 
 class Preco(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     valor = db.Column(db.Float, nullable=False)
     data_cadastro = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
+    # --- CAMPOS DE PROMOÇÃO (ETAPA 11) ---
+    e_promocao = db.Column(db.Boolean, default=False, nullable=False)
+    data_expiracao = db.Column(db.DateTime, nullable=True) # Só é relevante se e_promocao=True
+    # --- FIM DA MUDANÇA ---
     
     # Chaves estrangeiras
     produto_id = db.Column(db.Integer, db.ForeignKey('produto.id'), nullable=False)
@@ -76,13 +81,18 @@ class Preco(db.Model):
 
 
 # --- MUDANÇA 4: Tabela de Sugestão também usa a nova estrutura ---
-class SugestaoPreco(db.Model):
+[span_4](start_span)class SugestaoPreco(db.Model):[span_4](end_span)
     id = db.Column(db.Integer, primary_key=True)
     
     produto_id = db.Column(db.Integer, db.ForeignKey('produto.id'), nullable=False)
     supermercado_id = db.Column(db.Integer, db.ForeignKey('supermercado.id'), nullable=False)
     marca_id = db.Column(db.Integer, db.ForeignKey('marca.id'), nullable=True) # <-- Novo
     valor = db.Column(db.Float, nullable=False)
+    
+    # --- CAMPOS DE PROMOÇÃO (ETAPA 11) ---
+    e_promocao = db.Column(db.Boolean, default=False, nullable=False)
+    data_expiracao = db.Column(db.DateTime, nullable=True) # Só é relevante se e_promocao=True
+    # --- FIM DA MUDANÇA ---
     
     sugerido_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     data_sugestao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -91,4 +101,4 @@ class SugestaoPreco(db.Model):
 
     # Links de volta
     supermercado = db.relationship('Supermercado', lazy=True)
-    marca = db.relationship('Marca', lazy=True) # <-- Novo
+    [span_5](start_span)marca = db.relationship('Marca', lazy=True) # <-- Novo[span_5](end_span)
