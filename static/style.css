@@ -161,3 +161,27 @@ th {
         flex-grow: 1; /* Faz a busca ocupar todo o espaço */
     }
 }
+
+/* --- MUDANÇA: Estilos do Header (Busca + Perfil) --- */
+.header-right-group {
+    display: flex;
+    align-items: center;
+}
+
+.profile-link {
+    text-decoration: none;
+    font-size: 1.5rem; /* Tamanho do emoji */
+    color: #333;
+    margin-left: 0.75rem; /* Espaçamento da busca */
+    line-height: 1; /* Alinhamento vertical */
+}
+.profile-link:hover {
+    color: #007bff;
+}
+
+/* MUDANÇA: Ajuste de Responsividade para o grupo */
+@media (max-width: 480px) {
+    .header-right-group {
+        flex-grow: 1; /* Faz o grupo ocupar todo o espaço */
+    }
+}
