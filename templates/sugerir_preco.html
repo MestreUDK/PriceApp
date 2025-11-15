@@ -9,7 +9,7 @@
         <select name="produto" id="produto" required>
             <option value="" disabled selected>-- Selecione um produto --</option>
             {% for produto in produtos %}
-                <option value="{{ produto.id }}">{{ produto.nome }} ({{ produto.marca }})</option>
+                <option value="{{ produto.id }}">{{ produto.nome }}{% if produto.marca %} ({{ produto.marca }}){% endif %}</option>
             {% endfor %}
         </select>
 
