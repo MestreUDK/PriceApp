@@ -3,7 +3,8 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, send_from_directory, current_app, Response
 )
 from extensions import db
-from models import Supermercado, Produto, Preco, User 
+# MUDANÇA 1: Importa Marca
+from models import Supermercado, Produto, Preco, User, Marca
 from flask_login import login_required 
 import json 
 
@@ -31,51 +32,60 @@ def busca():
     
     termo_busca = f"%{termo}%"
     
+    # MUDANÇA 2: Busca agora inclui Marcas
     produtos_encontrados = Produto.query.filter(Produto.nome.ilike(termo_busca)).order_by(Produto.nome).all()
     mercados_encontrados = Supermercado.query.filter(Supermercado.nome.ilike(termo_busca)).order_by(Supermercado.nome).all()
+    marcas_encontradas = Marca.query.filter(Marca.nome.ilike(termo_busca)).order_by(Marca.nome).all()
     
     return render_template('busca.html', 
                            termo=termo, 
                            produtos=produtos_encontrados, 
-                           mercados=mercados_encontrados)
+                           mercados=mercados_encontrados,
+                           marcas=marcas_encontradas) # <-- Enviado
 
 @core_bp.route('/backup/download')
 @login_required
 def download_backup():
-    # 1. Consultar todos os dados
     usuarios = User.query.all()
     produtos = Produto.query.all()
     mercados = Supermercado.query.all()
     precos = Preco.query.all()
+    marcas = Marca.query.all() # <-- MUDANÇA 3: Adiciona Marcas
 
-    # 2. Converter para listas de dicionários
     usuarios_list = [
         {"id": u.id, "username": u.username, "role": u.role}
         for u in usuarios
     ]
+    # MUDANÇA 4: Produto agora é simples
     produtos_list = [
-        {"id": p.id, "nome": p.nome, "marca": p.marca, "criado_por_id": p.criado_por_id, "editado_por_id": p.editado_por_id}
+        {"id": p.id, "nome": p.nome, "criado_por_id": p.criado_por_id, "editado_por_id": p.editado_por_id}
         for p in produtos
     ]
     mercados_list = [
         {"id": m.id, "nome": m.nome, "endereço": m.endereço, "criado_por_id": m.criado_por_id, "editado_por_id": m.editado_por_id}
         for m in mercados
     ]
+    # MUDANÇA 5: Preco agora tem marca_id
     precos_list = [
         {"id": pr.id, "produto_id": pr.produto_id, "supermercado_id": pr.supermercado_id, 
+         "marca_id": pr.marca_id, # <-- Adicionado
          "valor": pr.valor, "data_cadastro": pr.data_cadastro.isoformat(), "criado_por_id": pr.criado_por_id}
         for pr in precos
     ]
+    # MUDANÇA 6: Lista de Marcas
+    marcas_list = [
+        {"id": ma.id, "nome": ma.nome, "criado_por_id": ma.criado_por_id, "editado_por_id": ma.editado_por_id}
+        for ma in marcas
+    ]
 
-    # 3. Montar o JSON final
     backup_data = {
         "usuarios": usuarios_list,
         "produtos": produtos_list,
         "supermercados": mercados_list,
-        "precos": precos_list
+        "precos": precos_list,
+        "marcas": marcas_list # <-- Adicionado
     }
 
-    # 4. Criar o arquivo de resposta
     json_data = json.dumps(backup_data, indent=2, ensure_ascii=False)
     
     return Response(
@@ -84,10 +94,7 @@ def download_backup():
         headers={"Content-Disposition": "attachment;filename=priceapp_backup.json"}
     )
 
-# --- MUDANÇA AQUI: ROTA PARA O LEITOR OFFLINE ---
 @core_bp.route('/leitor-offline')
-@login_required # Ainda precisa estar logado para ver (ou o sw.js o servirá do cache)
+@login_required 
 def leitor_offline():
-    # Esta rota apenas renderiza o template.
-    # Toda a lógica está no JavaScript dentro do HTML.
     return render_template('leitor_offline.html')
