@@ -6,8 +6,7 @@
     {% if current_user.role == 'admin' %}
         <form method="POST">
             <h3>Adicionar Novo Produto</h3>
-            <input type="text" name="nome" placeholder="Nome do Produto (Ex: Arroz 5kg)" required>
-            <input type="text" name="marca" placeholder="Marca (Ex: Tio João) - Opcional">
+            <input type="text" name="nome" placeholder="Nome do Produto (Ex: Arroz, Feijão)" required>
             <button type="submit">Adicionar Produto</button>
         </form>
         <hr>
@@ -18,7 +17,6 @@
         <thead>
             <tr>
                 <th>Nome</th>
-                <th>Marca</th>
                 <th>Criado por</th>
                 <th>Ações</th>
             </tr>
@@ -27,7 +25,6 @@
             {% for produto in produtos %}
             <tr>
                 <td>{{ produto.nome }}</td>
-                <td>{{ produto.marca or 'Sem marca' }}</td>
                 <td>
                     {% if produto.criado_por %}
                         {{ produto.criado_por.username }}
@@ -49,7 +46,7 @@
             </tr>
             {% else %}
             <tr>
-                 <td colspan="4">Nenhum produto cadastrado ainda.</td>
+                 <td colspan="3">Nenhum produto cadastrado ainda.</td>
             </tr>
             {% endfor %}
         </tbody>
