@@ -46,7 +46,7 @@
         const historyTableEl_offline = document.getElementById('historyTable_offline');
         const chartCanvas_offline = document.getElementById('graficoHistorico_offline');
 
-        // --- MUDANÇA 2: Carregamento do LocalStorage ---
+        // --- MUDANÇA 2: Carregamento do LocalStorage (com verificação de promoção) ---
         document.addEventListener('DOMContentLoaded', () => {
             const jsonData = localStorage.getItem('priceapp_offline_db');
             if (!jsonData) {
@@ -56,8 +56,10 @@
             }
             try {
                 const data = JSON.parse(jsonData);
-                // Verifica se os novos dados (marcas) existem
-                if (data.produtos && data.supermercados && data.precos && data.marcas) {
+                // Verifica se os dados de promoção existem
+                if (data.produtos && data.supermercados && data.precos && data.marcas && 
+                    (data.precos.length === 0 || data.precos[0].hasOwnProperty('e_promocao'))) { // <-- Verifica a nova estrutura
+                    
                     DB_OFFLINE = data;
                     
                     userMap_offline = new Map(DB_OFFLINE.usuarios.map(u => [u.id, u.username]));
@@ -70,14 +72,14 @@
                     appEl_offline.classList.remove('hidden');
                     renderSearchResults_offline('');
                 } else {
-                    throw new Error("Dados sincronizados estão corrompidos ou em formato antigo.");
+                    throw new Error("Dados sincronizados estão corrompidos ou em formato antigo (sem dados de promoção). Sincronize novamente.");
                 }
             } catch (error) {
                 statusEl_offline.textContent = `Erro ao ler dados: ${error.message}`;
                 statusEl_offline.style.color = 'red';
             }
         });
-
+        
         // Evento: Digitando na Busca
         searchInput_offline.addEventListener('input', (e) => {
             const termo = e.target.value.toLowerCase();
@@ -85,13 +87,12 @@
             comparisonEl_offline.classList.add('hidden');
             historyViewEl_offline.classList.add('hidden');
         });
-
-        // --- MUDANÇA 3: Busca de Produtos (agora mais simples) ---
+        
+        // --- MUDANÇA 3: Busca de Produtos (sem alteração) ---
         function renderSearchResults_offline(termo) {
             const produtosFiltrados = DB_OFFLINE.produtos.filter(p => 
                 p.nome.toLowerCase().includes(termo)
             );
-
             if (produtosFiltrados.length === 0) {
                 resultsEl_offline.innerHTML = "<p>Nenhum produto encontrado.</p>";
                 return;
@@ -118,7 +119,7 @@
             resultsEl_offline.innerHTML = html;
         }
 
-        // --- MUDANÇA 4: Comparação (agora mostra marca) ---
+        // --- MUDANÇA 4: Comparação (agora filtra promoções expiradas e mostra emoji) ---
         window.showComparison_offline = function(produtoId) {
             const produto = produtoMap_offline.get(produtoId);
             if (!produto) return;
@@ -128,13 +129,24 @@
             
             // Lógica de preços recentes
             const precosRecentesMap = new Map();
+            const agora = new Date(); // Data/hora atual
+            
             precosProduto.forEach(preco => {
+                
+                // --- FILTRO DE PROMOÇÃO (ETAPA 11) ---
+                // Ignora o preço se ele for uma promoção e a data de expiração já passou
+                if (preco.e_promocao && preco.data_expiracao && new Date(preco.data_expiracao) < agora) {
+                    return; // Pula este preço
+                }
+                // --- FIM DO FILTRO ---
+                
                 // A chave agora é (supermercado + marca)
                 const key = `${preco.supermercado_id}-${preco.marca_id}`; 
                 if (!precosRecentesMap.has(key) || new Date(preco.data_cadastro) > new Date(precosRecentesMap.get(key).data_cadastro)) {
                     precosRecentesMap.set(key, preco);
                 }
             });
+            
             const precosRecentes = Array.from(precosRecentesMap.values()).sort((a, b) => a.valor - b.valor);
 
             let html = `<hr><h2>Comparando: ${produto.nome}</h2>`;
@@ -151,11 +163,16 @@
                     // Define o 'marca_str' para o link
                     const marca_str = marca ? marca.nome : 'sem-marca';
                     
+                    // --- BADGE DE PROMO (ETAPA 11) ---
+                    const promoEmoji = preco.e_promocao 
+                        ? ` <span title="Preço Promocional">⚡</span>` 
+                        : '';
+                    
                     html += `
                         <tr style="${style}">
                             <td>${mercado.nome}</td>
                             <td>${marca ? marca.nome : 'Sem marca'}</td>
-                            <td>R$ ${preco.valor.toFixed(2)}</td>
+                            <td>R$ ${preco.valor.toFixed(2)}${promoEmoji}</td>
                             <td>${dataFormatada}</td>
                             <td>
                                 <button class="btn btn-cyan" onclick="showHistory_offline(${produtoId}, ${preco.supermercado_id}, '${marca_str}')">Histórico</button>
@@ -169,7 +186,7 @@
             comparisonEl_offline.classList.remove('hidden');
         }
 
-        // --- MUDANÇA 5: Histórico (lógica de 'marca_str') ---
+        // --- MUDANÇA 5: Histórico (agora mostra emoji) ---
         window.showHistory_offline = function(produtoId, supermercadoId, marca_str) {
             const produto = produtoMap_offline.get(produtoId);
             const supermercado = mercadoMap_offline.get(supermercadoId);
@@ -203,9 +220,15 @@
                 precosHistorico.forEach(preco => {
                     const dataFormatada = new Date(preco.data_cadastro).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                     const criadoPor = userMap_offline.get(preco.criado_por_id) || 'N/D';
+                    
+                    // --- BADGE DE PROMO (ETAPA 11) ---
+                    const promoEmoji = preco.e_promocao 
+                        ? ` <span title="Preço Promocional">⚡</span>` 
+                        : '';
+                    
                     tableHtml += `
                         <tr>
-                            <td>R$ ${preco.valor.toFixed(2)}</td>
+                            <td>R$ ${preco.valor.toFixed(2)}${promoEmoji}</td>
                             <td>${dataFormatada}</td>
                             <td>${criadoPor}</td>
                         </tr>
@@ -224,11 +247,12 @@
                 type: 'line',
                 data: { labels: labels, datasets: [{ label: 'Preço (R$)', data: valores, fill: false, borderColor: 'rgb(0, 123, 255)', tension: 0.1 }] },
                 options: {
-                    scales: { y: { ticks: { callback: (value) => 'R$ ' + value.toFixed(2) } } },
+                    scales: { y: { ticks: { 
+                        callback: (value) => 'R$ ' + value.toFixed(2) } } },
                     plugins: { tooltip: { callbacks: { label: (context) => `Preço: R$ ${context.parsed.y.toFixed(2)}` } } }
                 }
             });
-
+            
             historyViewEl_offline.classList.remove('hidden');
             historyViewEl_offline.scrollIntoView({ behavior: 'smooth' });
         }
