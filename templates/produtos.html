@@ -7,7 +7,7 @@
         <form method="POST">
             <h3>Adicionar Novo Produto</h3>
             <input type="text" name="nome" placeholder="Nome do Produto (Ex: Arroz 5kg)" required>
-            <input type="text" name="marca" placeholder="Marca (Ex: Tio João)">
+            <input type="text" name="marca" placeholder="Marca (Ex: Tio João) - Opcional">
             <button type="submit">Adicionar Produto</button>
         </form>
         <hr>
@@ -19,15 +19,15 @@
             <tr>
                 <th>Nome</th>
                 <th>Marca</th>
-                <th>Criado por</th> <th>Ações</th>
+                <th>Criado por</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for produto in produtos %}
             <tr>
                 <td>{{ produto.nome }}</td>
-                <td>{{ produto.marca }}</td>
-                
+                <td>{{ produto.marca or 'Sem marca' }}</td>
                 <td>
                     {% if produto.criado_por %}
                         {{ produto.criado_por.username }}
