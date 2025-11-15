@@ -18,8 +18,6 @@ class User(db.Model, UserMixin):
     
     produtos_editados = db.relationship('Produto', backref='editado_por', lazy=True, foreign_keys='Produto.editado_por_id')
     mercados_editados = db.relationship('Supermercado', backref='editado_por', lazy=True, foreign_keys='Supermercado.editado_por_id')
-    
-    # --- MUDANÇA 1: Link para as sugestões ---
     sugestoes_feitas = db.relationship('SugestaoPreco', backref='sugerido_por', lazy=True, foreign_keys='SugestaoPreco.sugerido_por_id')
 
 # ----------------------------------------
@@ -34,11 +32,22 @@ class Supermercado(db.Model):
 
 class Produto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(200), nullable=False, unique=True)
-    marca = db.Column(db.String(100))
+    
+    # --- MUDANÇA 1: Remove 'unique=True' daqui ---
+    nome = db.Column(db.String(200), nullable=False)
+    
+    # --- MUDANÇA 2: Seja explícito que marca pode ser nula ---
+    marca = db.Column(db.String(100), nullable=True) 
+    
     precos = db.relationship('Preco', backref='produto', lazy=True)
     criado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     editado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    # --- MUDANÇA 3: Adiciona a restrição de unicidade combinada ---
+    # Isso permite (Arroz, Tio João) e (Arroz, Camil),
+    # mas bloqueia (Arroz, Tio João) de ser cadastrado duas vezes.
+    __table_args__ = (db.UniqueConstraint('nome', 'marca', name='_nome_marca_uc'),)
+
 
 class Preco(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -49,23 +58,18 @@ class Preco(db.Model):
     criado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
 
-# --- MUDANÇA 2: NOVA TABELA DE SUGESTÕES DE PREÇO ---
+# --- TABELA DE SUGESTÕES DE PREÇO ---
 class SugestaoPreco(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     
-    # Quais dados foram sugeridos?
     produto_id = db.Column(db.Integer, db.ForeignKey('produto.id'), nullable=False)
     supermercado_id = db.Column(db.Integer, db.ForeignKey('supermercado.id'), nullable=False)
     valor = db.Column(db.Float, nullable=False)
     
-    # Quem sugeriu?
     sugerido_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     data_sugestao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
-    # Qual o status?
-    # 'pendente', 'aprovado', 'rejeitado'
     status = db.Column(db.String(50), nullable=False, default='pendente')
 
-    # Links de volta (para facilitar as consultas)
     produto = db.relationship('Produto', lazy=True)
     supermercado = db.relationship('Supermercado', lazy=True)
