@@ -3,8 +3,9 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-# MUDANÇA 1: Importa Marca
+# MUDANÇA 1: Importa Marca e datetime
 from models import Supermercado, Produto, SugestaoPreco, Preco, Marca
+from datetime import datetime # <-- ADICIONADO
 from flask_login import login_required, current_user
 
 suggestions_bp = Blueprint('suggestions', __name__, template_folder='../templates')
@@ -26,6 +27,26 @@ def sugerir_preco():
         if marca_id == "":
             marca_id = None
         # --- FIM DA MUDANÇA ---
+        
+        # --- MUDANÇA (ETAPA 11): Captura dados da promoção ---
+        e_promocao = request.form.get('e_promocao') == 'true' # Checkbox retorna 'true'
+        
+        data_expiracao_str = request.form.get('data_expiracao')
+        data_expiracao = None
+        
+        if data_expiracao_str:
+            # Converte 'YYYY-MM-DD' do input date para objeto datetime
+            try:
+                data_expiracao = datetime.strptime(data_expiracao_str, '%Y-%m-%d')
+            except ValueError:
+                flash('Formato de data de expiração inválido.', 'error')
+                return redirect(url_for('suggestions.sugerir_preco'))
+        
+        # Validação: Se é promoção, DEVE ter data de expiração
+        if e_promocao and not data_expiracao:
+            flash('Promoções devem ter uma data de expiração obrigatória.', 'error')
+            return redirect(url_for('suggestions.sugerir_preco'))
+        # --- FIM DA MUDANÇA ---
 
         nova_sugestao = SugestaoPreco(
             produto_id=produto_id,
@@ -33,11 +54,15 @@ def sugerir_preco():
             marca_id=marca_id, # <-- Adicionado
             valor=float(valor),
             sugerido_por_id=current_user.id,
-            status='pendente' 
+            status='pendente',
+            
+            # --- MUDANÇA (ETAPA 11): Salva no banco ---
+            e_promocao=e_promocao,
+            data_expiracao=data_expiracao
         )
         db.session.add(nova_sugestao)
         db.session.commit()
-        
+     
         flash('Sugestão de preço enviada para aprovação. Obrigado por colaborar!', 'success')
         return redirect(url_for('core.index'))
 
@@ -71,14 +96,18 @@ def aprovar_sugestao(sugestao_id):
         flash('Sugestão não encontrada ou já processada.', 'error')
         return redirect(url_for('suggestions.admin_sugestoes'))
     
-    # --- MUDANÇA 4: Adiciona marca_id ao aprovar ---
+    # --- MUDANÇA 4: Adiciona marca_id e dados de promoção ao aprovar ---
     novo_preco = Preco(
         produto_id=sugestao.produto_id,
         supermercado_id=sugestao.supermercado_id,
         marca_id=sugestao.marca_id, # <-- Adicionado
         valor=sugestao.valor,
         criado_por_id=sugestao.sugerido_por_id,
-        data_cadastro=sugestao.data_sugestao
+        data_cadastro=sugestao.data_sugestao,
+        
+        # --- MUDANÇA (ETAPA 11): Copia dados da promoção ---
+        e_promocao=sugestao.e_promocao,
+        data_expiracao=sugestao.data_expiracao
     )
     # --- FIM DA MUDANÇA ---
     
