@@ -6,7 +6,7 @@
     </a>
 
     <h2>Histórico de Preço para:</h2>
-    <h3>{{ produto.nome }}{% if produto.marca %} ({{ produto.marca }}){% endif %}</h3>
+    <h3>{{ produto.nome }} {% if marca %}({{ marca.nome }}){% else %}(Sem marca){% endif %}</h3>
     <h4>Em: {{ supermercado.nome }}</h4>
     
     <hr>
@@ -31,7 +31,6 @@
                 <tr>
                     <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
                     <td>{{ preco.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</td>
-                    
                     <td>
                         {% if preco.criado_por %}
                             {{ preco.criado_por.username }}
