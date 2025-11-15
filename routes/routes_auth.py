@@ -15,7 +15,7 @@ auth_bp = Blueprint('auth', __name__, template_folder='../templates')
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     # Se o usuário já estiver logado, não pode ver a página de registro
-    if current_user.is_authenticated:
+    [span_0](start_span)if current_user.is_authenticated:[span_0](end_span)
         return redirect(url_for('core.index'))
 
     if request.method == 'POST':
@@ -30,19 +30,19 @@ def register():
 
         # Se não existe, cria o usuário
         # Embaralha a senha com bcrypt
-        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-        
+        [span_1](start_span)hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')[span_1](end_span)
+
         # Lógica de Admin: O PRIMEIRO usuário a se registrar vira Admin
         new_user = User(username=username, password_hash=hashed_password)
         if User.query.count() == 0:
             new_user.role = 'admin'
-            flash('Conta de Administrador criada com sucesso!', 'success')
+            [span_2](start_span)flash('Conta de Administrador criada com sucesso!', 'success')[span_2](end_span)
         else:
             flash('Conta criada com sucesso!', 'success')
 
         db.session.add(new_user)
         db.session.commit()
-        
+
         return redirect(url_for('auth.login'))
 
     return render_template('register.html')
@@ -50,19 +50,19 @@ def register():
 # --- ROTA DE LOGIN ---
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    # Se o usuário já estiver logado, não pode ver a página de login
-    if current_user.is_authenticated:
+    # [span_3](start_span)Se o usuário já estiver logado, não pode ver a página de login[span_3](end_span)
+    [span_4](start_span)if current_user.is_authenticated:[span_4](end_span)
         return redirect(url_for('core.index'))
 
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
+
         user = User.query.filter_by(username=username).first()
 
         # Verifica se o usuário existe E se a senha está correta
         if user and bcrypt.check_password_hash(user.password_hash, password):
-            login_user(user) # O Flask-Login cuida da sessão
+            [span_5](start_span)login_user(user) # O Flask-Login cuida da sessão[span_5](end_span)
             flash('Login realizado com sucesso!', 'success')
             return redirect(url_for('core.index'))
         else:
@@ -76,5 +76,13 @@ def login():
 @login_required # Só pode deslogar quem está logado
 def logout():
     logout_user()
-    flash('Você foi desconectado.', 'success')
+    [span_6](start_span)flash('Você foi desconectado.', 'success')[span_6](end_span)
     return redirect(url_for('auth.login'))
+
+
+# --- MUDANÇA: ROTA DE PERFIL (GET) ---
+@auth_bp.route('/perfil', methods=['GET'])
+@login_required
+def perfil():
+    # A lógica POST (para salvar os formulários) será adicionada na próxima etapa
+    return render_template('perfil.html')
