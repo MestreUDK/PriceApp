@@ -18,13 +18,21 @@ def gerenciar_produtos():
         nome_produto = request.form.get('nome')
         marca_produto = request.form.get('marca')
 
-        if Produto.query.filter_by(nome=nome_produto).first():
-            flash('Este produto já está cadastrado.', 'error')
+        # --- MUDANÇA 1: Trata marca vazia como None ---
+        if not marca_produto:
+            marca_produto = None
+        # --- FIM DA MUDANÇA ---
+
+        # --- MUDANÇA 2: Verifica a combinação de nome E marca ---
+        filtro = Produto.query.filter_by(nome=nome_produto, marca=marca_produto).first()
+        if filtro:
+            flash('Este produto (com esta marca) já está cadastrado.', 'error')
+        # --- FIM DA MUDANÇA ---
         else:
             novo_produto = Produto(
                 nome=nome_produto, 
                 marca=marca_produto,
-                criado_por_id=current_user.id  # <-- MUDANÇA 1
+                criado_por_id=current_user.id
             )
             db.session.add(novo_produto)
             db.session.commit()
@@ -46,8 +54,16 @@ def edit_produto(produto_id):
 
     if request.method == 'POST':
         produto.nome = request.form.get('nome')
-        produto.marca = request.form.get('marca')
-        produto.editado_por_id = current_user.id  # <-- MUDANÇA 2
+        
+        # --- MUDANÇA 3: Trata marca vazia como None na edição ---
+        marca_produto = request.form.get('marca')
+        if not marca_produto:
+            produto.marca = None
+        else:
+            produto.marca = marca_produto
+        # --- FIM DA MUDANÇA ---
+            
+        produto.editado_por_id = current_user.id
         
         db.session.commit()
         flash('Produto atualizado com sucesso!', 'success')
