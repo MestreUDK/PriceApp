@@ -34,7 +34,12 @@
                         {% endif %}
                     </td>
                     
-                    <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
+                    <td>
+                        R$ {{ "%.2f"|format(preco.valor) }}
+                        {% if preco.e_promocao %}
+                            <span title="Preço Promocional">⚡</span>
+                        {% endif %}
+                    </td>
                     <td>{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
                     
                     <td>
@@ -42,7 +47,8 @@
                                           produto_id=preco.produto_id, 
                                           supermercado_id=preco.supermercado_id,
                                           marca_str=preco.marca.nome if preco.marca else 'sem-marca') }}" 
-                           style="text-decoration: none; padding: 0.5rem 1rem; background-color: #17a2b8; color: white; border-radius: 4px; font-size: 0.9em;">
+                           style="text-decoration: none; padding: 0.5rem 1rem;
+                                  background-color: #17a2b8; color: white; border-radius: 4px; font-size: 0.9em;">
                             Histórico
                         </a>
                     </td>
