@@ -6,7 +6,7 @@
     </a>
 
     <h2>Histórico de Preço para:</h2>
-    <h3>{{ produto.nome }} ({{ produto.marca }})</h3>
+    <h3>{{ produto.nome }}{% if produto.marca %} ({{ produto.marca }}){% endif %}</h3>
     <h4>Em: {{ supermercado.nome }}</h4>
     
     <hr>
@@ -23,7 +23,8 @@
                 <tr>
                     <th>Preço (R$)</th>
                     <th>Registrado em</th>
-                    <th>Registrado por</th> </tr>
+                    <th>Registrado por</th>
+                </tr>
             </thead>
             <tbody>
                 {% for preco in precos %}
@@ -38,7 +39,7 @@
                             N/D
                         {% endif %}
                     </td>
-                    </tr>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
