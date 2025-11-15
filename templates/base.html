@@ -12,25 +12,29 @@
     <header class="header-bar">
         <a href="{{ url_for('core.index') }}" class="logo">PriceApp</a>
         
-        {% if current_user.is_authenticated %}
-            <form class="search-form" method="GET" action="{{ url_for('core.busca') }}">
-                <input type="search" name="q" placeholder="Buscar..." required>
-                <button type="submit">Buscar</button>
-            </form>
+        [span_16](start_span){% if current_user.is_authenticated %}[span_16](end_span)
+            <div class="header-right-group">
+                <form class="search-form" method="GET" action="{{ url_for('core.busca') }}">
+                    <input type="search" name="q" placeholder="Buscar..." required>
+                    <button type="submit">Buscar</button>
+                </form>
+                
+                <a href="{{ url_for('auth.perfil') }}" class="profile-link" title="Meu Perfil">👤</a>
+            </div>
         {% endif %}
     </header>
 
-    <div class="container">
+    [span_17](start_span)<div class="container">[span_17](end_span)
         
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+        [span_18](start_span){% with messages = get_flashed_messages(with_categories=true) %}[span_18](end_span)
+          [span_19](start_span){% if messages %}[span_19](end_span)
+            [span_20](start_span){% for category, message in messages %}[span_20](end_span)
+              [span_21](start_span)<div class="flash {{ category }}">{{ message }}</div>[span_21](end_span)
+            [span_22](start_span){% endfor %}[span_22](end_span)
+          [span_23](start_span){% endif %}[span_23](end_span)
+        [span_24](start_span){% endwith %}[span_24](end_span)
 
-        {% block content %}{% endblock %}
+        [span_25](start_span){% block content %}{% endblock %}[span_25](end_span)
     </div>
 
     <nav class="bottom-nav">
@@ -40,12 +44,13 @@
             <a href="{{ url_for('core.leitor_offline') }}" style="color: #17a2b8;">Leitor Offline</a>
 
             {% if current_user.role == 'admin' %}
-                <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar</b></a>
-                <a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>
-                <a href="{{ url_for('brands.gerenciar_marcas') }}">Marcas</a> <a href="{{ url_for('suggestions.admin_sugestoes') }}" style="color: #ffc107;">Sugestões</a>
+                [span_26](start_span)<a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar</b></a>[span_26](end_span)
+                [span_27](start_span)<a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>[span_27](end_span)
+                [span_28](start_span)<a href="{{ url_for('brands.gerenciar_marcas') }}">Marcas</a>[span_28](end_span)
+                [span_29](start_span)<a href="{{ url_for('suggestions.admin_sugestoes') }}" style="color: #ffc107;">Sugestões</a>[span_29](end_span)
             {% endif %}
             
-            <a href="{{ url_for('auth.logout') }}" style="color: #ffc107;">Sair</a>
+            [span_30](start_span)<a href="{{ url_for('auth.logout') }}" style="color: #ffc107;">Sair</a>[span_30](end_span)
             
         {% else %}
             <a href="{{ url_for('auth.login') }}"><b>Entrar</b></a>
@@ -54,45 +59,45 @@
     </nav>
 
     <script>
-        if ('serviceWorker' in navigator) {
+        [span_31](start_span)if ('serviceWorker' in navigator) {[span_31](end_span)
             navigator.serviceWorker.register("{{ url_for('core.service_worker') }}")
-                .then(function(registration) {
-                   console.log('Service Worker registrado com sucesso:', registration);
-                })
-                .catch(function(error) {
-                    console.log('Falha ao registrar Service Worker:', error);
-                });
-        }
+                [span_32](start_span).then(function(registration) {[span_32](end_span)
+                   [span_33](start_span)console.log('Service Worker registrado com sucesso:', registration);[span_33](end_span)
+                [span_34](start_span)})[span_34](end_span)
+                [span_35](start_span).catch(function(error) {[span_35](end_span)
+                    [span_36](start_span)console.log('Falha ao registrar Service Worker:', error);[span_36](end_span)
+                [span_37](start_span)});[span_37](end_span)
+        [span_38](start_span)}
     </script>
     <script>
-        const syncButton = document.getElementById('syncButton');
-        const syncStatus = document.getElementById('syncStatus');
+        const syncButton = document.getElementById('syncButton');[span_38](end_span)
+        [span_39](start_span)const syncStatus = document.getElementById('syncStatus');[span_39](end_span)
 
-        if (syncButton) {
-            syncButton.addEventListener('click', () => {
-                syncStatus.textContent = 'Sincronizando...';
-                syncStatus.style.color = '#007bff';
+        [span_40](start_span)if (syncButton) {[span_40](end_span)
+            [span_41](start_span)syncButton.addEventListener('click', () => {[span_41](end_span)
+                [span_42](start_span)syncStatus.textContent = 'Sincronizando...';[span_42](end_span)
+                [span_43](start_span)syncStatus.style.color = '#007bff';[span_43](end_span)
                 
-                fetch("{{ url_for('core.download_backup') }}")
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Falha ao buscar dados do servidor.');
-                        }
-                        return response.text(); 
+                [span_44](start_span)fetch("{{ url_for('core.download_backup') }}")[span_44](end_span)
+                    [span_45](start_span).then(response => {[span_45](end_span)
+                        [span_46](start_span)if (!response.ok) {[span_46](end_span)
+                            [span_47](start_span)throw new Error('Falha ao buscar dados do servidor.');[span_47](end_span)
+                        [span_48](start_span)}
+                        return response.text();[span_48](end_span)
+                    [span_49](start_span)})[span_49](end_span)
+                    [span_50](start_span).then(jsonData => {[span_50](end_span)
+                        [span_51](start_span)localStorage.setItem('priceapp_offline_db', jsonData);[span_51](end_span)
+                        syncStatus.textContent = 'Pronto! [span_52](start_span)Dados sincronizados para uso offline.';[span_52](end_span)
+                        [span_53](start_span)syncStatus.style.color = 'green';[span_53](end_span)
+                        [span_54](start_span)console.log('Dados salvos no localStorage.');[span_54](end_span)
                     })
-                    .then(jsonData => {
-                        localStorage.setItem('priceapp_offline_db', jsonData);
-                        syncStatus.textContent = 'Pronto! Dados sincronizados para uso offline.';
-                        syncStatus.style.color = 'green';
-                        console.log('Dados salvos no localStorage.');
-                    })
-                    .catch(error => {
-                        syncStatus.textContent = `Erro na sincronização: ${error.message}`;
-                        syncStatus.style.color = 'red';
-                        console.error('Erro ao sincronizar:', error);
-                    });
-            });
-        }
+                    [span_55](start_span).catch(error => {[span_55](end_span)
+                        [span_56](start_span)syncStatus.textContent = `Erro na sincronização: ${error.message}`;[span_56](end_span)
+                        [span_57](start_span)syncStatus.style.color = 'red';[span_57](end_span)
+                        [span_58](start_span)console.error('Erro ao sincronizar:', error);[span_58](end_span)
+                    [span_59](start_span)});[span_59](end_span)
+            [span_60](start_span)});[span_60](end_span)
+        [span_61](start_span)}
     </script>
   </body>
 </html>
