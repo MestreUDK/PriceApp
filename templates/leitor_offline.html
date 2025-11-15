@@ -10,21 +10,15 @@
         <label for="searchInput_offline">Buscar Produto:</label>
         <input type="search" id="searchInput_offline" placeholder="Digite o nome de um produto...">
         
-        <div id="results_offline">
-            </div>
-        
-        <div id="comparison_offline" class="hidden">
-            </div>
-
+        <div id="results_offline"></div>
+        <div id="comparison_offline" class="hidden"></div>
         <div id="historyView_offline" class="hidden">
             <hr>
             <h2 id="historyTitle_offline">Histórico de Preço</h2>
             <h3 id="historySubtitle_offline"></h3>
-            
             <div style="width: 100%; max-width: 900px; margin-bottom: 2rem;">
                 <canvas id="graficoHistorico_offline"></canvas>
             </div>
-
             <h3>Todos os Registros (do mais antigo ao mais novo)</h3>
             <div id="historyTable_offline"></div>
         </div>
@@ -32,16 +26,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // --- LÓGICA DO LEITOR OFFLINE ---
-
-        // Nosso "banco de dados" global
-        let DB_OFFLINE = { usuarios: [], produtos: [], supermercados: [], precos: [] };
+        // --- MUDANÇA 1: Banco de dados e Mapeadores atualizados ---
+        let DB_OFFLINE = { usuarios: [], produtos: [], supermercados: [], precos: [], marcas: [] };
         let myChart_offline = null;
-
-        // Mapeadores
         let userMap_offline = new Map();
         let produtoMap_offline = new Map();
         let mercadoMap_offline = new Map();
+        let marcaMap_offline = new Map(); // <-- Novo
 
         // Elementos do HTML
         const statusEl_offline = document.getElementById('status_offline');
@@ -55,43 +46,37 @@
         const historyTableEl_offline = document.getElementById('historyTable_offline');
         const chartCanvas_offline = document.getElementById('graficoHistorico_offline');
 
-        // --- MUDANÇA PRINCIPAL: CARREGAR DO LOCALSTORAGE ---
+        // --- MUDANÇA 2: Carregamento do LocalStorage ---
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Tenta pegar os dados salvos
             const jsonData = localStorage.getItem('priceapp_offline_db');
-            
             if (!jsonData) {
                 statusEl_offline.textContent = 'Erro: Nenhum dado sincronizado. Vá para a página inicial e clique em "Sincronizar para Offline".';
                 statusEl_offline.style.color = 'red';
                 return;
             }
-
             try {
-                // 2. Tenta processar os dados
                 const data = JSON.parse(jsonData);
-                if (data.produtos && data.supermercados && data.precos) {
+                // Verifica se os novos dados (marcas) existem
+                if (data.produtos && data.supermercados && data.precos && data.marcas) {
                     DB_OFFLINE = data;
                     
-                    // Preenche os mapeadores
                     userMap_offline = new Map(DB_OFFLINE.usuarios.map(u => [u.id, u.username]));
                     produtoMap_offline = new Map(DB_OFFLINE.produtos.map(p => [p.id, p]));
                     mercadoMap_offline = new Map(DB_OFFLINE.supermercados.map(m => [m.id, m]));
-
-                    statusEl_offline.textContent = `Dados carregados com sucesso! (${DB_OFFLINE.produtos.length} produtos)`;
+                    marcaMap_offline = new Map(DB_OFFLINE.marcas.map(m => [m.id, m])); // <-- Novo
+                    
+                    statusEl_offline.textContent = `Dados carregados! (${DB_OFFLINE.produtos.length} produtos, ${DB_OFFLINE.marcas.length} marcas)`;
                     statusEl_offline.style.color = 'green';
                     appEl_offline.classList.remove('hidden');
-                    
-                    // Mostra todos os produtos
                     renderSearchResults_offline('');
                 } else {
-                    throw new Error("Dados sincronizados estão corrompidos.");
+                    throw new Error("Dados sincronizados estão corrompidos ou em formato antigo.");
                 }
             } catch (error) {
                 statusEl_offline.textContent = `Erro ao ler dados: ${error.message}`;
                 statusEl_offline.style.color = 'red';
             }
         });
-        // --- FIM DA MUDANÇA ---
 
         // Evento: Digitando na Busca
         searchInput_offline.addEventListener('input', (e) => {
@@ -101,11 +86,10 @@
             historyViewEl_offline.classList.add('hidden');
         });
 
-        // Função: Renderiza a Busca (Produtos)
+        // --- MUDANÇA 3: Busca de Produtos (agora mais simples) ---
         function renderSearchResults_offline(termo) {
             const produtosFiltrados = DB_OFFLINE.produtos.filter(p => 
-                p.nome.toLowerCase().includes(termo) ||
-                (p.marca && p.marca.toLowerCase().includes(termo))
+                p.nome.toLowerCase().includes(termo)
             );
 
             if (produtosFiltrados.length === 0) {
@@ -113,11 +97,9 @@
                 return;
             }
 
-            let html = `<table>... (código da tabela de produtos) ...</table>`; // (O HTML da tabela de busca)
-            // (Reutilizando a lógica da v2)
-            html = `
+            let html = `
                 <table>
-                    <thead><tr><th>Produto</th><th>Marca</th><th>Criado por</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Produto</th><th>Criado por</th><th>Ações</th></tr></thead>
                     <tbody>
             `;
             produtosFiltrados.forEach(p => {
@@ -125,7 +107,6 @@
                 html += `
                     <tr>
                         <td>${p.nome}</td>
-                        <td>${p.marca || ''}</td>
                         <td>${criadoPor}</td>
                         <td>
                             <button class="btn btn-green" onclick="showComparison_offline(${p.id})">Ver Preços</button>
@@ -137,38 +118,47 @@
             resultsEl_offline.innerHTML = html;
         }
 
-        // Função: Mostra a Comparação de Preços
+        // --- MUDANÇA 4: Comparação (agora mostra marca) ---
         window.showComparison_offline = function(produtoId) {
             const produto = produtoMap_offline.get(produtoId);
             if (!produto) return;
             historyViewEl_offline.classList.add('hidden');
 
             const precosProduto = DB_OFFLINE.precos.filter(p => p.produto_id === produtoId);
+            
+            // Lógica de preços recentes
             const precosRecentesMap = new Map();
             precosProduto.forEach(preco => {
-                const key = preco.supermercado_id;
+                // A chave agora é (supermercado + marca)
+                const key = `${preco.supermercado_id}-${preco.marca_id}`; 
                 if (!precosRecentesMap.has(key) || new Date(preco.data_cadastro) > new Date(precosRecentesMap.get(key).data_cadastro)) {
                     precosRecentesMap.set(key, preco);
                 }
             });
             const precosRecentes = Array.from(precosRecentesMap.values()).sort((a, b) => a.valor - b.valor);
 
-            let html = `<hr><h2>Comparando: ${produto.nome} (${produto.marca || ''})</h2>`;
+            let html = `<hr><h2>Comparando: ${produto.nome}</h2>`;
             if (precosRecentes.length === 0) {
                 html += "<p>Nenhum preço registrado para este produto.</p>";
             } else {
-                html += `<table><thead><tr><th>Supermercado</th><th>Preço (R$)</th><th>Registrado em</th><th>Ações</th></tr></thead><tbody>`;
+                html += `<table><thead><tr><th>Supermercado</th><th>Marca</th><th>Preço (R$)</th><th>Registrado em</th><th>Ações</th></tr></thead><tbody>`;
                 precosRecentes.forEach((preco, index) => {
                     const mercado = mercadoMap_offline.get(preco.supermercado_id) || { nome: 'Desconhecido' };
+                    const marca = marcaMap_offline.get(preco.marca_id) || null; // <-- Pega a marca
                     const dataFormatada = new Date(preco.data_cadastro).toLocaleDateString('pt-BR');
                     const style = (index === 0) ? 'background-color: #d4edda; font-weight: bold;' : '';
+                    
+                    // Define o 'marca_str' para o link
+                    const marca_str = marca ? marca.nome : 'sem-marca';
+                    
                     html += `
                         <tr style="${style}">
                             <td>${mercado.nome}</td>
+                            <td>${marca ? marca.nome : 'Sem marca'}</td>
                             <td>R$ ${preco.valor.toFixed(2)}</td>
                             <td>${dataFormatada}</td>
                             <td>
-                                <button class="btn btn-cyan" onclick="showHistory_offline(${produtoId}, ${preco.supermercado_id})">Histórico</button>
+                                <button class="btn btn-cyan" onclick="showHistory_offline(${produtoId}, ${preco.supermercado_id}, '${marca_str}')">Histórico</button>
                             </td>
                         </tr>
                     `;
@@ -179,14 +169,30 @@
             comparisonEl_offline.classList.remove('hidden');
         }
 
-        // Função para Histórico e Gráfico
-        window.showHistory_offline = function(produtoId, supermercadoId) {
+        // --- MUDANÇA 5: Histórico (lógica de 'marca_str') ---
+        window.showHistory_offline = function(produtoId, supermercadoId, marca_str) {
             const produto = produtoMap_offline.get(produtoId);
             const supermercado = mercadoMap_offline.get(supermercadoId);
             if (!produto || !supermercado) return;
 
-            const precosHistorico = DB_OFFLINE.precos.filter(p => p.produto_id === produtoId && p.supermercado_id === supermercadoId)
-                                                      .sort((a, b) => new Date(a.data_cadastro) - new Date(b.data_cadastro));
+            let marca_id = null;
+            let marca = null;
+            if (marca_str !== 'sem-marca') {
+                // Encontra a marca pelo nome (invertido)
+                for (const [id, m] of marcaMap_offline.entries()) {
+                    if (m.nome === marca_str) {
+                        marca_id = id;
+                        marca = m;
+                        break;
+                    }
+                }
+            }
+            
+            const precosHistorico = DB_OFFLINE.precos.filter(p => 
+                p.produto_id === produtoId && 
+                p.supermercado_id === supermercadoId &&
+                p.marca_id === marca_id // Filtra pela marca_id correta
+            ).sort((a, b) => new Date(a.data_cadastro) - new Date(b.data_cadastro));
             
             const labels = precosHistorico.map(p => new Date(p.data_cadastro).toLocaleDateString('pt-BR'));
             const valores = precosHistorico.map(p => p.valor);
@@ -208,8 +214,10 @@
                 tableHtml += `</tbody></table>`;
             }
             historyTableEl_offline.innerHTML = tableHtml;
+            
+            // Título
             historyTitleEl_offline.textContent = `Histórico de Preço para: ${produto.nome}`;
-            historySubtitleEl_offline.textContent = `Em: ${supermercado.nome}`;
+            historySubtitleEl_offline.textContent = `Em: ${supermercado.nome} (${marca ? marca.nome : 'Sem marca'})`;
 
             if (myChart_offline) myChart_offline.destroy();
             myChart_offline = new Chart(chartCanvas_offline, {
