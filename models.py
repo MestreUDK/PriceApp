@@ -9,7 +9,7 @@ from flask_login import UserMixin
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), nullable=False, unique=True)
-    [span_0](start_span)password_hash = db.Column(db.String(128), nullable=False)[span_0](end_span)
+    password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(50), nullable=False, default='user')
     
     # --- MUDANÇA 1: Novos campos de perfil ---
@@ -23,7 +23,7 @@ class User(db.Model, UserMixin):
     mercados_criados = db.relationship('Supermercado', backref='criado_por', lazy=True, foreign_keys='Supermercado.criado_por_id')
     marcas_criadas = db.relationship('Marca', backref='criado_por', lazy=True, foreign_keys='Marca.criado_por_id') # Novo
     
-    [span_1](start_span)produtos_editados = db.relationship('Produto', backref='editado_por', lazy=True, foreign_keys='Produto.editado_por_id')[span_1](end_span)
+    produtos_editados = db.relationship('Produto', backref='editado_por', lazy=True, foreign_keys='Produto.editado_por_id')
     mercados_editados = db.relationship('Supermercado', backref='editado_por', lazy=True, foreign_keys='Supermercado.editado_por_id')
     marcas_editadas = db.relationship('Marca', backref='editado_por', lazy=True, foreign_keys='Marca.editado_por_id') # Novo
 
@@ -41,7 +41,7 @@ class Supermercado(db.Model):
 
 class Produto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    [span_2](start_span)nome = db.Column(db.String(200), nullable=False, unique=True) # Ex: "Arroz", "Feijão"[span_2](end_span)
+    nome = db.Column(db.String(200), nullable=False, unique=True) # Ex: "Arroz", "Feijão"
     
     precos = db.relationship('Preco', backref='produto', lazy=True)
     criado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
@@ -57,7 +57,7 @@ class Marca(db.Model):
     
     precos = db.relationship('Preco', backref='marca', lazy=True)
     criado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    [span_3](start_span)editado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)[span_3](end_span)
+    editado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
 
 class Preco(db.Model):
@@ -81,7 +81,7 @@ class Preco(db.Model):
 
 
 # --- MUDANÇA 4: Tabela de Sugestão também usa a nova estrutura ---
-[span_4](start_span)class SugestaoPreco(db.Model):[span_4](end_span)
+class SugestaoPreco(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     
     produto_id = db.Column(db.Integer, db.ForeignKey('produto.id'), nullable=False)
@@ -101,4 +101,4 @@ class Preco(db.Model):
 
     # Links de volta
     supermercado = db.relationship('Supermercado', lazy=True)
-    [span_5](start_span)marca = db.relationship('Marca', lazy=True) # <-- Novo[span_5](end_span)
+    marca = db.relationship('Marca', lazy=True) # <-- Novo
