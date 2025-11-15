@@ -1,20 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <!-- Link para voltar para a lista de produtos -->
-    <!-- CORRIGIDO -->
     <a href="{{ url_for('products.gerenciar_produtos') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Produtos
     </a>
 
     <h2>Comparando Preços para:</h2>
-    <h1>{{ produto.nome }} ({{ produto.marca }})</h1>
+    <h1>{{ produto.nome }}{% if produto.marca %} ({{ produto.marca }}){% endif %}</h1>
     
     <hr>
 
     <h3>Preços Atuais (do mais barato para o mais caro)</h3>
 
-    <!-- Verifica se a lista de preços não está vazia -->
     {% if precos %}
         <table>
             <thead>
@@ -22,37 +19,29 @@
                     <th>Supermercado</th>
                     <th>Preço (R$)</th>
                     <th>Registrado em</th>
-                    <th>Ações</th> <!-- <-- NOVA COLUNA -->
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Loop para exibir cada preço -->
                 {% for preco in precos %}
                 <tr style="{% if loop.first %}background-color: #d4edda; font-weight: bold;{% endif %}">
                     <td>{{ preco.supermercado.nome }}</td>
                     <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
                     <td>{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
-                    <!-- --- NOVO BOTÃO --- -->
                     <td>
-                        <!-- CORRIGIDO -->
                         <a href="{{ url_for('prices.ver_historico', produto_id=preco.produto_id, supermercado_id=preco.supermercado_id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #17a2b8; color: white; border-radius: 4px; font-size: 0.9em;">
                             Histórico
                         </a>
                     </td>
-                    <!-- --- FIM DO BOTÃO --- -->
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <!-- Mensagem se nenhum preço foi encontrado -->
         <p>Ainda não há preços cadastrados para este produto.</p>
-        <!-- CORRIGIDO -->
         <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
             + Registrar o primeiro preço
         </a>
     {% endif %}
 
 {% endblock %}
-
-
