@@ -46,7 +46,7 @@ form input, form select, form button {
     border: 1px solid #ddd; 
     border-radius: 4px; 
     box-sizing: border-box;
-    font-size: 1rem; 
+    font-size: 1rem;
 }
 form button { 
     background-color: #007bff; 
@@ -60,7 +60,7 @@ form button:hover, .search-form button:hover {
     background-color: #0056b3;
 }
 form label { 
-    margin-bottom: 0.5rem; 
+    margin-bottom: 0.5rem;
     display: block; 
     font-weight: bold;
 }
@@ -80,7 +80,7 @@ form label {
 }
 .search-form button { 
     width: auto;
-    margin-bottom: 0; 
+    margin-bottom: 0;
     border-radius: 0 4px 4px 0;
     padding: 0.5rem 0.75rem;
 }
