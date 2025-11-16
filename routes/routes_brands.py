@@ -5,7 +5,7 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-from models import Marca, Preco
+from models import Marca, Preco, SugestaoPreco
 from flask_login import login_required, current_user 
 
 brands_bp = Blueprint('brands', __name__, template_folder='../templates')
@@ -13,7 +13,6 @@ brands_bp = Blueprint('brands', __name__, template_folder='../templates')
 @brands_bp.route('/marcas', methods=['GET', 'POST'])
 @login_required 
 def gerenciar_marcas():
-    # Apenas Admins podem gerenciar marcas
     if current_user.role != 'admin':
         abort(403)
         
@@ -64,11 +63,7 @@ def delete_marca(marca_id):
     if not marca:
         abort(404)
     
-    # IMPORTANTE: Desvincula preços associados (coloca como None)
-    # Não queremos excluir preços só porque a marca foi removida.
     Preco.query.filter_by(marca_id=marca.id).update({'marca_id': None})
-    
-    # (O mesmo para sugestões)
     SugestaoPreco.query.filter_by(marca_id=marca.id).update({'marca_id': None})
     
     db.session.delete(marca)
