@@ -13,7 +13,8 @@
     {% endif %}
 
     <h2>Produtos Cadastrados</h2>
-    <table>
+    
+    <table class="tabela-cards">
         <thead>
             <tr>
                 <th>Nome</th>
@@ -24,22 +25,23 @@
         <tbody>
             {% for produto in produtos %}
             <tr>
-                <td>{{ produto.nome }}</td>
-                <td>
+                <td data-label="Nome">{{ produto.nome }}</td>
+                <td data-label="Criado por">
                     {% if produto.criado_por %}
                         {{ produto.criado_por.username }}
                     {% else %}
                         N/D
                     {% endif %}
                 </td>
-                <td>
-                    <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em; display: inline-block; margin-bottom: 5px;">
-                        Ver Preços
+                
+                <td class="actions-cell">
+                    <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em;">
+                        🛒 Ver Preços
                     </a>
-                    
+
                     {% if current_user.role == 'admin' %}
-                        <a href="{{ url_for('products.edit_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em; display: inline-block;">
-                            Editar
+                        <a href="{{ url_for('products.edit_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
+                            ✏️ Editar
                         </a>
                     {% endif %}
                 </td>
