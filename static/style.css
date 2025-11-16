@@ -1,15 +1,29 @@
-/* --- ESTILOS GERAIS --- */
+/* ================================================
+   1. ESTILOS GERAIS (Body, Títulos)
+   ================================================ */
 body { 
     font-family: sans-serif;
     margin: 0; 
     background-color: #f4f4f9;
-    /* ADICIONADO: Preenchimento para não ficar atrás das barras fixas */
+    /* Preenchimento para não ficar atrás das barras fixas */
     padding-top: 60px; /* Altura da barra superior */
     padding-bottom: 60px; /* Altura da barra inferior */
 }
 h1, h2 { 
     color: #333;
     margin-top: 0;
+}
+
+/* ================================================
+   2. LAYOUT (Container, Barras Fixas)
+   ================================================ */
+.container { 
+    max-width: 900px; 
+    margin: 1rem auto; 
+    padding: 1.5rem; 
+    background-color: white; 
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 /* --- BARRA SUPERIOR FIXA (HEADER) --- */
@@ -20,8 +34,6 @@ h1, h2 {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #ddd;
-
-    /* ADICIONADO: Fixa no topo */
     position: fixed;
     top: 0;
     left: 0;
@@ -30,14 +42,93 @@ h1, h2 {
     z-index: 100;
     box-sizing: border-box;
 }
+
+/* --- BARRA INFERIOR FIXA (NAVEGAÇÃO) --- */
+.bottom-nav {
+    background-color: #333;
+    display: flex;
+    /* (ETAPA 13): Permite scroll horizontal */
+    overflow-x: auto;
+    white-space: nowrap;
+    align-items: center; 
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    z-index: 100;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+}
+
+/* ================================================
+   3. COMPONENTES (Links, Botões, Forms)
+   ================================================ */
+
+/* --- Links da Barra Superior --- */
 .header-bar .logo {
     font-weight: bold;
     font-size: 1.2rem;
     color: #333;
     text-decoration: none;
 }
+.profile-link {
+    text-decoration: none;
+    font-size: 1.5rem; /* Tamanho do emoji */
+    color: #333;
+    margin-left: 0.75rem; /* Espaçamento da busca */
+    line-height: 1; 
+}
+.profile-link:hover {
+    color: #007bff;
+}
 
-/* --- FORMULÁRIO DE BUSCA (NA BARRA SUPERIOR) --- */
+/* --- Links da Barra Inferior --- */
+.bottom-nav a { 
+    color: white; 
+    text-decoration: none;
+    padding: 0 0.75rem; /* PADDING AJUSTADO */
+    text-align: center;
+    /* (ETAPA 13): Tamanho mínimo e altura */
+    flex-shrink: 0;   
+    min-width: 80px;  
+    height: 100%;     
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 0.9em;
+}
+.bottom-nav a:hover, .bottom-nav a:focus {
+    background-color: #444;
+}
+
+/* --- Formulários --- */
+form input, form select, form button { 
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem; 
+    border: 1px solid #ddd; 
+    border-radius: 4px; 
+    box-sizing: border-box;
+    font-size: 1rem; 
+}
+form button { 
+    background-color: #007bff; 
+    color: white; 
+    border: none; 
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+form button:hover, .search-form button:hover {
+    background-color: #0056b3;
+}
+form label { 
+    margin-bottom: 0.5rem; 
+    display: block; 
+    font-weight: bold;
+}
+
+/* --- Formulário de Busca (Header) --- */
 .search-form { 
     display: flex;
 }
@@ -48,100 +139,20 @@ h1, h2 {
     border: 1px solid #ccc;
     border-radius: 4px 0 0 4px;
     border-right: none;
-    padding: 0.5rem; /* Ajuste de padding */
+    padding: 0.5rem;
 }
 .search-form button { 
     width: auto;
     margin-bottom: 0; 
     border-radius: 0 4px 4px 0;
-    padding: 0.5rem 0.75rem; /* Ajuste de padding */
+    padding: 0.5rem 0.75rem;
 }
-
-/* --- BARRA INFERIOR FIXA (NAVEGAÇÃO) --- */
-/* === INÍCIO DA MUDANÇA (ETAPA 13) === */
-.bottom-nav {
-    background-color: #333;
+.header-right-group {
     display: flex;
-    /* REMOVIDO: justify-content: space-around; */
-    
-    /* ADICIONADO: Permite scroll horizontal e alinha os itens */
-    overflow-x: auto;
-    white-space: nowrap;
-    align-items: center; /* Alinha verticalmente */
-
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    z-index: 100;
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-}
-.bottom-nav a { 
-    color: white; 
-    text-decoration: none;
-    /* PADDING AJUSTADO */
-    padding: 0 0.75rem; /* Mais espaço lateral, 0 em cima/baixo */
-    text-align: center;
-    
-    /* REMOVIDO: flex-grow: 1; */
-    
-    /* ADICIONADO: Garante tamanho mínimo e preenchimento */
-    flex-shrink: 0;   /* Não deixa o item encolher */
-    min-width: 80px;  /* Tamanho mínimo de toque no celular */
-    height: 100%;     /* Ocupa a altura total da barra */
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    font-size: 0.9em;
-}
-/* === FIM DA MUDANÇA === */
-
-/* Efeito hover/foco para a navegação */
-.bottom-nav a:hover, .bottom-nav a:focus {
-    background-color: #444;
+    align-items: center;
 }
 
-/* --- CONTEÚDO PRINCIPAL --- */
-.container { 
-    max-width: 900px; 
-    margin: 1rem auto; /* Espaçamento menor, já que o body tem padding */
-    padding: 1.5rem; 
-    background-color: white; 
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* --- ESTILOS DE FORMULÁRIO MELHORADOS --- */
-form input, form select, form button { 
-    width: 100%;
-    padding: 0.75rem;
-    margin-bottom: 1rem; 
-    border: 1px solid #ddd; 
-    border-radius: 4px; 
-    box-sizing: border-box;
-    font-size: 1rem; /* Tamanho de fonte legível */
-}
-form button { 
-    background-color: #007bff; 
-    color: white; 
-    border: none; 
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s; /* Transição suave */
-}
-/* MELHORIA: Efeito hover nos botões */
-form button:hover, .search-form button:hover {
-    background-color: #0056b3;
-}
-form label { 
-    margin-bottom: 0.5rem; 
-    display: block; 
-    font-weight: bold;
-}
-
-/* --- TABELAS --- */
+/* --- Tabelas --- */
 table { 
     width: 100%; 
     border-collapse: collapse; 
@@ -156,7 +167,7 @@ th {
     background-color: #f2f2f2;
 }
 
-/* --- MENSAGENS FLASH --- */
+/* --- Mensagens Flash --- */
 .flash {
     padding: 1rem;
     margin-bottom: 1rem;
@@ -167,7 +178,12 @@ th {
 .flash.success { background-color: #28a745; }
 .flash.error { background-color: #dc3545; }
 
-/* --- RESPONSIVIDADE (Busca em telas pequenas) --- */
+
+/* ================================================
+   4. RESPONSIVIDADE (Media Queries)
+   ================================================ */
+
+/* --- Em telas de 480px ou menos --- */
 @media (max-width: 480px) {
     .header-bar .logo {
         display: none; /* Esconde o logo para dar espaço à busca */
@@ -175,85 +191,59 @@ th {
     .search-form {
         flex-grow: 1; /* Faz a busca ocupar todo o espaço */
     }
-}
-
-/* --- MUDANÇA: Estilos do Header (Busca + Perfil) --- */
-.header-right-group {
-    display: flex;
-    align-items: center;
-}
-
-.profile-link {
-    text-decoration: none;
-    font-size: 1.5rem; /* Tamanho do emoji */
-    color: #333;
-    margin-left: 0.75rem; /* Espaçamento da busca */
-    line-height: 1; /* Alinhamento vertical */
-}
-.profile-link:hover {
-    color: #007bff;
-}
-
-/* MUDANÇA: Ajuste de Responsividade para o grupo */
-@media (max-width: 480px) {
     .header-right-group {
         flex-grow: 1; /* Faz o grupo ocupar todo o espaço */
+    }
+}
 
-/* --- INÍCIO DA MUDANÇA (ETAPA 13 - TABELAS RESPONSIVAS) --- */
-
-/* Esconde os cabeçalhos da tabela em telas pequenas */
+/* --- (ETAPA 13) Tabelas Responsivas (Padrão de Cards) --- */
+/* Em telas de 600px ou menos */
 @media (max-width: 600px) {
     .tabela-cards thead {
         display: none;
     }
 
-    /* Transforma a linha em um "card" */
     .tabela-cards tr {
         display: block;
         margin-bottom: 1.5rem;
         border: 1px solid #ddd;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        overflow: hidden; /* Para o background do 'td' funcionar */
+        overflow: hidden; 
     }
 
-    /* Transforma a célula em um item da lista (bloco) */
     .tabela-cards td {
         display: block;
-        text-align: right; /* Alinha o valor à direita */
+        text-align: right; 
         position: relative;
-        padding-left: 50%; /* Espaço para o "label" */
-        border-bottom: 1px solid #eee; /* Linha separadora entre os dados */
+        padding-left: 50%; 
+        border-bottom: 1px solid #eee; 
     }
 
-    /* Remove a borda da última célula do card */
     .tabela-cards td:last-child {
         border-bottom: none;
     }
 
-    /* Adiciona o "label" (Nome da Coluna) antes do dado */
     .tabela-cards td::before {
         content: attr(data-label); /* Puxa o texto do atributo data-label */
         position: absolute;
         left: 0;
-        width: 45%; /* Metade do espaço */
+        width: 45%; 
         padding-left: 1rem;
         font-weight: bold;
         text-align: left;
         color: #333;
     }
 
-    /* Estilo especial para a primeira célula (será o título do card) */
+    /* Título do card */
     .tabela-cards td:first-child {
         background-color: #f8f8f8;
         font-weight: bold;
         font-size: 1.1em;
-        text-align: left; /* Título do card alinhado à esquerda */
-        padding-left: 1rem; /* Padding normal para o título */
+        text-align: left; 
+        padding-left: 1rem; 
     }
     .tabela-cards td:first-child::before {
         display: none; /* Não mostra "label" no título */
     }
 }
-/* --- FIM DA MUDANÇA --- */
-
