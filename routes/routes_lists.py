@@ -3,9 +3,13 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-from models import Produto, Lista, ListaItem
+# --- MUDANÇA (ETAPA 12): Importa Supermercado, Preco, datetime, or_ ---
+from models import Produto, Lista, ListaItem, Supermercado, Preco
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError # Importa para tratar erros
+from sqlalchemy import or_
+from datetime import datetime
+# --- FIM DA MUDANÇA ---
 
 # Cria o novo Blueprint
 lists_bp = Blueprint('lists', __name__, template_folder='../templates')
@@ -32,7 +36,6 @@ def gerenciar_listas():
     
     return render_template('listas.html', listas=listas)
 
-# --- INÍCIO DAS NOVAS ROTAS (ETAPA 12) ---
 
 @lists_bp.route('/lista/<int:lista_id>', methods=['GET'])
 @login_required
@@ -131,5 +134,80 @@ def delete_lista(lista_id):
     flash(f'Lista "{lista.nome}" excluída com sucesso.', 'success')
     return redirect(url_for('lists.gerenciar_listas'))
 
-# (Aqui virá a rota de /lista/<id>/comparar)
+# --- INÍCIO DA ROTA DE COMPARAÇÃO (ETAPA 12) ---
+
+@lists_bp.route('/lista/<int:lista_id>/comparar')
+@login_required
+def comparar_lista(lista_id):
+    # 1. Pega a lista e verifica a permissão
+    lista = db.session.get(Lista, lista_id)
+    if not lista:
+        abort(404)
+    if lista.user_id != current_user.id:
+        abort(403)
+
+    if not lista.itens:
+        flash('Sua lista está vazia. Adicione produtos antes de comparar.', 'error')
+        return redirect(url_for('lists.ver_lista', lista_id=lista_id))
+
+    # 2. Pega todos os supermercados
+    supermercados = Supermercado.query.all()
+    itens_da_lista = lista.itens
+    
+    resultados = [] # Lista para guardar o total de cada mercado
+
+    # 3. Itera em CADA supermercado
+    for mercado in supermercados:
+        total_mercado = 0.0
+        itens_faltantes = []
+        itens_encontrados_detalhes = [] # Para o botão de copiar
+
+        # 4. Itera em CADA item da lista de compras
+        for item in itens_da_lista:
+            
+            # 5. Encontra o preço mais recente e válido (incluindo filtro de promoção)
+            #    para ESTE item NESTE mercado
+            preco_obj = Preco.query.filter(
+                Preco.produto_id == item.produto_id,
+                Preco.supermercado_id == mercado.id,
+                # Reutiliza a lógica de promoção da Etapa 11
+                or_(
+                    Preco.e_promocao == False,
+                    Preco.data_expiracao > datetime.utcnow()
+                )
+            ).order_by(
+                Preco.data_cadastro.desc()
+            ).first()
+
+            if preco_obj:
+                # Se achou o preço, multiplica pela quantidade e soma ao total
+                custo_item = preco_obj.valor * item.quantidade
+                total_mercado += custo_item
+                itens_encontrados_detalhes.append({
+                    "nome": item.produto.nome,
+                    "marca": preco_obj.marca.nome if preco_obj.marca else "Sem marca",
+                    "qtde": item.quantidade,
+                    "preco_unit": preco_obj.valor,
+                    "total_item": custo_item
+                })
+            else:
+                # Se não achou preço para este item, marca como "faltante"
+                itens_faltantes.append(item.produto)
+
+        # 6. Guarda o resultado deste supermercado
+        resultados.append({
+            "supermercado": mercado,
+            "total_cost": total_mercado,
+            "missing_items": itens_faltantes,
+            "found_items_details": itens_encontrados_detalhes
+        })
+
+    # 7. Ordena os resultados:
+    #    Prioridade 1: Menor número de itens faltantes (0 é o melhor)
+    #    Prioridade 2: Menor custo total
+    resultados.sort(key=lambda x: (len(x['missing_items']), x['total_cost']))
+
+    # 8. Renderiza o novo template de resultados
+    return render_template('lista_comparar.html', lista=lista, resultados=resultados)
+
 # --- FIM DAS NOVAS ROTAS ---
