@@ -1,4 +1,3 @@
-
 # routes/routes_core.py
 from flask import (
     Blueprint, render_template, request, redirect, url_for, send_from_directory, current_app, Response
@@ -7,11 +6,12 @@ from extensions import db
 from models import Supermercado, Produto, Preco, User, Marca
 from flask_login import login_required 
 import json 
-# --- INÍCIO DA MUDANÇA (ETAPA 15) ---
+
+# --- INÍCIO DA CORREÇÃO (ETAPA 15) ---
 import openpyxl
-from openpyxl.writer.excel import save_virtual_workbook
-from io import BytesIO
-# --- FIM DA MUDANÇA ---
+# A linha "from openpyxl.writer.excel import save_virtual_workbook" FOI REMOVIDA
+from io import BytesIO 
+# --- FIM DA CORREÇÃO ---
 
 core_bp = Blueprint('core', __name__,
                     template_folder='../templates',
@@ -50,10 +50,7 @@ def busca():
 @core_bp.route('/backup/download')
 @login_required
 def download_backup():
-    # --- IMPORTANTE (ETAPA 15) ---
-    # Esta rota JSON é MANTIDA para que o botão "Sincronizar para Offline"
-    # continue funcionando exatamente como está.
-    
+    # Esta rota JSON é mantida para o Leitor Offline
     usuarios = User.query.all()
     produtos = Produto.query.all()
     mercados = Supermercado.query.all()
@@ -102,7 +99,7 @@ def download_backup():
         headers={"Content-Disposition": "attachment;filename=priceapp_backup.json"}
     )
 
-# --- INÍCIO DA MUDANÇA (ETAPA 15) ---
+# --- INÍCIO DA CORREÇÃO (ETAPA 15) ---
 @core_bp.route('/backup/download_excel')
 @login_required
 def download_excel_backup():
@@ -149,17 +146,21 @@ def download_excel_backup():
             pr.data_cadastro, pr.criado_por_id, pr.e_promocao, pr.data_expiracao
         ])
     
-    # 8. Salva em memória
-    # Salva o workbook em um stream de bytes na memória
-    virtual_workbook = save_virtual_workbook(wb)
+    # 8. Salva em memória (MODO CORRIGIDO)
+    # Cria um stream de bytes na memória
+    excel_file_memory = BytesIO()
+    # Salva o workbook nesse stream
+    wb.save(excel_file_memory)
+    # Move o "cursor" de volta para o início do stream
+    excel_file_memory.seek(0)
     
     # 9. Retorna a Resposta
     return Response(
-        virtual_workbook,
+        excel_file_memory.getvalue(), # Pega o valor em bytes
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": "attachment;filename=priceapp_backup.xlsx"}
     )
-# --- FIM DA MUDANÇA ---
+# --- FIM DA CORREÇÃO ---
 
 
 @core_bp.route('/leitor-offline')
