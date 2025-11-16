@@ -7,7 +7,12 @@
 
     <h2>Editando Lista:</h2>
     <h1>{{ lista.nome }}</h1>
-    
+
+    {% if lista.itens %}
+        <a href="{{ url_for('lists.comparar_lista', lista_id=lista.id) }}" style="display: inline-block; padding: 1rem; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 1rem; font-weight: bold;">
+            🛒 Comparar Preços desta Lista
+        </a>
+    {% endif %}
     <hr>
 
     <h3>Adicionar Produto à Lista</h3>
