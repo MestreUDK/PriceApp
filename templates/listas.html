@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Minhas Listas de Compras</h2>
+
+    <form method="POST" action="{{ url_for('lists.gerenciar_listas') }}">
+        <h3>Criar Nova Lista</h3>
+        <input type="text" name="nome" placeholder="Nome da Lista (Ex: Compras da Semana)" required>
+        <button type="submit">Criar Lista</button>
+    </form>
+    
+    <hr style="margin: 2rem 0;">
+
+    <h2>Listas Salvas</h2>
+    {% if listas %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome da Lista</th>
+                    <th>Criada em</th>
+                    <th>Itens</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lista in listas %}
+                <tr>
+                    <td>
+                        <a href="#" style="font-weight: bold; text-decoration: none;">
+                            {{ lista.nome }}
+                        </a>
+                    </td>
+                    <td>{{ lista.data_criacao.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ lista.itens|length }}</td> <td>
+                        <a href="#" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #007bff; color: white; border-radius: 4px; font-size: 0.9em;">
+                            Ver/Editar
+                        </a>
+                        <a href="#" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em; margin-left: 5px;">
+                            Comparar Preços
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Você ainda não criou nenhuma lista.</p>
+    {% endif %}
+
+{% endblock %}
