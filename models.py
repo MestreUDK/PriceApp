@@ -28,6 +28,9 @@ class User(db.Model, UserMixin):
     marcas_editadas = db.relationship('Marca', backref='editado_por', lazy=True, foreign_keys='Marca.editado_por_id') # Novo
 
     sugestoes_feitas = db.relationship('SugestaoPreco', backref='sugerido_por', lazy=True, foreign_keys='SugestaoPreco.sugerido_por_id')
+    
+    # --- ETAPA 12: Link para Listas ---
+    listas = db.relationship('Lista', backref='criada_por', lazy=True)
 
 # ----------------------------------------
 
@@ -49,6 +52,10 @@ class Produto(db.Model):
     
     # Link de volta para sugestões (sem mudança)
     sugestoes = db.relationship('SugestaoPreco', backref='produto', lazy=True)
+    
+    # --- ETAPA 12: Link para Itens de Lista ---
+    # (Este link informa em quais listas este produto está)
+    listas_onde_esta = db.relationship('ListaItem', backref='produto', lazy=True)
 
 
 class Marca(db.Model):
@@ -102,3 +109,33 @@ class SugestaoPreco(db.Model):
     # Links de volta
     supermercado = db.relationship('Supermercado', lazy=True)
     marca = db.relationship('Marca', lazy=True) # <-- Novo
+
+# ----------------------------------------
+# --- NOVAS TABELAS (ETAPA 12) ---
+# ----------------------------------------
+
+# Representa uma lista de compras (Ex: "Compras da Semana")
+class Lista(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    data_criacao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
+    # Chave estrangeira para o dono da lista
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Link de volta para os itens
+    # 'cascade' garante que se a Lista for deletada, os Itens dela também sejam
+    itens = db.relationship('ListaItem', backref='lista', lazy=True, cascade="all, delete-orphan")
+
+# Tabela de associação (Muitos-para-Muitos entre Lista e Produto)
+# Representa um item na lista (Ex: "2x Arroz")
+class ListaItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    quantidade = db.Column(db.Integer, nullable=False, default=1)
+    
+    # Chaves estrangeiras
+    lista_id = db.Column(db.Integer, db.ForeignKey('lista.id'), nullable=False)
+    produto_id = db.Column(db.Integer, db.ForeignKey('produto.id'), nullable=False)
+    
+    # Garante que um produto só possa ser adicionado uma vez na mesma lista
+    __table_args__ = (db.UniqueConstraint('lista_id', 'produto_id', name='_lista_produto_uc'),)
