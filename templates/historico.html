@@ -22,9 +22,48 @@
         <canvas id="graficoHistorico"></canvas>
     </div>
 
+    {% if active_promo %}
+    <div style="background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+        <h3 style="margin-top: 0; color: #d46b08;">⚡ Promoção Ativa Encontrada!</h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            
+            {% if normal_price_obj %}
+            <div>
+                <span style="font-size: 0.9em; color: #555; display: block;">Preço Normal (Recente)</span>
+                <span style="font-size: 1.5em; color: #dc3545; text-decoration: line-through;">
+                    R$ {{ "%.2f"|format(normal_price_obj.valor) }}
+                </span>
+            </div>
+            {% endif %}
+
+            <div>
+                <span style="font-size: 0.9em; color: #555; display: block;">Preço Promocional</span>
+                <span style="font-size: 1.5em; color: #28a745; font-weight: bold;">
+                    R$ {{ "%.2f"|format(active_promo.valor) }}
+                </span>
+            </div>
+
+            {% if normal_price_obj and normal_price_obj.valor > 0 %}
+            {% set desconto = ((normal_price_obj.valor - active_promo.valor) / normal_price_obj.valor) * 100 %}
+            <div>
+                <span style="font-size: 0.9em; color: #555; display: block;">Desconto</span>
+                <span style="font-size: 1.5em; color: #007bff; font-weight: bold;">
+                    {{ "%.0f"|format(desconto) }}% OFF
+                </span>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <p style="margin-top: 1rem; color: #333;">
+            Promoção válida até: <strong>{{ active_promo.data_expiracao.strftime('%d/%m/%Y') }}</strong>
+        </p>
+    </div>
+    {% endif %}
     <h3>Todos os Registros (do mais antigo ao mais novo)</h3>
     {% if precos %}
-        <table>
+        <table class="tabela-cards">
             <thead>
                 <tr>
                     <th>Preço (R$)</th>
@@ -35,9 +74,14 @@
             <tbody>
                 {% for preco in precos %}
                 <tr>
-                    <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
-                    <td>{{ preco.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</td>
-                    <td>
+                    <td data-label="Preço">
+                        R$ {{ "%.2f"|format(preco.valor) }}
+                        {% if preco.e_promocao %}
+                            <span title="Preço Promocional">⚡</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Data">{{ preco.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</td>
+                    <td data-label="Registrado por">
                         {% if preco.criado_por %}
                             {{ preco.criado_por.username }}
                         {% else %}
