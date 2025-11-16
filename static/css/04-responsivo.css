@@ -15,7 +15,7 @@
     }
 }
 
-/* --- (ETAPA 13) Tabelas Responsivas (Padrão de Cards) --- */
+/* --- Tabelas Responsivas (Padrão de Cards) --- */
 /* Em telas de 600px ou menos */
 @media (max-width: 600px) {
     .tabela-cards thead {
@@ -28,7 +28,7 @@
         border: 1px solid #ddd;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        overflow: hidden; 
+        overflow: hidden;
     }
 
     .tabela-cards td {
@@ -61,19 +61,17 @@
         font-size: 1.1em;
         text-align: left; 
         padding-left: 1rem; 
-        padding-right: 1rem; 
+        padding-right: 1rem;
     }
 
-    /* === INÍCIO DA MUDANÇA (Correção da Sobreposição) === */
     /* Esconde o 'data-label' da primeira célula (o título) */
     .tabela-cards td:first-child::before {
-        display: none; 
+        display: none;
     }
-    /* === FIM DA MUDANÇA === */
 
     /* Estilo para células que contêm botões (Centralizado) */
     .tabela-cards td.actions-cell {
-        display: flex; 
+        display: flex;
         flex-wrap: wrap; 
         justify-content: center; /* Centraliza os botões */
         gap: 0.5rem; 
