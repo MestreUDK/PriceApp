@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <a href="{{ url_for('lists.gerenciar_listas') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+        &larr; Voltar para Todas as Listas
+    </a>
+
+    <h2>Editando Lista:</h2>
+    <h1>{{ lista.nome }}</h1>
+    
+    <hr>
+
+    <h3>Adicionar Produto à Lista</h3>
+    <form method="POST" action="{{ url_for('lists.add_item_lista', lista_id=lista.id) }}" style="display: flex; gap: 10px; align-items: flex-end;">
+        
+        <div style="flex-grow: 1;">
+            <label for="produto_id">Produto:</label>
+            <select name="produto_id" id="produto_id" required>
+                <option value="" disabled selected>-- Selecione um produto --</option>
+                {% for produto in produtos %}
+                    <option value="{{ produto.id }}">{{ produto.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="width: 100px;">
+            <label for="quantidade">Qtde:</label>
+            <input type="number" name="quantidade" id="quantidade" value="1" min="1" step="1" required style="padding: 0.75rem 0.5rem;">
+        </div>
+
+        <button type="submit" style="width: auto; height: 44px; margin-bottom: 1rem;">Adicionar</button>
+    </form>
+    <p style="margin-top: -0.5rem; font-size: 0.9em; color: #555;">
+        Dica: Se adicionar um produto que já está na lista, a quantidade será atualizada.
+    </p>
+
+    <hr style="margin: 2rem 0;">
+
+    <h3>Itens na Lista ({{ lista.itens|length }})</h3>
+    {% if lista.itens %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Quantidade</th>
+                    <th style="text-align: right;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in lista.itens %}
+                <tr>
+                    <td>{{ item.produto.nome }}</td>
+                    <td>{{ item.quantidade }}</td>
+                    <td style="text-align: right;">
+                        <form method="POST" action="{{ url_for('lists.delete_item_lista', item_id=item.id) }}" style="display: inline-block;">
+                            <button type="submit" style="background-color: #dc3545; width: auto; padding: 0.5rem 1rem; font-size: 0.9em;">
+                                Remover
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Esta lista está vazia. Adicione produtos usando o formulário acima.</p>
+    {% endif %}
+
+    <hr style="margin: 3rem 0;">
+
+    <h3 style="color: #dc3545;">Zona de Perigo</h3>
+    <p>Esta ação não pode ser desfeita. Todos os itens da lista serão perdidos.</p>
+    <form method="POST" action="{{ url_for('lists.delete_lista', lista_id=lista.id) }}" onsubmit="return confirm('Tem certeza que deseja EXCLUIR permanentemente esta lista e todos os seus itens?');">
+        <button type="submit" style="background-color: #dc3545; width: auto;">Excluir esta Lista</button>
+    </form>
+
+{% endblock %}
