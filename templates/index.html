@@ -8,7 +8,6 @@
         <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-right: 10px; margin-bottom: 10px;">
             + Registrar um Novo Preço
         </a>
-    
     {% elif current_user.role == 'user' %}
         <a href="{{ url_for('suggestions.sugerir_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-right: 10px; margin-bottom: 10px;">
             + Sugerir um Novo Preço
@@ -17,7 +16,6 @@
     <a href="{{ url_for('core.download_backup') }}" style="display: inline-block; padding: 1rem; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 10px; margin-right: 10px;">
         Baixar Backup (JSON)
     </a>
-    
     <button id="syncButton" style="display: inline-block; padding: 1rem; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 10px; border: none; font-size: 0.9rem; font-family: sans-serif; cursor: pointer;">
         Sincronizar para Offline
     </button>
@@ -26,7 +24,7 @@
     <hr>
     <h3>Últimos Preços Registrados</h3>
     {% if ultimos_precos %}
-         <table>
+         <table class="tabela-cards">
             <thead>
                 <tr>
                     <th>Produto</th>
@@ -39,11 +37,11 @@
             <tbody>
                 {% for preco in ultimos_precos %}
                 <tr>
-                    <td>{{ preco.produto.nome }} ({{ preco.produto.marca }})</td>
-                    <td>{{ preco.supermercado.nome }}</td>
-                    <td>R$ {{ "%.2f"|format(preco.valor) }}</td>
-                    <td>{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
-                    <td>
+                    <td data-label="Produto">{{ preco.produto.nome }} ({{ preco.produto.marca }})</td>
+                    <td data-label="Supermercado">{{ preco.supermercado.nome }}</td>
+                    <td data-label="Preço">R$ {{ "%.2f"|format(preco.valor) }}</td>
+                    <td data-label="Data">{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
+                    <td data-label="Registrado por">
                         {% if preco.criado_por %}
                             {{ preco.criado_por.username }}
                         {% else %}
