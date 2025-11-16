@@ -43,7 +43,6 @@
         border-bottom: none;
     }
 
-    /* Adiciona o "label" (Nome da Coluna) antes do dado */
     .tabela-cards td::before {
         content: attr(data-label); 
         position: absolute;
@@ -62,19 +61,22 @@
         font-size: 1.1em;
         text-align: left; 
         padding-left: 1rem; 
-        /* REMOVIDO: td:first-child::before { display: none; } - Já não tem data-label */
-        padding-right: 1rem; /* Adiciona padding à direita para o título */
+        padding-right: 1rem; 
     }
 
-    /* NOVO: Estilo para células que contêm botões */
+    /* Estilo para células que contêm botões */
     .tabela-cards td.actions-cell {
-        display: flex; /* Transforma em flexbox */
-        flex-wrap: wrap; /* Permite quebrar em várias linhas se não couber */
-        justify-content: flex-end; /* Alinha os botões à direita */
-        gap: 0.5rem; /* Espaço entre os botões */
+        display: flex; 
+        flex-wrap: wrap; 
+        
+        /* === MUDANÇA AQUI: Centraliza os botões === */
+        justify-content: center; /* Era flex-end */
+        /* === FIM DA MUDANÇA === */
+
+        gap: 0.5rem; 
         padding-top: 1rem;
         padding-bottom: 1rem;
-        border-bottom: none; /* Remove borda, pois geralmente é a última */
+        border-bottom: none; 
     }
     .tabela-cards td.actions-cell::before {
         display: none; /* Remove o label "Ações" */
