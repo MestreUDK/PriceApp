@@ -1,0 +1,68 @@
+/* ================================================
+   4. RESPONSIVIDADE (Media Queries)
+   ================================================ */
+
+/* --- Em telas de 480px ou menos --- */
+@media (max-width: 480px) {
+    .header-bar .logo {
+        display: none; /* Esconde o logo para dar espaço à busca */
+    }
+    .search-form {
+        flex-grow: 1; /* Faz a busca ocupar todo o espaço */
+    }
+    .header-right-group {
+        flex-grow: 1; /* Faz o grupo ocupar todo o espaço */
+    }
+}
+
+/* --- (ETAPA 13) Tabelas Responsivas (Padrão de Cards) --- */
+/* Em telas de 600px ou menos */
+@media (max-width: 600px) {
+    .tabela-cards thead {
+        display: none;
+    }
+
+    .tabela-cards tr {
+        display: block;
+        margin-bottom: 1.5rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        overflow: hidden; 
+    }
+
+    .tabela-cards td {
+        display: block;
+        text-align: right; 
+        position: relative;
+        padding-left: 50%; 
+        border-bottom: 1px solid #eee; 
+    }
+
+    .tabela-cards td:last-child {
+        border-bottom: none;
+    }
+
+    .tabela-cards td::before {
+        content: attr(data-label); /* Puxa o texto do atributo data-label */
+        position: absolute;
+        left: 0;
+        width: 45%; 
+        padding-left: 1rem;
+        font-weight: bold;
+        text-align: left;
+        color: #333;
+    }
+
+    /* Título do card */
+    .tabela-cards td:first-child {
+        background-color: #f8f8f8;
+        font-weight: bold;
+        font-size: 1.1em;
+        text-align: left; 
+        padding-left: 1rem; 
+    }
+    .tabela-cards td:first-child::before {
+        display: none; /* Não mostra "label" no título */
+    }
+}
