@@ -25,16 +25,16 @@
             <tbody>
                 {% for lista in listas %}
                 <tr>
-                    <td>{{ lista.nome }}</td> {# REMOVIDO: data-label="Nome" #}
+                    <td data-label="Nome">{{ lista.nome }}</td>
                     <td data-label="Criada em">{{ lista.data_criacao.strftime('%d/%m/%Y') }}</td>
                     <td data-label="Itens">{{ lista.itens|length }}</td> 
                     
-                    <td class="actions-cell"> {# ADICIONADO: class="actions-cell" #}
+                    <td class="actions-cell">
                         <a href="{{ url_for('lists.ver_lista', lista_id=lista.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #007bff; color: white; border-radius: 4px; font-size: 0.9em;">
                             ✏️ Editar
                         </a>
                         
-                        <a href="{{ url_for('lists.comparar_lista', lista_id=lista.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em;"> {# margin-left removido, agora o gap faz o espaçamento #}
+                        <a href="{{ url_for('lists.comparar_lista', lista_id=lista.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em;">
                             🛒 Comparar
                         </a>
                     </td>
