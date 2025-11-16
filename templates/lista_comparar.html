@@ -57,7 +57,7 @@
                                 class="btn-copy-list"
                                 data-list-mercado="{{ res.supermercado.nome }}"
                                 data-list-total="{{ "%.2f"|format(res.total_cost) }}"
-                                data-list-items="{{ res.found_items_details | tojson | escape }}"
+                                data-list-items='{{ res.found_items_details | tojson | safe }}'
                                 style="background-color: #17a2b8; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
                                 Copiar Lista
                             </button>
@@ -71,49 +71,61 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Pega TODOS os botões de copiar (embora geralmente seja só um)
+    // Pega TODOS os botões de copiar
     const copyButtons = document.querySelectorAll('.btn-copy-list');
     
     copyButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // 1. Pega os dados armazenados no botão
-            const mercado = button.getAttribute('data-list-mercado');
-            const total = button.getAttribute('data-list-total');
-            // 'data-list-items' está em JSON, então convertemos de volta
-            const items = JSON.parse(button.getAttribute('data-list-items'));
+            try {
+                // 1. Pega os dados armazenados no botão
+                const mercado = button.getAttribute('data-list-mercado');
+                const total = button.getAttribute('data-list-total');
+                // Pega o JSON string
+                const itemsJson = button.getAttribute('data-list-items');
+                // Converte para um objeto JavaScript
+                const items = JSON.parse(itemsJson);
 
-            // 2. Formata o texto para o clipboard
-            let clipboardText = `Lista de Compras - ${mercado}\n`;
-            clipboardText += "----------------------------\n\n";
-            
-            items.forEach(item => {
-                // Ex: "2x Arroz (Tio João) .... R$ 25.98"
-                const itemLine = `${item.qtde}x ${item.nome} (${item.marca})\n`;
-                const priceLine = `    (Preço Un: R$ ${item.preco_unit.toFixed(2)}) .... Total: R$ ${item.total_item.toFixed(2)}\n\n`;
-                clipboardText += itemLine + priceLine;
-            });
-            
-            clipboardText += "----------------------------\n";
-            clipboardText += `TOTAL DA LISTA: R$ ${total}`;
-
-            // 3. Copia para o Clipboard
-            navigator.clipboard.writeText(clipboardText).then(() => {
-                // Sucesso!
-                button.textContent = 'Copiado!';
-                button.style.backgroundColor = '#28a745'; // Verde
+                // 2. Formata o texto para o clipboard
+                let clipboardText = `Lista de Compras - ${mercado}\n`;
+                clipboardText += "----------------------------\n\n";
                 
-                // Volta ao normal depois de 2 segundos
-                setTimeout(() => {
-                    button.textContent = 'Copiar Lista';
-                    button.style.backgroundColor = '#17a2b8'; // Azul
-                }, 2000);
+                items.forEach(item => {
+                    // Ex: "2x Arroz (Tio João)"
+                    const itemLine = `${item.qtde}x ${item.nome} (${item.marca})\n`;
+                    // Ex: "    (Preço Un: R$ 12.99) .... Total: R$ 25.98"
+                    const priceLine = `    (Preço Un: R$ ${item.preco_unit.toFixed(2)}) .... Total: R$ ${item.total_item.toFixed(2)}\n\n`;
+                    clipboardText += itemLine + priceLine;
+                });
+                
+                clipboardText += "----------------------------\n";
+                clipboardText += `TOTAL DA LISTA: R$ ${total}`;
 
-            }).catch(err => {
-                // Falha
-                button.textContent = 'Erro ao copiar';
+                // 3. Copia para o Clipboard
+                navigator.clipboard.writeText(clipboardText).then(() => {
+                    // Sucesso!
+                    button.textContent = 'Copiado!';
+                    button.style.backgroundColor = '#28a745'; // Verde
+                    
+                    // Volta ao normal depois de 2 segundos
+                    setTimeout(() => {
+                        button.textContent = 'Copiar Lista';
+                        button.style.backgroundColor = '#17a2b8'; // Azul
+                    }, 2000);
+
+                }).catch(err => {
+                    // Falha (geralmente por permissão ou HTTPS)
+                    button.textContent = 'Erro ao copiar';
+                    button.style.backgroundColor = '#dc3545'; // Vermelho
+                    console.error('Falha ao copiar para o clipboard: ', err);
+                });
+            
+            } catch (e) {
+                // Captura erros de JSON.parse
+                button.textContent = 'Erro (JSON)';
                 button.style.backgroundColor = '#dc3545'; // Vermelho
-                console.error('Falha ao copiar: ', err);
-            });
+                console.error('Erro ao processar o JSON dos itens: ', e);
+                console.error('JSON recebido:', button.getAttribute('data-list-items'));
+            }
         });
     });
 });
