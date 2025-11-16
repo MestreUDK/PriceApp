@@ -6,9 +6,7 @@
 
     <hr style="margin: 2rem 0;">
 
-    <!-- FORMULÁRIO 1: INFORMAÇÕES DE CONTATO -->
     <h3>Informações de Contato</h3>
-    <!-- MUDANÇA 1: Aponta o 'action' para a rota correta -->
     <form method="POST" action="{{ url_for('auth.update_info') }}"> 
         <label for="email">E-mail:</label>
         <input type="email" name="email" id="email" value="{{ current_user.email or '' }}" placeholder="seu.email@exemplo.com">
@@ -21,9 +19,7 @@
 
     <hr style="margin: 2rem 0;">
 
-    <!-- FORMULÁRIO 2: ALTERAR SENHA -->
     <h3>Alterar Senha</h3>
-    <!-- MUDANÇA 2: Aponta o 'action' para a rota correta -->
     <form method="POST" action="{{ url_for('auth.update_senha') }}"> 
         <label for="senha_antiga">Senha Antiga:</label>
         <input type="password" name="senha_antiga" id="senha_antiga" required>
