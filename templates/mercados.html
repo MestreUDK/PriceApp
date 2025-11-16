@@ -14,12 +14,14 @@
     {% endif %}
 
     <h2>Supermercados Cadastrados</h2>
-    <table>
+    
+    <table class="tabela-cards">
         <thead>
             <tr>
                 <th>Nome</th>
                 <th>Endereço</th>
-                <th>Criado por</th> {% if current_user.role == 'admin' %}
+                <th>Criado por</th>
+                {% if current_user.role == 'admin' %}
                     <th>Ações</th>
                 {% endif %}
             </tr>
@@ -27,20 +29,20 @@
         <tbody>
             {% for mercado in mercados %}
             <tr>
-                <td>{{ mercado.nome }}</td>
-                <td>{{ mercado.endereço or 'N/D' }}</td>
-                
-                <td>
+                <td data-label="Nome">{{ mercado.nome }}</td>
+                <td data-label="Endereço">{{ mercado.endereço or 'N/D' }}</td>
+                <td data-label="Criado por">
                     {% if mercado.criado_por %}
                         {{ mercado.criado_por.username }}
                     {% else %}
                         N/D
                     {% endif %}
                 </td>
+                
                 {% if current_user.role == 'admin' %}
-                    <td>
+                    <td class="actions-cell">
                         <a href="{{ url_for('markets.edit_mercado', mercado_id=mercado.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
-                            Editar
+                            ✏️ Editar
                         </a>
                     </td>
                 {% endif %}
