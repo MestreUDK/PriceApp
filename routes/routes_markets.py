@@ -1,12 +1,9 @@
-
 # routes/routes_markets.py
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-# --- INÍCIO DA MUDANÇA (ETAPA 16) ---
 from models import Supermercado, Preco, Produto
-# --- FIM DA MUDANÇA ---
 from flask_login import login_required, current_user 
 
 markets_bp = Blueprint('markets', __name__, template_folder='../templates')
@@ -75,7 +72,7 @@ def delete_mercado(mercado_id):
     flash(f'Supermercado "{mercado.nome}" e todos os seus preços foram excluídos com sucesso!', 'success')
     return redirect(url_for('markets.gerenciar_mercados'))
 
-# --- INÍCIO DA MUDANÇA (ETAPA 16) ---
+
 @markets_bp.route('/mercado/<int:mercado_id>/produtos')
 @login_required 
 def ver_produtos_mercado(mercado_id):
@@ -85,11 +82,10 @@ def ver_produtos_mercado(mercado_id):
         
     # Encontra todos os produtos que têm pelo menos 1 preço
     # registrado neste supermercado.
-    # Usamos .distinct() para não listar o mesmo produto várias vezes.
     produtos_no_mercado = Produto.query \
         .join(Preco) \
         .filter(Preco.supermercado_id == mercado_id) \
-        .distinct(Produto.id) \
+        .group_by(Produto.id) \
         .order_by(Produto.nome) \
         .all()
 
@@ -98,4 +94,3 @@ def ver_produtos_mercado(mercado_id):
         mercado=mercado, 
         produtos=produtos_no_mercado
     )
-# --- FIM DA MUDANÇA ---
