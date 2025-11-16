@@ -5,7 +5,7 @@ const urlsToCache = [
   '/registrar-preco',
   '/produtos',
   '/mercados',
-  '/leitor-offline' // <-- MUDANÇA AQUI
+  '/leitor-offline' 
 ];
 
 self.addEventListener('install', event => {
