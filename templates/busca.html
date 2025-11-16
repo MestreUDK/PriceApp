@@ -5,20 +5,18 @@
     <hr>
     <h3>Produtos Encontrados ({{ produtos|length }})</h3>
     {% if produtos %}
-        <table>
+        <table class="tabela-cards">
             <thead>
                 <tr>
                     <th>Nome</th>
-                    <th>Marca</th>
                     <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for produto in produtos %}
                 <tr>
-                    <td>{{ produto.nome }}</td>
-                    <td>{{ produto.marca }}</td>
-                    <td>
+                    <td data-label="Nome">{{ produto.nome }}</td>
+                    <td class="actions-cell">
                         <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em; display: inline-block; margin-bottom: 5px;">
                             Ver Preços
                         </a>
@@ -41,25 +39,57 @@
 
     <h3>Supermercados Encontrados ({{ mercados|length }})</h3>
     {% if mercados %}
-        <table>
+        <table class="tabela-cards">
             <thead>
                  <tr>
                     <th>Nome</th>
                     <th>Endereço</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+             <tbody>
+                 {% for mercado in mercados %}
+                <tr>
+                    <td data-label="Nome">{{ mercado.nome }}</td>
+                    <td data-label="Endereço">{{ mercado.endereço or 'N/D' }}</td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('markets.ver_produtos_mercado', mercado_id=mercado.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em;">
+                            Ver Produtos
+                        </a>
+                        {% if current_user.role == 'admin' %}
+                            <a href="{{ url_for('markets.edit_mercado', mercado_id=mercado.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
+                                Editar
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                 {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum supermercado encontrado.</p>
+    {% endif %}
+    
+    <hr style="margin: 2rem 0;">
+
+    <h3>Marcas Encontradas ({{ marcas|length }})</h3>
+    {% if marcas %}
+        <table class="tabela-cards">
+            <thead>
+                 <tr>
+                    <th>Nome</th>
                     {% if current_user.role == 'admin' %}
                         <th>Ações</th>
                     {% endif %}
                 </tr>
             </thead>
              <tbody>
-                {% for mercado in mercados %}
+                 {% for marca in marcas %}
                 <tr>
-                    <td>{{ mercado.nome }}</td>
-                    <td>{{ mercado.endereço or 'N/D' }}</td>
-                     
+                    <td data-label="Nome">{{ marca.nome }}</td>
                     {% if current_user.role == 'admin' %}
-                        <td>
-                            <a href="{{ url_for('markets.edit_mercado', mercado_id=mercado.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em; display: inline-block;">
+                        <td class="actions-cell">
+                            <a href="{{ url_for('brands.edit_marca', marca_id=marca.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
                                 Editar
                             </a>
                         </td>
@@ -69,6 +99,6 @@
             </tbody>
         </table>
     {% else %}
-        <p>Nenhum supermercado encontrado.</p>
+        <p>Nenhuma marca encontrada.</p>
     {% endif %}
 {% endblock %}

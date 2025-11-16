@@ -3,15 +3,14 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-# --- MUDANÇA (ETAPA 12): Importa Supermercado, Preco, datetime, or_ ---
 from models import Produto, Lista, ListaItem, Supermercado, Preco
 from flask_login import login_required, current_user
-from sqlalchemy.exc import IntegrityError # Importa para tratar erros
+from sqlalchemy.exc import IntegrityError 
 from sqlalchemy import or_
 from datetime import datetime
-# --- FIM DA MUDANÇA ---
+import json # <-- INÍCIO DA CORREÇÃO (LINHA ADICIONADA)
 
-# Cria o novo Blueprint
+# Cria o Blueprint
 lists_bp = Blueprint('lists', __name__, template_folder='../templates')
 
 @lists_bp.route('/listas', methods=['GET', 'POST'])
@@ -50,10 +49,7 @@ def ver_lista(lista_id):
     # 2. Pega todos os produtos (para o <select> "Adicionar Item")
     produtos = Produto.query.order_by(Produto.nome).all()
     
-    # 3. Pega os itens que já estão na lista
-    # (O 'lista.itens' já faz isso graças ao relationship do models.py)
-    
-    # 4. Renderiza um NOVO template
+    # 3. Renderiza o template
     return render_template('lista_detalhe.html', lista=lista, produtos=produtos)
 
 @lists_bp.route('/lista/<int:lista_id>/add_item', methods=['POST'])
@@ -134,8 +130,7 @@ def delete_lista(lista_id):
     flash(f'Lista "{lista.nome}" excluída com sucesso.', 'success')
     return redirect(url_for('lists.gerenciar_listas'))
 
-# --- INÍCIO DA ROTA DE COMPARAÇÃO (ETAPA 12) ---
-
+# --- ROTA DE COMPARAÇÃO (ETAPA 17) ---
 @lists_bp.route('/lista/<int:lista_id>/comparar')
 @login_required
 def comparar_lista(lista_id):
@@ -150,64 +145,73 @@ def comparar_lista(lista_id):
         flash('Sua lista está vazia. Adicione produtos antes de comparar.', 'error')
         return redirect(url_for('lists.ver_lista', lista_id=lista_id))
 
-    # 2. Pega todos os supermercados
-    supermercados = Supermercado.query.all()
     itens_da_lista = lista.itens
     
-    resultados = [] # Lista para guardar o total de cada mercado
+    resultados = [] # Lista para guardar o resultado de CADA ITEM
+    grand_total = 0.0
 
-    # 3. Itera em CADA supermercado
-    for mercado in supermercados:
-        total_mercado = 0.0
-        itens_faltantes = []
-        itens_encontrados_detalhes = [] # Para o botão de copiar
+    # 2. Itera em CADA item da lista de compras
+    for item in itens_da_lista:
+        
+        # 3. Encontra o preço mais recente e válido (incluindo filtro de promoção)
+        #    para ESTE item, em QUALQUER mercado
+        best_price_obj = Preco.query.filter(
+            Preco.produto_id == item.produto_id,
+            # Reutiliza a lógica de promoção (preço válido)
+            or_(
+                Preco.e_promocao == False,
+                Preco.data_expiracao > datetime.utcnow()
+            )
+        ).order_by(
+            Preco.valor.asc() # Pega o mais barato
+        ).first()
 
-        # 4. Itera em CADA item da lista de compras
-        for item in itens_da_lista:
+        if best_price_obj:
+            # 4. Se achou o preço, multiplica pela quantidade
+            custo_item = best_price_obj.valor * item.quantidade
+            grand_total += custo_item
             
-            # 5. Encontra o preço mais recente e válido (incluindo filtro de promoção)
-            #    para ESTE item NESTE mercado
-            preco_obj = Preco.query.filter(
-                Preco.produto_id == item.produto_id,
-                Preco.supermercado_id == mercado.id,
-                # Reutiliza a lógica de promoção da Etapa 11
-                or_(
-                    Preco.e_promocao == False,
-                    Preco.data_expiracao > datetime.utcnow()
-                )
-            ).order_by(
-                Preco.data_cadastro.desc()
-            ).first()
+            # 5. Guarda o resultado deste item
+            resultados.append({
+                "item": item,
+                "best_price": best_price_obj,
+                "total_cost": custo_item,
+                "found": True
+            })
+        else:
+            # 6. Se não achou preço para este item
+            resultados.append({
+                "item": item,
+                "best_price": None,
+                "total_cost": 0.0,
+                "found": False
+            })
 
-            if preco_obj:
-                # Se achou o preço, multiplica pela quantidade e soma ao total
-                custo_item = preco_obj.valor * item.quantidade
-                total_mercado += custo_item
-                itens_encontrados_detalhes.append({
-                    "nome": item.produto.nome,
-                    "marca": preco_obj.marca.nome if preco_obj.marca else "Sem marca",
-                    "qtde": item.quantidade,
-                    "preco_unit": preco_obj.valor,
-                    "total_item": custo_item
-                })
-            else:
-                # Se não achou preço para este item, marca como "faltante"
-                itens_faltantes.append(item.produto)
+    # 7. Prepara dados para o script de "Copiar Lista"
+    # (Enviamos os dados completos para o JS processar)
+    resultados_json_list = [] # Mudei o nome para evitar conflito com o 'json' importado
+    for res in resultados:
+        if res["found"]:
+            resultados_json_list.append({
+                "nome": res["item"].produto.nome,
+                "qtde": res["item"].quantidade,
+                "preco_unit": res["best_price"].valor,
+                "total_item": res["total_cost"],
+                "mercado": res["best_price"].supermercado.nome,
+                "marca": res["best_price"].marca.nome if res["best_price"].marca else "Sem marca"
+            })
+        else:
+             resultados_json_list.append({
+                "nome": res["item"].produto.nome,
+                "qtde": res["item"].quantidade,
+                "found": False
+            })
 
-        # 6. Guarda o resultado deste supermercado
-        resultados.append({
-            "supermercado": mercado,
-            "total_cost": total_mercado,
-            "missing_items": itens_faltantes,
-            "found_items_details": itens_encontrados_detalhes
-        })
-
-    # 7. Ordena os resultados:
-    #    Prioridade 1: Menor número de itens faltantes (0 é o melhor)
-    #    Prioridade 2: Menor custo total
-    resultados.sort(key=lambda x: (len(x['missing_items']), x['total_cost']))
-
-    # 8. Renderiza o novo template de resultados
-    return render_template('lista_comparar.html', lista=lista, resultados=resultados)
-
-# --- FIM DAS NOVAS ROTAS ---
+    # 8. Renderiza o template de resultados (agora com a nova lógica)
+    return render_template(
+        'lista_comparar.html', 
+        lista=lista, 
+        resultados=resultados, 
+        grand_total=grand_total,
+        resultados_json=json.dumps(resultados_json_list) # <-- FIM DA CORREÇÃO
+    )

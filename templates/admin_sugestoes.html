@@ -20,7 +20,12 @@
             <tbody>
                 {% for sugestao in sugestoes %}
                 <tr>
-                    <td data-label="Produto">{{ sugestao.produto.nome }}</td>
+                    <td data-label="Produto">
+                        {{ sugestao.produto.nome }}
+                        {% if sugestao.e_promocao %}
+                            <span title="Preço Promocional">⚡</span>
+                        {% endif %}
+                    </td>
                     <td data-label="Marca">
                         {% if sugestao.marca %}
                             {{ sugestao.marca.nome }}

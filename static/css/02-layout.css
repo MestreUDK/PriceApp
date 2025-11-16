@@ -2,7 +2,7 @@
    2. LAYOUT (Container, Barras Fixas)
    ================================================ */
 .container { 
-    max-width: 900px; 
+    max-width: 900px;
     margin: 1rem auto; 
     padding: 1.5rem; 
     background-color: white; 
@@ -31,7 +31,6 @@
 .bottom-nav {
     background-color: #333;
     display: flex;
-    /* (ETAPA 13): Permite scroll horizontal */
     overflow-x: auto;
     white-space: nowrap;
     align-items: center; 

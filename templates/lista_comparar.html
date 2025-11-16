@@ -5,64 +5,68 @@
         &larr; Voltar para a Lista
     </a>
 
-    <h2>Resultados da Comparação:</h2>
+    <h2>Resultados da Comparação Otimizada:</h2>
     <h1>{{ lista.nome }}</h1>
     
     <hr>
-    <h3>Melhores Opções (do mais barato para o mais caro)</h3>
-    <p>Os supermercados com a lista completa (0 itens faltantes) são mostrados primeiro.</p>
+
+    <div style="background-color: #f4f4f9; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+        <span style="font-size: 1.1em; color: #333; display: block;">Custo Total Otimizado</span>
+        <span style="font-size: 2.5em; color: #28a745; font-weight: bold;">
+            R$ {{ "%.2f"|format(grand_total) }}
+        </span>
+    </div>
+
+    <button 
+        class="btn-copy-list"
+        data-list-nome="{{ lista.nome }}"
+        data-list-total="{{ "%.2f"|format(grand_total) }}"
+        data-list-items='{{ resultados_json | safe }}'
+        style="background-color: #17a2b8; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; font-size: 1em; cursor: pointer; width: 100%; margin-bottom: 1.5rem;">
+        📋 Copiar Lista Otimizada
+    </button>
+    
+    <p>Abaixo está a combinação de produtos mais baratos encontrados em todos os mercados.</p>
 
     {% if not resultados %}
         <p>Não foi possível gerar uma comparação. Verifique se os produtos da sua lista têm preços cadastrados.</p>
     {% else %}
-        <table>
+        <table class="tabela-cards">
             <thead>
                 <tr>
-                    <th>Supermercado</th>
-                    <th>Custo Total da Lista</th>
-                    <th>Itens Faltantes</th>
-                    <th>Ações</th>
+                    <th>Produto</th>
+                    <th>Qtde</th>
+                    <th>Melhor Preço (Un.)</th>
+                    <th>Mercado</th>
+                    <th>Marca</th>
+                    <th>Total Item</th>
                 </tr>
             </thead>
             <tbody>
                 {% for res in resultados %}
-                <tr style="{% if loop.first %}background-color: #d4edda; font-weight: bold;{% endif %}">
+                <tr>
+                    <td data-label="Produto">{{ res.item.produto.nome }}</td>
+                    <td data-label="Qtde" style="text-align: center;">{{ res.item.quantidade }}x</td>
                     
-                    <td>{{ res.supermercado.nome }}</td>
-                    
-                    <td>
-                        R$ {{ "%.2f"|format(res.total_cost) }}
-                        
-                        {% if res.total_cost == 0 and res.missing_items|length > 0 %}
-                            (Nenhum item encontrado)
-                        {% endif %}
-                    </td>
-                    
-                    <td>
-                        {% if res.missing_items|length == 0 %}
-                            <span style="color: #28a745; font-weight: bold;">Lista Completa</span>
-                        {% else %}
-                            <span style="color: #dc3545;">{{ res.missing_items|length }} item(s) faltante(s)</span>
-                            <ul style="font-size: 0.8em; margin: 5px 0 0 15px; padding: 0;">
-                                {% for item_produto in res.missing_items %}
-                                    <li>{{ item_produto.nome }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </td>
-
-                    <td>
-                        {% if loop.first and res.missing_items|length == 0 %}
-                            <button 
-                                class="btn-copy-list"
-                                data-list-mercado="{{ res.supermercado.nome }}"
-                                data-list-total="{{ "%.2f"|format(res.total_cost) }}"
-                                data-list-items='{{ res.found_items_details | tojson | safe }}'
-                                style="background-color: #17a2b8; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
-                                Copiar Lista
-                            </button>
-                        {% endif %}
-                    </td>
+                    {% if res.found %}
+                        <td data-label="Preço Un." style="font-weight: bold; color: #28a745;">
+                            R$ {{ "%.2f"|format(res.best_price.valor) }}
+                            {% if res.best_price.e_promocao %}
+                                <span title="Preço Promocional">⚡</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Mercado">{{ res.best_price.supermercado.nome }}</td>
+                        <td data-label="Marca">
+                            {{ res.best_price.marca.nome if res.best_price.marca else 'Sem marca' }}
+                        </td>
+                        <td data-label="Total Item" style="font-weight: bold;">
+                            R$ {{ "%.2f"|format(res.total_cost) }}
+                        </td>
+                    {% else %}
+                        <td data-label="Preço Un." colspan="4" style="text-align: center; color: #dc3545;">
+                            Preço não encontrado
+                        </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -71,63 +75,61 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Pega TODOS os botões de copiar
-    const copyButtons = document.querySelectorAll('.btn-copy-list');
+    const copyButton = document.querySelector('.btn-copy-list');
     
-    copyButtons.forEach(button => {
-        button.addEventListener('click', () => {
+    if (copyButton) {
+        copyButton.addEventListener('click', () => {
             try {
                 // 1. Pega os dados armazenados no botão
-                const mercado = button.getAttribute('data-list-mercado');
-                const total = button.getAttribute('data-list-total');
-                // Pega o JSON string
-                const itemsJson = button.getAttribute('data-list-items');
-                // Converte para um objeto JavaScript
+                const nomeLista = copyButton.getAttribute('data-list-nome');
+                const total = copyButton.getAttribute('data-list-total');
+                const itemsJson = copyButton.getAttribute('data-list-items');
                 const items = JSON.parse(itemsJson);
 
                 // 2. Formata o texto para o clipboard
-                let clipboardText = `Lista de Compras - ${mercado}\n`;
-                clipboardText += "----------------------------\n\n";
+                let clipboardText = `🛒 Lista Otimizada - ${nomeLista} 🛒\n`;
+                clipboardText += "---------------------------------\n\n";
                 
                 items.forEach(item => {
-                    // Ex: "2x Arroz (Tio João)"
-                    const itemLine = `${item.qtde}x ${item.nome} (${item.marca})\n`;
-                    // Ex: "    (Preço Un: R$ 12.99) .... Total: R$ 25.98"
-                    const priceLine = `    (Preço Un: R$ ${item.preco_unit.toFixed(2)}) .... Total: R$ ${item.total_item.toFixed(2)}\n\n`;
-                    clipboardText += itemLine + priceLine;
+                    if (item.found === false) {
+                        // Item não encontrado
+                        clipboardText += `❌ ${item.qtde}x ${item.nome}\n`;
+                        clipboardText += `    (Item não encontrado)\n\n`;
+                    } else {
+                        // Item encontrado
+                        // Ex: "✅ 2x Arroz (Tio João)"
+                        const itemLine = `✅ ${item.qtde}x ${item.nome} (${item.marca})\n`;
+                        // Ex: "    @ Mercado A .... Total: R$ 25.98\n\n"
+                        const priceLine = `    @ ${item.mercado} .... Total: R$ ${item.total_item.toFixed(2)}\n\n`;
+                        clipboardText += itemLine + priceLine;
+                    }
                 });
                 
-                clipboardText += "----------------------------\n";
-                clipboardText += `TOTAL DA LISTA: R$ ${total}`;
-
+                clipboardText += "---------------------------------\n";
+                clipboardText += `VALOR TOTAL: R$ ${total}`;
+                
                 // 3. Copia para o Clipboard
                 navigator.clipboard.writeText(clipboardText).then(() => {
-                    // Sucesso!
-                    button.textContent = 'Copiado!';
-                    button.style.backgroundColor = '#28a745'; // Verde
+                    copyButton.textContent = 'Copiado! ✅';
+                    copyButton.style.backgroundColor = '#28a745'; 
                     
-                    // Volta ao normal depois de 2 segundos
                     setTimeout(() => {
-                        button.textContent = 'Copiar Lista';
-                        button.style.backgroundColor = '#17a2b8'; // Azul
+                        copyButton.textContent = '📋 Copiar Lista Otimizada';
+                        copyButton.style.backgroundColor = '#17a2b8';
                     }, 2000);
 
                 }).catch(err => {
-                    // Falha (geralmente por permissão ou HTTPS)
-                    button.textContent = 'Erro ao copiar';
-                    button.style.backgroundColor = '#dc3545'; // Vermelho
+                    copyButton.textContent = 'Erro ao copiar';
+                    copyButton.style.backgroundColor = '#dc3545';
                     console.error('Falha ao copiar para o clipboard: ', err);
                 });
-            
             } catch (e) {
-                // Captura erros de JSON.parse
-                button.textContent = 'Erro (JSON)';
-                button.style.backgroundColor = '#dc3545'; // Vermelho
+                copyButton.textContent = 'Erro (JSON)';
+                copyButton.style.backgroundColor = '#dc3545';
                 console.error('Erro ao processar o JSON dos itens: ', e);
-                console.error('JSON recebido:', button.getAttribute('data-list-items'));
             }
         });
-    });
+    }
 });
 </script>
 {% endblock %}

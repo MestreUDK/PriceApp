@@ -3,7 +3,7 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-from models import Supermercado, Preco
+from models import Supermercado, Preco, Produto
 from flask_login import login_required, current_user 
 
 markets_bp = Blueprint('markets', __name__, template_folder='../templates')
@@ -24,7 +24,7 @@ def gerenciar_mercados():
             novo_mercado = Supermercado(
                 nome=nome_mercado, 
                 endereço=endereço,
-                criado_por_id=current_user.id  # <-- MUDANÇA 1
+                criado_por_id=current_user.id 
             ) 
             db.session.add(novo_mercado)
             db.session.commit()
@@ -47,7 +47,7 @@ def edit_mercado(mercado_id):
     if request.method == 'POST':
         mercado.nome = request.form.get('nome')
         mercado.endereço = request.form.get('endereço')
-        mercado.editado_por_id = current_user.id  # <-- MUDANÇA 2
+        mercado.editado_por_id = current_user.id  
         
         db.session.commit()
         flash('Supermercado atualizado com sucesso!', 'success')
@@ -71,3 +71,26 @@ def delete_mercado(mercado_id):
     
     flash(f'Supermercado "{mercado.nome}" e todos os seus preços foram excluídos com sucesso!', 'success')
     return redirect(url_for('markets.gerenciar_mercados'))
+
+
+@markets_bp.route('/mercado/<int:mercado_id>/produtos')
+@login_required 
+def ver_produtos_mercado(mercado_id):
+    mercado = db.session.get(Supermercado, mercado_id)
+    if not mercado:
+        abort(404)
+        
+    # Encontra todos os produtos que têm pelo menos 1 preço
+    # registrado neste supermercado.
+    produtos_no_mercado = Produto.query \
+        .join(Preco) \
+        .filter(Preco.supermercado_id == mercado_id) \
+        .group_by(Produto.id) \
+        .order_by(Produto.nome) \
+        .all()
+
+    return render_template(
+        'mercado_produtos.html', 
+        mercado=mercado, 
+        produtos=produtos_no_mercado
+    )

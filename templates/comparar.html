@@ -12,7 +12,7 @@
     <h3>Preços Atuais (do mais barato para o mais caro)</h3>
 
     {% if precos %}
-        <table>
+        <table class="tabela-cards">
             <thead>
                 <tr>
                     <th>Supermercado</th>
@@ -24,9 +24,9 @@
             <tbody>
                 {% for preco in precos %}
                 <tr style="{% if loop.first %}background-color: #d4edda; font-weight: bold;{% endif %}">
-                    <td>{{ preco.supermercado.nome }}</td>
+                    <td data-label="Supermercado">{{ preco.supermercado.nome }}</td>
                     
-                    <td>
+                    <td data-label="Marca">
                         {% if preco.marca %}
                             {{ preco.marca.nome }}
                         {% else %}
@@ -34,15 +34,15 @@
                         {% endif %}
                     </td>
                     
-                    <td>
+                    <td data-label="Preço">
                         R$ {{ "%.2f"|format(preco.valor) }}
                         {% if preco.e_promocao %}
                             <span title="Preço Promocional">⚡</span>
                         {% endif %}
                     </td>
-                    <td>{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
+                    <td data-label="Data">{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
                     
-                    <td>
+                    <td class="actions-cell">
                         <a href="{{ url_for('prices.ver_historico', 
                                           produto_id=preco.produto_id, 
                                           supermercado_id=preco.supermercado_id,

@@ -3,7 +3,6 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-# MUDANÇA 1: Preco e Marca não são mais necessários aqui
 from models import Produto
 from flask_login import login_required, current_user 
 
@@ -18,15 +17,12 @@ def gerenciar_produtos():
             
         nome_produto = request.form.get('nome')
 
-        # --- MUDANÇA 2: Verificação muito mais simples ---
         filtro = Produto.query.filter_by(nome=nome_produto).first()
         if filtro:
             flash('Este produto já está cadastrado.', 'error')
-        # --- FIM DA MUDANÇA ---
         else:
             novo_produto = Produto(
                 nome=nome_produto, 
-                # Marca foi removida daqui
                 criado_por_id=current_user.id
             )
             db.session.add(novo_produto)
@@ -49,7 +45,6 @@ def edit_produto(produto_id):
 
     if request.method == 'POST':
         produto.nome = request.form.get('nome')
-        # --- MUDANÇA 3: Lógica da marca removida ---
         produto.editado_por_id = current_user.id
         
         db.session.commit()
@@ -68,15 +63,15 @@ def delete_produto(produto_id):
     if not produto:
         abort(404)
     
-    # --- MUDANÇA 4: Importa Preco e SugestaoPreco aqui ---
-    from models import Preco, SugestaoPreco
+    from models import Preco, SugestaoPreco, ListaItem
     
-    # Exclui Preços e Sugestões associados
+    # Exclui Preços, Sugestões e Itens de Lista associados
     Preco.query.filter_by(produto_id=produto.id).delete()
     SugestaoPreco.query.filter_by(produto_id=produto.id).delete()
+    ListaItem.query.filter_by(produto_id=produto.id).delete() # Importante
     
     db.session.delete(produto)
     db.session.commit()
     
-    flash(f'Produto "{produto.nome}" e todos os seus preços/sugestões foram excluídos com sucesso!', 'success')
+    flash(f'Produto "{produto.nome}" e todos os seus preços/sugestões/itens de lista foram excluídos com sucesso!', 'success')
     return redirect(url_for('products.gerenciar_produtos'))
