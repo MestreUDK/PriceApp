@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <a href="{{ url_for('markets.gerenciar_mercados') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+        &larr; Voltar para Mercados
+    </a>
+
+    <h2>Produtos Disponíveis em:</h2>
+    <h1>{{ mercado.nome }}</h1>
+    
+    <hr>
+    
+    {% if produtos %}
+        <p>Listando produtos que possuem pelo menos um preço registrado neste mercado.</p>
+        <table class="tabela-cards">
+            <thead>
+                <tr>
+                    <th>Nome do Produto</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for produto in produtos %}
+                <tr>
+                    <td data-label="Produto">{{ produto.nome }}</td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em;">
+                            🛒 Ver Preços
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Ainda não há produtos com preços cadastrados para este supermercado.</p>
+    {% endif %}
+{% endblock %}
