@@ -51,19 +51,24 @@ h1, h2 {
     padding: 0.5rem; /* Ajuste de padding */
 }
 .search-form button { 
-    width: auto; 
+    width: auto;
     margin-bottom: 0; 
     border-radius: 0 4px 4px 0;
     padding: 0.5rem 0.75rem; /* Ajuste de padding */
 }
 
 /* --- BARRA INFERIOR FIXA (NAVEGAÇÃO) --- */
+/* === INÍCIO DA MUDANÇA (ETAPA 13) === */
 .bottom-nav {
     background-color: #333;
     display: flex;
-    justify-content: space-around; /* Distribui os links igualmente */
+    /* REMOVIDO: justify-content: space-around; */
+    
+    /* ADICIONADO: Permite scroll horizontal e alinha os itens */
+    overflow-x: auto;
+    white-space: nowrap;
+    align-items: center; /* Alinha verticalmente */
 
-    /* ADICIONADO: Fixa na base */
     position: fixed;
     bottom: 0;
     left: 0;
@@ -75,14 +80,24 @@ h1, h2 {
 .bottom-nav a { 
     color: white; 
     text-decoration: none;
-    padding: 0.5rem;
+    /* PADDING AJUSTADO */
+    padding: 0 0.75rem; /* Mais espaço lateral, 0 em cima/baixo */
     text-align: center;
-    flex-grow: 1; /* Faz todos ocuparem o mesmo espaço */
+    
+    /* REMOVIDO: flex-grow: 1; */
+    
+    /* ADICIONADO: Garante tamanho mínimo e preenchimento */
+    flex-shrink: 0;   /* Não deixa o item encolher */
+    min-width: 80px;  /* Tamanho mínimo de toque no celular */
+    height: 100%;     /* Ocupa a altura total da barra */
+
     display: flex;
     flex-direction: column;
     justify-content: center;
     font-size: 0.9em;
 }
+/* === FIM DA MUDANÇA === */
+
 /* Efeito hover/foco para a navegação */
 .bottom-nav a:hover, .bottom-nav a:focus {
     background-color: #444;
@@ -94,13 +109,13 @@ h1, h2 {
     margin: 1rem auto; /* Espaçamento menor, já que o body tem padding */
     padding: 1.5rem; 
     background-color: white; 
-    border-radius: 8px; 
+    border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 /* --- ESTILOS DE FORMULÁRIO MELHORADOS --- */
 form input, form select, form button { 
-    width: 100%; 
+    width: 100%;
     padding: 0.75rem;
     margin-bottom: 1rem; 
     border: 1px solid #ddd; 
