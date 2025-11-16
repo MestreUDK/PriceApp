@@ -54,7 +54,7 @@
         color: #333;
     }
 
-    /* Título do card (primeira célula) - NUNCA TERÁ DATA-LABEL */
+    /* Título do card (primeira célula) */
     .tabela-cards td:first-child {
         background-color: #f8f8f8;
         font-weight: bold;
@@ -64,15 +64,18 @@
         padding-right: 1rem; 
     }
 
-    /* Estilo para células que contêm botões */
+    /* === INÍCIO DA MUDANÇA (Correção da Sobreposição) === */
+    /* Esconde o 'data-label' da primeira célula (o título) */
+    .tabela-cards td:first-child::before {
+        display: none; 
+    }
+    /* === FIM DA MUDANÇA === */
+
+    /* Estilo para células que contêm botões (Centralizado) */
     .tabela-cards td.actions-cell {
         display: flex; 
         flex-wrap: wrap; 
-        
-        /* === MUDANÇA AQUI: Centraliza os botões === */
-        justify-content: center; /* Era flex-end */
-        /* === FIM DA MUDANÇA === */
-
+        justify-content: center; /* Centraliza os botões */
         gap: 0.5rem; 
         padding-top: 1rem;
         padding-bottom: 1rem;
