@@ -6,9 +6,9 @@ from models import User
 
 def create_app():
     app = Flask(__name__)
-    
+
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chave-padrao-apenas-para-testes-locais')
-    
+
     DATABASE_URL = os.environ.get('DATABASE_URL')
     if DATABASE_URL:
         if DATABASE_URL.startswith("postgres://"):
@@ -16,13 +16,13 @@ def create_app():
         app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///local_test.db' 
-        
+
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
-    
+
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Por favor, faça login para acessar esta página.'
     login_manager.login_message_category = 'error' 
@@ -33,7 +33,8 @@ def create_app():
     from routes.routes_prices import prices_bp
     from routes.routes_auth import auth_bp
     from routes.routes_suggestions import suggestions_bp
-    from routes.routes_brands import brands_bp # <-- MUDANÇA 1: Importa
+    from routes.routes_brands import brands_bp 
+    from routes.routes_lists import lists_bp # <-- ETAPA 12: Importa o novo blueprint
 
     app.register_blueprint(core_bp)
     app.register_blueprint(products_bp)
@@ -41,13 +42,14 @@ def create_app():
     app.register_blueprint(prices_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(suggestions_bp)
-    app.register_blueprint(brands_bp) # <-- MUDANÇA 2: Registra
+    app.register_blueprint(brands_bp)
+    app.register_blueprint(lists_bp) # <-- ETAPA 12: Registra o novo blueprint
 
     import models
 
     with app.app_context():
         db.create_all()
-        
+
     return app
 
 @login_manager.user_loader
