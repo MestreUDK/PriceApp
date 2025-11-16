@@ -1,0 +1,15 @@
+/* ================================================
+   1. ESTILOS GERAIS (Body, Títulos)
+   ================================================ */
+body { 
+    font-family: sans-serif;
+    margin: 0; 
+    background-color: #f4f4f9;
+    /* Preenchimento para não ficar atrás das barras fixas */
+    padding-top: 60px; /* Altura da barra superior */
+    padding-bottom: 60px; /* Altura da barra inferior */
+}
+h1, h2 { 
+    color: #333;
+    margin-top: 0;
+}
