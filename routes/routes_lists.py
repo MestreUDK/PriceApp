@@ -8,13 +8,16 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError 
 from sqlalchemy import or_
 from datetime import datetime
+import json # <-- INÍCIO DA CORREÇÃO (LINHA ADICIONADA)
 
+# Cria o Blueprint
 lists_bp = Blueprint('lists', __name__, template_folder='../templates')
 
 @lists_bp.route('/listas', methods=['GET', 'POST'])
 @login_required
 def gerenciar_listas():
     if request.method == 'POST':
+        # Lógica para CRIAR uma nova lista
         nome_lista = request.form.get('nome')
         
         if not nome_lista:
@@ -27,6 +30,7 @@ def gerenciar_listas():
         
         return redirect(url_for('lists.gerenciar_listas'))
 
+    # Lógica para MOSTRAR as listas do usuário
     listas = Lista.query.filter_by(user_id=current_user.id).order_by(Lista.data_criacao.desc()).all()
     
     return render_template('listas.html', listas=listas)
@@ -35,14 +39,17 @@ def gerenciar_listas():
 @lists_bp.route('/lista/<int:lista_id>', methods=['GET'])
 @login_required
 def ver_lista(lista_id):
+    # 1. Pega a lista e verifica se pertence ao usuário
     lista = db.session.get(Lista, lista_id)
     if not lista:
         abort(404)
     if lista.user_id != current_user.id:
-        abort(403) 
+        abort(403) # Não tem permissão
 
+    # 2. Pega todos os produtos (para o <select> "Adicionar Item")
     produtos = Produto.query.order_by(Produto.nome).all()
     
+    # 3. Renderiza o template
     return render_template('lista_detalhe.html', lista=lista, produtos=produtos)
 
 @lists_bp.route('/lista/<int:lista_id>/add_item', methods=['POST'])
@@ -55,7 +62,7 @@ def add_item_lista(lista_id):
         abort(403)
         
     produto_id = request.form.get('produto_id')
-    quantidade_str = request.form.get('quantidade', '1') 
+    quantidade_str = request.form.get('quantidade', '1') # Padrão é 1
     
     try:
         quantidade = int(quantidade_str)
@@ -69,12 +76,15 @@ def add_item_lista(lista_id):
         flash('Nenhum produto selecionado.', 'error')
         return redirect(url_for('lists.ver_lista', lista_id=lista_id))
         
+    # Verifica se o item já existe na lista
     item_existente = ListaItem.query.filter_by(lista_id=lista_id, produto_id=produto_id).first()
     
     if item_existente:
+        # Se existe, atualiza a quantidade
         item_existente.quantidade = quantidade
         flash('Quantidade do item atualizada!', 'success')
     else:
+        # Se não existe, cria um novo
         novo_item = ListaItem(
             lista_id=lista_id,
             produto_id=produto_id,
@@ -93,10 +103,11 @@ def delete_item_lista(item_id):
     if not item:
         abort(404)
     
+    # Segurança: Verifica se o usuário é dono da lista onde o item está
     if item.lista.user_id != current_user.id:
         abort(403)
         
-    lista_id = item.lista_id 
+    lista_id = item.lista_id # Salva o ID para o redirect
     
     db.session.delete(item)
     db.session.commit()
@@ -119,7 +130,7 @@ def delete_lista(lista_id):
     flash(f'Lista "{lista.nome}" excluída com sucesso.', 'success')
     return redirect(url_for('lists.gerenciar_listas'))
 
-# --- INÍCIO DA MUDANÇA (ETAPA 17 - LÓGICA MULTI-MERCADO) ---
+# --- ROTA DE COMPARAÇÃO (ETAPA 17) ---
 @lists_bp.route('/lista/<int:lista_id>/comparar')
 @login_required
 def comparar_lista(lista_id):
@@ -178,10 +189,10 @@ def comparar_lista(lista_id):
 
     # 7. Prepara dados para o script de "Copiar Lista"
     # (Enviamos os dados completos para o JS processar)
-    resultados_json = []
+    resultados_json_list = [] # Mudei o nome para evitar conflito com o 'json' importado
     for res in resultados:
         if res["found"]:
-            resultados_json.append({
+            resultados_json_list.append({
                 "nome": res["item"].produto.nome,
                 "qtde": res["item"].quantidade,
                 "preco_unit": res["best_price"].valor,
@@ -190,7 +201,7 @@ def comparar_lista(lista_id):
                 "marca": res["best_price"].marca.nome if res["best_price"].marca else "Sem marca"
             })
         else:
-             resultados_json.append({
+             resultados_json_list.append({
                 "nome": res["item"].produto.nome,
                 "qtde": res["item"].quantidade,
                 "found": False
@@ -202,6 +213,5 @@ def comparar_lista(lista_id):
         lista=lista, 
         resultados=resultados, 
         grand_total=grand_total,
-        resultados_json=json.dumps(resultados_json) # Envia dados para o JS
+        resultados_json=json.dumps(resultados_json_list) # <-- FIM DA CORREÇÃO
     )
-# --- FIM DA MUDANÇA (ETAPA 17) ---
