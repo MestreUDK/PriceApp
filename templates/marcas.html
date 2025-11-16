@@ -13,7 +13,8 @@
     {% endif %}
 
     <h2>Marcas Cadastradas</h2>
-    <table>
+    
+    <table class="tabela-cards">
         <thead>
             <tr>
                 <th>Nome</th>
@@ -26,18 +27,19 @@
         <tbody>
             {% for marca in marcas %}
             <tr>
-                <td>{{ marca.nome }}</td>
-                <td>
+                <td data-label="Nome">{{ marca.nome }}</td>
+                <td data-label="Criado por">
                     {% if marca.criado_por %}
                         {{ marca.criado_por.username }}
                     {% else %}
                         N/D
                     {% endif %}
                 </td>
+                
                 {% if current_user.role == 'admin' %}
-                    <td>
+                    <td class="actions-cell">
                         <a href="{{ url_for('brands.edit_marca', marca_id=marca.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
-                            Editar
+                            ✏️ Editar
                         </a>
                     </td>
                 {% endif %}
