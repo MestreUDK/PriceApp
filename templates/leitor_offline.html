@@ -26,15 +26,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // --- MUDANÇA 1: Banco de dados e Mapeadores atualizados ---
         let DB_OFFLINE = { usuarios: [], produtos: [], supermercados: [], precos: [], marcas: [] };
         let myChart_offline = null;
         let userMap_offline = new Map();
         let produtoMap_offline = new Map();
         let mercadoMap_offline = new Map();
-        let marcaMap_offline = new Map(); // <-- Novo
+        let marcaMap_offline = new Map(); 
 
-        // Elementos do HTML
         const statusEl_offline = document.getElementById('status_offline');
         const appEl_offline = document.getElementById('app_offline');
         const searchInput_offline = document.getElementById('searchInput_offline');
@@ -46,7 +44,6 @@
         const historyTableEl_offline = document.getElementById('historyTable_offline');
         const chartCanvas_offline = document.getElementById('graficoHistorico_offline');
 
-        // --- MUDANÇA 2: Carregamento do LocalStorage (com verificação de promoção) ---
         document.addEventListener('DOMContentLoaded', () => {
             const jsonData = localStorage.getItem('priceapp_offline_db');
             if (!jsonData) {
@@ -56,16 +53,15 @@
             }
             try {
                 const data = JSON.parse(jsonData);
-                // Verifica se os dados de promoção existem
                 if (data.produtos && data.supermercados && data.precos && data.marcas && 
-                    (data.precos.length === 0 || data.precos[0].hasOwnProperty('e_promocao'))) { // <-- Verifica a nova estrutura
+                    (data.precos.length === 0 || data.precos[0].hasOwnProperty('e_promocao'))) { 
                     
                     DB_OFFLINE = data;
                     
                     userMap_offline = new Map(DB_OFFLINE.usuarios.map(u => [u.id, u.username]));
                     produtoMap_offline = new Map(DB_OFFLINE.produtos.map(p => [p.id, p]));
                     mercadoMap_offline = new Map(DB_OFFLINE.supermercados.map(m => [m.id, m]));
-                    marcaMap_offline = new Map(DB_OFFLINE.marcas.map(m => [m.id, m])); // <-- Novo
+                    marcaMap_offline = new Map(DB_OFFLINE.marcas.map(m => [m.id, m])); 
                     
                     statusEl_offline.textContent = `Dados carregados! (${DB_OFFLINE.produtos.length} produtos, ${DB_OFFLINE.marcas.length} marcas)`;
                     statusEl_offline.style.color = 'green';
@@ -79,16 +75,14 @@
                 statusEl_offline.style.color = 'red';
             }
         });
-        
-        // Evento: Digitando na Busca
+
         searchInput_offline.addEventListener('input', (e) => {
             const termo = e.target.value.toLowerCase();
             renderSearchResults_offline(termo);
             comparisonEl_offline.classList.add('hidden');
             historyViewEl_offline.classList.add('hidden');
         });
-        
-        // --- MUDANÇA 3: Busca de Produtos (sem alteração) ---
+
         function renderSearchResults_offline(termo) {
             const produtosFiltrados = DB_OFFLINE.produtos.filter(p => 
                 p.nome.toLowerCase().includes(termo)
@@ -99,18 +93,16 @@
             }
 
             let html = `
-                <table>
-                    <thead><tr><th>Produto</th><th>Criado por</th><th>Ações</th></tr></thead>
+                <table class="tabela-cards">
+                    <thead><tr><th>Produto</th><th>Ações</th></tr></thead>
                     <tbody>
             `;
             produtosFiltrados.forEach(p => {
-                const criadoPor = userMap_offline.get(p.criado_por_id) || 'N/D';
                 html += `
                     <tr>
-                        <td>${p.nome}</td>
-                        <td>${criadoPor}</td>
-                        <td>
-                            <button class="btn btn-green" onclick="showComparison_offline(${p.id})">Ver Preços</button>
+                        <td data-label="Produto">${p.nome}</td>
+                        <td class="actions-cell">
+                            <button onclick="showComparison_offline(${p.id})">Ver Preços</button>
                         </td>
                     </tr>
                 `;
@@ -119,63 +111,51 @@
             resultsEl_offline.innerHTML = html;
         }
 
-        // --- MUDANÇA 4: Comparação (agora filtra promoções expiradas e mostra emoji) ---
         window.showComparison_offline = function(produtoId) {
             const produto = produtoMap_offline.get(produtoId);
             if (!produto) return;
             historyViewEl_offline.classList.add('hidden');
 
             const precosProduto = DB_OFFLINE.precos.filter(p => p.produto_id === produtoId);
-            
-            // Lógica de preços recentes
             const precosRecentesMap = new Map();
-            const agora = new Date(); // Data/hora atual
+            const agora = new Date(); 
             
             precosProduto.forEach(preco => {
                 
-                // --- FILTRO DE PROMOÇÃO (ETAPA 11) ---
-                // Ignora o preço se ele for uma promoção e a data de expiração já passou
                 if (preco.e_promocao && preco.data_expiracao && new Date(preco.data_expiracao) < agora) {
-                    return; // Pula este preço
+                    return; 
                 }
-                // --- FIM DO FILTRO ---
                 
-                // A chave agora é (supermercado + marca)
                 const key = `${preco.supermercado_id}-${preco.marca_id}`; 
                 if (!precosRecentesMap.has(key) || new Date(preco.data_cadastro) > new Date(precosRecentesMap.get(key).data_cadastro)) {
                     precosRecentesMap.set(key, preco);
                 }
             });
-            
             const precosRecentes = Array.from(precosRecentesMap.values()).sort((a, b) => a.valor - b.valor);
 
             let html = `<hr><h2>Comparando: ${produto.nome}</h2>`;
             if (precosRecentes.length === 0) {
                 html += "<p>Nenhum preço registrado para este produto.</p>";
             } else {
-                html += `<table><thead><tr><th>Supermercado</th><th>Marca</th><th>Preço (R$)</th><th>Registrado em</th><th>Ações</th></tr></thead><tbody>`;
+                html += `<table class="tabela-cards"><thead><tr><th>Supermercado</th><th>Marca</th><th>Preço (R$)</th><th>Registrado em</th><th>Ações</th></tr></thead><tbody>`;
                 precosRecentes.forEach((preco, index) => {
                     const mercado = mercadoMap_offline.get(preco.supermercado_id) || { nome: 'Desconhecido' };
-                    const marca = marcaMap_offline.get(preco.marca_id) || null; // <-- Pega a marca
+                    const marca = marcaMap_offline.get(preco.marca_id) || null; 
                     const dataFormatada = new Date(preco.data_cadastro).toLocaleDateString('pt-BR');
                     const style = (index === 0) ? 'background-color: #d4edda; font-weight: bold;' : '';
                     
-                    // Define o 'marca_str' para o link
                     const marca_str = marca ? marca.nome : 'sem-marca';
                     
-                    // --- BADGE DE PROMO (ETAPA 11) ---
-                    const promoEmoji = preco.e_promocao 
-                        ? ` <span title="Preço Promocional">⚡</span>` 
-                        : '';
+                    const promoEmoji = preco.e_promocao ? ` <span title="Preço Promocional">⚡</span>` : '';
                     
                     html += `
                         <tr style="${style}">
-                            <td>${mercado.nome}</td>
-                            <td>${marca ? marca.nome : 'Sem marca'}</td>
-                            <td>R$ ${preco.valor.toFixed(2)}${promoEmoji}</td>
-                            <td>${dataFormatada}</td>
-                            <td>
-                                <button class="btn btn-cyan" onclick="showHistory_offline(${produtoId}, ${preco.supermercado_id}, '${marca_str}')">Histórico</button>
+                            <td data-label="Supermercado">${mercado.nome}</td>
+                            <td data-label="Marca">${marca ? marca.nome : 'Sem marca'}</td>
+                            <td data-label="Preço">R$ ${preco.valor.toFixed(2)}${promoEmoji}</td>
+                            <td data-label="Data">${dataFormatada}</td>
+                            <td class="actions-cell">
+                                <button onclick="showHistory_offline(${produtoId}, ${preco.supermercado_id}, '${marca_str}')">Histórico</button>
                             </td>
                         </tr>
                     `;
@@ -186,7 +166,6 @@
             comparisonEl_offline.classList.remove('hidden');
         }
 
-        // --- MUDANÇA 5: Histórico (agora mostra emoji) ---
         window.showHistory_offline = function(produtoId, supermercadoId, marca_str) {
             const produto = produtoMap_offline.get(produtoId);
             const supermercado = mercadoMap_offline.get(supermercadoId);
@@ -195,7 +174,6 @@
             let marca_id = null;
             let marca = null;
             if (marca_str !== 'sem-marca') {
-                // Encontra a marca pelo nome (invertido)
                 for (const [id, m] of marcaMap_offline.entries()) {
                     if (m.nome === marca_str) {
                         marca_id = id;
@@ -208,7 +186,7 @@
             const precosHistorico = DB_OFFLINE.precos.filter(p => 
                 p.produto_id === produtoId && 
                 p.supermercado_id === supermercadoId &&
-                p.marca_id === marca_id // Filtra pela marca_id correta
+                p.marca_id === marca_id 
             ).sort((a, b) => new Date(a.data_cadastro) - new Date(b.data_cadastro));
             
             const labels = precosHistorico.map(p => new Date(p.data_cadastro).toLocaleDateString('pt-BR'));
@@ -216,21 +194,18 @@
             
             let tableHtml = `<p>Nenhum histórico encontrado.</p>`;
             if (precosHistorico.length > 0) {
-                tableHtml = `<table><thead><tr><th>Preço (R$)</th><th>Registrado em</th><th>Registrado por</th></tr></thead><tbody>`;
+                tableHtml = `<table class="tabela-cards"><thead><tr><th>Preço (R$)</th><th>Registrado em</th><th>Registrado por</th></tr></thead><tbody>`;
                 precosHistorico.forEach(preco => {
                     const dataFormatada = new Date(preco.data_cadastro).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                     const criadoPor = userMap_offline.get(preco.criado_por_id) || 'N/D';
                     
-                    // --- BADGE DE PROMO (ETAPA 11) ---
-                    const promoEmoji = preco.e_promocao 
-                        ? ` <span title="Preço Promocional">⚡</span>` 
-                        : '';
+                    const promoEmoji = preco.e_promocao ? ` <span title="Preço Promocional">⚡</span>` : '';
                     
                     tableHtml += `
                         <tr>
-                            <td>R$ ${preco.valor.toFixed(2)}${promoEmoji}</td>
-                            <td>${dataFormatada}</td>
-                            <td>${criadoPor}</td>
+                            <td data-label="Preço">R$ ${preco.valor.toFixed(2)}${promoEmoji}</td>
+                            <td data-label="Data">${dataFormatada}</td>
+                            <td data-label="Registrado por">${criadoPor}</td>
                         </tr>
                     `;
                 });
@@ -238,7 +213,6 @@
             }
             historyTableEl_offline.innerHTML = tableHtml;
             
-            // Título
             historyTitleEl_offline.textContent = `Histórico de Preço para: ${produto.nome}`;
             historySubtitleEl_offline.textContent = `Em: ${supermercado.nome} (${marca ? marca.nome : 'Sem marca'})`;
 
@@ -252,7 +226,6 @@
                     plugins: { tooltip: { callbacks: { label: (context) => `Preço: R$ ${context.parsed.y.toFixed(2)}` } } }
                 }
             });
-            
             historyViewEl_offline.classList.remove('hidden');
             historyViewEl_offline.scrollIntoView({ behavior: 'smooth' });
         }
