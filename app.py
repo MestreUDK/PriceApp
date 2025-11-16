@@ -34,7 +34,7 @@ def create_app():
     from routes.routes_auth import auth_bp
     from routes.routes_suggestions import suggestions_bp
     from routes.routes_brands import brands_bp 
-    from routes.routes_lists import lists_bp # <-- ETAPA 12: Importa o novo blueprint
+    from routes.routes_lists import lists_bp 
 
     app.register_blueprint(core_bp)
     app.register_blueprint(products_bp)
@@ -43,7 +43,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(suggestions_bp)
     app.register_blueprint(brands_bp)
-    app.register_blueprint(lists_bp) # <-- ETAPA 12: Registra o novo blueprint
+    app.register_blueprint(lists_bp) 
 
     import models
 
