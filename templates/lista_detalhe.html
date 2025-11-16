@@ -43,7 +43,7 @@
 
     <h3>Itens na Lista ({{ lista.itens|length }})</h3>
     {% if lista.itens %}
-        <table>
+        <table class="tabela-cards">
             <thead>
                 <tr>
                     <th>Produto</th>
@@ -54,9 +54,9 @@
             <tbody>
                 {% for item in lista.itens %}
                 <tr>
-                    <td>{{ item.produto.nome }}</td>
-                    <td>{{ item.quantidade }}</td>
-                    <td style="text-align: right;">
+                    <td data-label="Produto">{{ item.produto.nome }}</td>
+                    <td data-label="Quantidade">{{ item.quantidade }}</td>
+                    <td style="text-align: right;" class="actions-cell">
                         <form method="POST" action="{{ url_for('lists.delete_item_lista', item_id=item.id) }}" style="display: inline-block;">
                             <button type="submit" style="background-color: #dc3545; width: auto; padding: 0.5rem 1rem; font-size: 0.9em;">
                                 Remover
