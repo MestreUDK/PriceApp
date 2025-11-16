@@ -13,7 +13,7 @@
 
     <h2>Listas Salvas</h2>
     {% if listas %}
-        <table>
+        <table class="tabela-cards">
             <thead>
                 <tr>
                     <th>Nome da Lista</th>
@@ -25,19 +25,17 @@
             <tbody>
                 {% for lista in listas %}
                 <tr>
-                    <td>
-                        <a href="{{ url_for('lists.ver_lista', lista_id=lista.id) }}" style="font-weight: bold; text-decoration: none;">
-                            {{ lista.nome }}
-                        </a>
-                    </td>
-                    <td>{{ lista.data_criacao.strftime('%d/%m/%Y') }}</td>
-                    <td>{{ lista.itens|length }}</td> <td>
+                    <td data-label="Nome">{{ lista.nome }}</td>
+                    <td data-label="Criada em">{{ lista.data_criacao.strftime('%d/%m/%Y') }}</td>
+                    <td data-label="Itens">{{ lista.itens|length }}</td> 
+                    
+                    <td data-label="Ações">
                         <a href="{{ url_for('lists.ver_lista', lista_id=lista.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #007bff; color: white; border-radius: 4px; font-size: 0.9em;">
-                            Ver/Editar
+                            ✏️ Editar
                         </a>
                         
                         <a href="{{ url_for('lists.comparar_lista', lista_id=lista.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em; margin-left: 5px;">
-                            Comparar Preços
+                            🛒 Comparar
                         </a>
                     </td>
                 </tr>
