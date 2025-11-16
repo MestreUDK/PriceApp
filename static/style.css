@@ -198,5 +198,62 @@ th {
 @media (max-width: 480px) {
     .header-right-group {
         flex-grow: 1; /* Faz o grupo ocupar todo o espaço */
+
+/* --- INÍCIO DA MUDANÇA (ETAPA 13 - TABELAS RESPONSIVAS) --- */
+
+/* Esconde os cabeçalhos da tabela em telas pequenas */
+@media (max-width: 600px) {
+    .tabela-cards thead {
+        display: none;
+    }
+
+    /* Transforma a linha em um "card" */
+    .tabela-cards tr {
+        display: block;
+        margin-bottom: 1.5rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        overflow: hidden; /* Para o background do 'td' funcionar */
+    }
+
+    /* Transforma a célula em um item da lista (bloco) */
+    .tabela-cards td {
+        display: block;
+        text-align: right; /* Alinha o valor à direita */
+        position: relative;
+        padding-left: 50%; /* Espaço para o "label" */
+        border-bottom: 1px solid #eee; /* Linha separadora entre os dados */
+    }
+
+    /* Remove a borda da última célula do card */
+    .tabela-cards td:last-child {
+        border-bottom: none;
+    }
+
+    /* Adiciona o "label" (Nome da Coluna) antes do dado */
+    .tabela-cards td::before {
+        content: attr(data-label); /* Puxa o texto do atributo data-label */
+        position: absolute;
+        left: 0;
+        width: 45%; /* Metade do espaço */
+        padding-left: 1rem;
+        font-weight: bold;
+        text-align: left;
+        color: #333;
+    }
+
+    /* Estilo especial para a primeira célula (será o título do card) */
+    .tabela-cards td:first-child {
+        background-color: #f8f8f8;
+        font-weight: bold;
+        font-size: 1.1em;
+        text-align: left; /* Título do card alinhado à esquerda */
+        padding-left: 1rem; /* Padding normal para o título */
+    }
+    .tabela-cards td:first-child::before {
+        display: none; /* Não mostra "label" no título */
     }
 }
+/* --- FIM DA MUDANÇA --- */
+
