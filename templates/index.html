@@ -24,8 +24,7 @@
     <hr>
     <h3>Últimos Preços Registrados</h3>
     {% if ultimos_precos %}
-         <table class="tabela-cards">
-            <thead>
+         <table class="tabela-cards"> <thead>
                 <tr>
                     <th>Produto</th>
                     <th>Supermercado</th>
@@ -37,7 +36,12 @@
             <tbody>
                 {% for preco in ultimos_precos %}
                 <tr>
-                    <td data-label="Produto">{{ preco.produto.nome }} ({{ preco.produto.marca }})</td>
+                    <td data-label="Produto">
+                        {{ preco.produto.nome }}
+                        {% if preco.marca %}
+                            ({{ preco.marca.nome }})
+                        {% endif %}
+                    </td>
                     <td data-label="Supermercado">{{ preco.supermercado.nome }}</td>
                     <td data-label="Preço">R$ {{ "%.2f"|format(preco.valor) }}</td>
                     <td data-label="Data">{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
