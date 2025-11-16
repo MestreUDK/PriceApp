@@ -26,15 +26,16 @@
                 {% for lista in listas %}
                 <tr>
                     <td>
-                        <a href="#" style="font-weight: bold; text-decoration: none;">
+                        <a href="{{ url_for('lists.ver_lista', lista_id=lista.id) }}" style="font-weight: bold; text-decoration: none;">
                             {{ lista.nome }}
                         </a>
                     </td>
                     <td>{{ lista.data_criacao.strftime('%d/%m/%Y') }}</td>
                     <td>{{ lista.itens|length }}</td> <td>
-                        <a href="#" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #007bff; color: white; border-radius: 4px; font-size: 0.9em;">
+                        <a href="{{ url_for('lists.ver_lista', lista_id=lista.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #007bff; color: white; border-radius: 4px; font-size: 0.9em;">
                             Ver/Editar
                         </a>
+                        
                         <a href="#" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em; margin-left: 5px;">
                             Comparar Preços
                         </a>
