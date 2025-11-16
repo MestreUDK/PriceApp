@@ -4,3 +4,4 @@ gunicorn
 psycopg2-binary
 Flask-Login
 Flask-Bcrypt
+openpyxl
