@@ -1,7 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'base.html' 
+ %}
 
 {% block content %}
-    <a href="{{ url_for('products.gerenciar_produtos') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <a href="{{ url_for('products.gerenciar_produtos') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem;
+ display: inline-block;">
         &larr; Voltar para Produtos
     </a>
 
@@ -15,67 +17,85 @@
         <table class="tabela-cards">
             <thead>
                 <tr>
-                    <th>Supermercado</th>
+        
+             <th>Supermercado</th>
                     <th>Marca</th>
                     <th>Preço Unit. (Efetivo)</th>
                     <th>Detalhe Promoção</th>
                     <th>Registrado em</th>
-                    <th>Ações</th>
+    
+                 <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for preco in precos %}
-                <tr style="{% if loop.first %}background-color: #d4edda; font-weight: bold;{% endif %}">
+                <tr style="{% if loop.first %}background-color: #d4edda;
+ font-weight: bold;{% endif %}">
                     <td data-label="Supermercado">{{ preco.supermercado.nome }}</td>
                     
                     <td data-label="Marca">
                         {% if preco.marca %}
-                             {{ preco.marca.nome }}
+      
+                        {{ preco.marca.nome }}
                         {% else %}
                             Sem marca
-                        {% endif %}
+                    
+     {% endif %}
                     </td>
                     
                     <td data-label="Preço Efetivo">
                         R$ {{ "%.2f"|format(preco.effective_price) }}
-                        {% if preco.e_promocao %}
+     
+                    {% if preco.e_promocao %}
                             <span title="Preço Promocional">⚡</span>
                         {% endif %}
                     </td>
-                    
+  
+                   
                     <td data-label="Promoção">
                         {% if preco.e_promocao %}
-                            {% if preco.promo_tipo == 'unidade' and preco.promo_unidade_valor %}
+                            {% if preco.promo_tipo == 'unidade' and 
+ preco.promo_unidade_valor %}
                                 Preço Reduzido
                             {% elif preco.promo_tipo == 'quantidade' and preco.promo_qtd_necessaria and preco.promo_qtd_valor %}
-                                {{ preco.promo_qtd_necessaria }} por R$ {{ "%.2f"|format(preco.promo_qtd_valor) }}
+                             
+    {{ preco.promo_qtd_necessaria }} por R$ {{ "%.2f"|format(preco.promo_qtd_valor) }}
+                            {% elif preco.promo_tipo == 'limite' and preco.promo_qtd_necessaria and preco.promo_unidade_valor %}
+                                {{ preco.promo_qtd_necessaria }}+ por R$ {{ "%.2f"|format(preco.promo_unidade_valor) }}/un
                             {% else %}
                                 N/D
-                            {% endif %}
+                            
+ {% endif %}
                         {% else %}
                              Preço Normal
                         {% endif %}
-                    </td>
+                
+     </td>
                     <td data-label="Data">{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
                     
                     <td class="actions-cell">
                         <a href="{{ url_for('prices.ver_historico', 
-                                          produto_id=preco.produto_id, 
+     
+                                      produto_id=preco.produto_id, 
                                           supermercado_id=preco.supermercado_id,
-                                          marca_str=preco.marca.nome if preco.marca else 'sem-marca') }}" 
-                           style="text-decoration: none; padding: 0.5rem 1rem;
+                    
+                       marca_str=preco.marca.nome if preco.marca else 'sem-marca') }}" 
+                           style="text-decoration: none;
+ padding: 0.5rem 1rem;
                                   background-color: #17a2b8; color: white; border-radius: 4px; font-size: 0.9em;">
                             Histórico
                         </a>
                     </td>
                 </tr>
-                {% endfor %}
+  
+               {% endfor %}
             </tbody>
         </table>
     {% else %}
         <p>Ainda não há preços cadastrados para este produto.</p>
         {% if current_user.role == 'admin' %}
-            <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+            <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block;
+ padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
                 + Registrar o primeiro preço
             </a>
         {% endif %}
