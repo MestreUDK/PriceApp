@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Gerenciar Sugestões de Edição</h2>
+    <p>Revise as sugestões de edições de itens enviadas pelos usuários.</p>
+
+    {% if sugestoes %}
+        <table class="tabela-cards">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Campo</th>
+                    <th>Valor Antigo</th>
+                    <th>Valor Sugerido</th>
+                    <th>Sugerido por</th>
+                    <th>Data</th>
+                    <th style="min-width: 150px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sugestao in sugestoes %}
+                <tr>
+                    <td data-label="Item">
+                        <b>{{ sugestao.tipo_item.capitalize() }} ID:</b> {{ sugestao.item_id }}
+                    </td>
+                    <td data-label="Campo">{{ sugestao.campo_sugerido }}</td>
+                    <td data-label="Valor Antigo" style="text-decoration: line-through; color: #dc3545;">
+                        {{ sugestao.valor_antigo }}
+                    </td>
+                    <td data-label="Valor Sugerido" style="font-weight: bold; color: #28a745;">
+                        {{ sugestao.valor_sugerido }}
+                    </td>
+                    <td data-label="Sugerido por">{{ sugestao.sugerido_por.username }}</td>
+                    <td data-label="Data">{{ sugestao.data_sugestao.strftime('%d/%m/%Y %H:%M') }}</td>
+
+                    <td class="actions-cell">
+                        <form method="POST" action="{{ url_for('suggestions_edit.aprovar_sugestao_edicao', sugestao_id=sugestao.id) }}" style="display: inline-block;">
+                            <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
+                                ✔️ Aprovar
+                            </button>
+                        </form>
+
+                        <form method="POST" action="{{ url_for('suggestions_edit.rejeitar_sugestao_edicao', sugestao_id=sugestao.id) }}" style="display: inline-block;">
+                            <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9em; cursor: pointer;" onclick="return confirm('Tem certeza que deseja rejeitar esta sugestão?');">
+                                ❌ Rejeitar
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <hr>
+        <p style="text-align: center; font-size: 1.1em; color: #555;">Tudo limpo! Não há nenhuma sugestão de edição pendente no momento.</p>
+    {% endif %}
+
+{% endblock %}
