@@ -35,6 +35,9 @@ def create_app():
     from routes.routes_suggestions import suggestions_bp
     from routes.routes_brands import brands_bp 
     from routes.routes_lists import lists_bp 
+    # --- INÍCIO DA MUDANÇA (ETAPA 18) ---
+    from routes.routes_suggestions_edit import suggestions_edit_bp
+    # --- FIM DA MUDANÇA ---
 
     app.register_blueprint(core_bp)
     app.register_blueprint(products_bp)
@@ -44,6 +47,9 @@ def create_app():
     app.register_blueprint(suggestions_bp)
     app.register_blueprint(brands_bp)
     app.register_blueprint(lists_bp) 
+    # --- INÍCIO DA MUDANÇA (ETAPA 18) ---
+    app.register_blueprint(suggestions_edit_bp)
+    # --- FIM DA MUDANÇA ---
 
     import models
 
