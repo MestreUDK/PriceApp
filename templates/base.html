@@ -12,12 +12,14 @@
     <header class="header-bar">
         <a href="{{ url_for('core.index') }}" class="logo">PriceApp</a>
         
-        {% if current_user.is_authenticated %}
+      
+[span_0](start_span)   {% if current_user.is_authenticated %}
             <div class="header-right-group">
                 <form class="search-form" method="GET" action="{{ url_for('core.busca') }}">
                     <input type="search" name="q" placeholder="Buscar..." required>
                     <button type="submit">Buscar</button>
-                </form>
+                
+[span_0](end_span) </form>
                 
                 <a href="{{ url_for('auth.perfil') }}" class="profile-link" title="Meu Perfil">👤</a>
             </div>
@@ -27,7 +29,8 @@
     <div class="container">
         
         {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
+          
+[span_1](start_span) {% if messages %}
             {% for category, message in messages %}
               <div class="flash {{ category }}">{{ message }}</div>
             {% endfor %}
@@ -38,25 +41,29 @@
     </div>
 
     <nav class="bottom-nav">
-        {% if current_user.is_authenticated %}
+ 
+[span_1](end_span)        {% if current_user.is_authenticated %}
             <a href="{{ url_for('core.index') }}">Início</a>
             <a href="{{ url_for('products.gerenciar_produtos') }}">Produtos</a>
             <a href="{{ url_for('markets.gerenciar_mercados') }}">Mercados</a>
             <a href="{{ url_for('lists.gerenciar_listas') }}">Listas</a>
             <a href="{{ url_for('core.leitor_offline') }}" style="color: #17a2b8;">Leitor Offline</a>
 
-            {% if current_user.role == 'admin' %}
+            
+[span_2](start_span) {% if current_user.role == 'admin' %}
                 <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar</b></a>
                 <a href="{{ url_for('brands.gerenciar_marcas') }}">Marcas</a>
                 <a href="{{ url_for('suggestions.admin_sugestoes') }}" style="color: #ffc107;">Sugestões Preço</a>
                 <a href="{{ url_for('suggestions_edit.admin_sugestoes_edicao') }}" style="color: #fd7e14;">Sugestões Edição</a>
-                {% else %}
+             
+[span_2](end_span)    {% else %}
                 <a href="{{ url_for('suggestions.sugerir_preco') }}"><b>Sugerir Preço</b></a>
                 <a href="{{ url_for('suggestions_edit.sugerir_edicao') }}" style="color: #fd7e14;">Sugerir Edição</a>
                 {% endif %}
             
             <a href="{{ url_for('auth.logout') }}" style="color: #ffc107;">Sair</a>
-            
+      
+[span_3](start_span)       
         {% else %}
             <a href="{{ url_for('auth.login') }}"><b>Entrar</b></a>
             <a href="{{ url_for('auth.register') }}">Registrar</a>
@@ -66,18 +73,19 @@
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register("{{ url_for('core.service_worker') }}")
-                .then(function(registration) {
+          
+[span_3](end_span).then(function(registration) {
                    console.log('Service Worker registrado com sucesso:', registration);
-                })
+[span_4](start_span) })
                 .catch(function(error) {
                     console.log('Falha ao registrar Service Worker:', error);
                 });
-        }
+[span_4](end_span) }
     </script>
     <script>
         // Script do Botão de Sincronização Offline (MANTIDO IGUAL)
         const syncButton = document.getElementById('syncButton');
-        const syncStatus = document.getElementById('syncStatus');
+[span_5](start_span) const syncStatus = document.getElementById('syncStatus');
 
         if (syncButton) {
             syncButton.addEventListener('click', () => {
@@ -85,21 +93,25 @@
                 syncStatus.style.color = '#007bff';
                 
                 fetch("{{ url_for('core.download_backup') }}") 
-                    .then(response => {
+        
+[span_5](end_span).then(response => {
                         if (!response.ok) {
                             throw new Error('Falha ao buscar dados do servidor.');
                         }
-                        return response.text(); 
+ 
+[span_6](start_span)                        return response.text(); 
                     })
                     .then(jsonData => {
                         localStorage.setItem('priceapp_offline_db', jsonData);
-                        syncStatus.textContent = 'Pronto! Dados sincronizados para uso offline.';
+        
+[span_6](end_span)                 syncStatus.textContent = 'Pronto! Dados sincronizados para uso offline.';
                         syncStatus.style.color = 'green';
                         console.log('Dados salvos no localStorage.');
                     })
-                    .catch(error => {
+    
+[span_7](start_span).catch(error => {
                         syncStatus.textContent = `Erro na sincronização: ${error.message}`;
-                        syncStatus.style.color = 'red';
+[span_7](end_span) syncStatus.style.color = 'red';
                         console.error('Erro ao sincronizar:', error);
                     });
             });
@@ -114,82 +126,89 @@
      */
     function setupSelectFilter(inputId, selectId) {
         const input = document.getElementById(inputId);
-        const select = document.getElementById(selectId);
+[span_8](start_span) const select = document.getElementById(selectId);
         
         if (!input || !select) return;
 
         // Guarda as opções originais
         const originalOptions = Array.from(select.options);
-
-        input.addEventListener('keyup', () => {
+[span_8](end_span) input.addEventListener('keyup', () => {
             const filterText = input.value.toLowerCase();
             
             // Limpa o select
             Array.from(select.options).forEach(option => {
                 if(option.value) { // Não remove a option "Selecione..."
-                    select.remove(option.index);
+                  
+[span_9](start_span)   select.remove(option.index);
                 }
             });
             
             // Adiciona de volta as opções que passam no filtro
             originalOptions.forEach(option => {
-                if (!option.value) { // Sempre mostra a option "Selecione..."
+                if (!option.value) { // Sempre mostra a 
+[span_9](end_span) option "Selecione..."
                     select.add(option);
                 }
                 else if (option.text.toLowerCase().includes(filterText)) {
                     select.add(option);
                 }
-            });
+        
+[span_10](start_span)     });
         });
-    }
+[span_10](end_span) }
     
-    // Função para mostrar/esconder campos dinâmicos de formulário
+    // --- INÍCIO DA MUDANÇA: Lógica de formulário atualizada ---
     function togglePromoFields() {
         const promoCheckbox = document.getElementById('e_promocao');
-        const promoFieldsDiv = document.getElementById('promo_fields');
+[span_11](start_span) const promoFieldsDiv = document.getElementById('promo_fields');
         const tipoPromoRadios = document.querySelectorAll('input[name="promo_tipo"]');
-        const camposUnidade = document.getElementById('campos_promo_unidade');
-        const camposQtd = document.getElementById('campos_promo_quantidade');
 
-        if (!promoCheckbox || !promoFieldsDiv || !tipoPromoRadios.length || !camposUnidade || !camposQtd) {
+        // Div dos campos individuais
+        const divPromoUnidadeValor = document.getElementById('div_promo_unidade_valor');
+        const divPromoQtdNecessaria = document.getElementById('div_promo_qtd_necessaria');
+        const divPromoQtdValor = document.getElementById('div_promo_qtd_valor');
+
+[span_11](end_span) if (!promoCheckbox || !promoFieldsDiv || !tipoPromoRadios.length || !divPromoUnidadeValor || !divPromoQtdNecessaria || !divPromoQtdValor) {
             return;
-        }
+[span_12](start_span) }
 
         // Mostra/esconde a div principal de promoções
-        promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
+        promoFieldsDiv.style.display = promoCheckbox.checked ?
+[span_12](end_span) 'block' : 'none';
 
         // Função para atualizar os campos de tipo
         const updateTipoCampos = () => {
             const tipoSelecionado = document.querySelector('input[name="promo_tipo"]:checked').value;
-            camposUnidade.style.display = (tipoSelecionado === 'unidade') ? 'block' : 'none';
-            camposQtd.style.display = (tipoSelecionado === 'quantidade') ? 'block' : 'none';
+            
+            // Lógica para mostrar/esconder campos individuais
+            divPromoUnidadeValor.style.display = (tipoSelecionado === 'unidade' || tipoSelecionado === 'limite') ? 'block' : 'none';
+            divPromoQtdNecessaria.style.display = (tipoSelecionado === 'quantidade' || tipoSelecionado === 'limite') ? 'block' : 'none';
+            divPromoQtdValor.style.display = (tipoSelecionado === 'quantidade') ? 'block' : 'none';
         };
-
-        // Adiciona listener ao checkbox
+[span_13](start_span) // Adiciona listener ao checkbox
         promoCheckbox.addEventListener('change', () => {
             promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
             if(promoCheckbox.checked) {
                 updateTipoCampos();
             }
         });
-
-        // Adiciona listener aos radios
+[span_13](end_span) // Adiciona listener aos radios
         tipoPromoRadios.forEach(radio => {
             radio.addEventListener('change', updateTipoCampos);
         });
-
-        // Executa no carregamento da página
+[span_14](start_span) // Executa no carregamento da página
         if(promoCheckbox.checked) {
             promoFieldsDiv.style.display = 'block';
-            updateTipoCampos();
+[span_14](end_span) updateTipoCampos();
         }
     }
+    // --- FIM DA MUDANÇA ---
 
     // Roda os scripts no carregamento da DOM
     document.addEventListener('DOMContentLoaded', () => {
         togglePromoFields();
         // Os filtros são ativados nos templates específicos
     });
-    </script>
+[span_15](start_span) </script>
     </body>
 </html>
