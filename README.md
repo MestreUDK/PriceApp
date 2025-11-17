@@ -44,7 +44,7 @@ O PriceApp foi construído com um roadmap robusto, resultando nas seguintes func
     1.  **Preço Reduzido:** (Ex: De R$ 5,00 por R$ 3,99).
     2.  **Por Quantidade:** (Ex: 3 unidades por R$ 10,00).
     3. **A partir de uma quantidade** (Ex: A partir de 3 unidades, o valor unitário fica por R$ 8,00)
-* **Card de Desconto:** A página de histórico exibe um card de destaque para promoções ativas, mostrando o valor do desconto.
+* **Card de Desconto:** A página de histórico exibe um card de destaque para promoções ativas, mostrando o valor do desconto e outros detalhes.
 
 ### 🛒 Listas de Compras Inteligentes
 * **Criação de Listas:** Usuários podem criar e gerenciar múltiplas listas de compras (Ex: "Compras da Semana", "Churrasco").
