@@ -26,7 +26,7 @@
         📋 Copiar Lista Otimizada
     </button>
     
-    <p>Abaixo está a combinação de produtos mais baratos encontrados em todos os mercados.</p>
+    <p>Abaixo está a combinação de produtos mais baratos encontrados em todos os mercados, considerando a quantidade desejada.</p>
 
     {% if not resultados %}
         <p>Não foi possível gerar uma comparação. Verifique se os produtos da sua lista têm preços cadastrados.</p>
@@ -36,9 +36,9 @@
                 <tr>
                     <th>Produto</th>
                     <th>Qtde</th>
-                    <th>Melhor Preço (Un.)</th>
+                    <th>Preço Unit. (Efetivo)</th>
                     <th>Mercado</th>
-                    <th>Marca</th>
+                    <th>Detalhe Promoção</th>
                     <th>Total Item</th>
                 </tr>
             </thead>
@@ -49,15 +49,26 @@
                     <td data-label="Qtde" style="text-align: center;">{{ res.item.quantidade }}x</td>
                     
                     {% if res.found %}
-                        <td data-label="Preço Un." style="font-weight: bold; color: #28a745;">
-                            R$ {{ "%.2f"|format(res.best_price.valor) }}
+                        {% set preco_unit_efetivo = res.total_cost / res.item.quantidade %}
+                        <td data-label="Preço Unit." style="font-weight: bold; color: #28a745;">
+                            R$ {{ "%.2f"|format(preco_unit_efetivo) }}
                             {% if res.best_price.e_promocao %}
                                 <span title="Preço Promocional">⚡</span>
                             {% endif %}
                         </td>
                         <td data-label="Mercado">{{ res.best_price.supermercado.nome }}</td>
-                        <td data-label="Marca">
-                            {{ res.best_price.marca.nome if res.best_price.marca else 'Sem marca' }}
+                        <td data-label="Promoção">
+                            {% if res.best_price.e_promocao %}
+                                {% if res.best_price.promo_tipo == 'unidade' %}
+                                    Preço Reduzido
+                                {% elif res.best_price.promo_tipo == 'quantidade' %}
+                                    {{ res.best_price.promo_qtd_necessaria }} por R$ {{ "%.2f"|format(res.best_price.promo_qtd_valor) }}
+                                {% else %}
+                                    Promo
+                                {% endif %}
+                            {% else %}
+                                Preço Normal
+                            {% endif %}
                         </td>
                         <td data-label="Total Item" style="font-weight: bold;">
                             R$ {{ "%.2f"|format(res.total_cost) }}
@@ -80,27 +91,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (copyButton) {
         copyButton.addEventListener('click', () => {
             try {
-                // 1. Pega os dados armazenados no botão
                 const nomeLista = copyButton.getAttribute('data-list-nome');
                 const total = copyButton.getAttribute('data-list-total');
                 const itemsJson = copyButton.getAttribute('data-list-items');
                 const items = JSON.parse(itemsJson);
 
-                // 2. Formata o texto para o clipboard
                 let clipboardText = `🛒 Lista Otimizada - ${nomeLista} 🛒\n`;
                 clipboardText += "---------------------------------\n\n";
                 
                 items.forEach(item => {
                     if (item.found === false) {
-                        // Item não encontrado
                         clipboardText += `❌ ${item.qtde}x ${item.nome}\n`;
                         clipboardText += `    (Item não encontrado)\n\n`;
                     } else {
-                        // Item encontrado
-                        // Ex: "✅ 2x Arroz (Tio João)"
+                        // INÍCIO DA MUDANÇA (ETAPA 20)
                         const itemLine = `✅ ${item.qtde}x ${item.nome} (${item.marca})\n`;
-                        // Ex: "    @ Mercado A .... Total: R$ 25.98\n\n"
-                        const priceLine = `    @ ${item.mercado} .... Total: R$ ${item.total_item.toFixed(2)}\n\n`;
+                        // Mostra o preço unitário efetivo
+                        const priceLine = `    @ ${item.mercado} (R$ ${item.preco_unit.toFixed(2)}/un) .... Total: R$ ${item.total_item.toFixed(2)}\n\n`;
+                        // FIM DA MUDANÇA
                         clipboardText += itemLine + priceLine;
                     }
                 });
@@ -108,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 clipboardText += "---------------------------------\n";
                 clipboardText += `VALOR TOTAL: R$ ${total}`;
                 
-                // 3. Copia para o Clipboard
                 navigator.clipboard.writeText(clipboardText).then(() => {
                     copyButton.textContent = 'Copiado! ✅';
                     copyButton.style.backgroundColor = '#28a745'; 
