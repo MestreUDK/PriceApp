@@ -2,6 +2,7 @@
   "name": "Gerenciador de Preços",
   "short_name": "PriceApp",
   "description": "App para comparar preços de supermercado.",
+  "version": "8.11.2",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
