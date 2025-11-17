@@ -53,20 +53,30 @@
                 </span>
             </div>
             {% endif %}
-
         </div>
         
         {% if active_promo.promo_tipo == 'quantidade' %}
-        <p style="margin-top: 1rem; color: #333; font-size: 1.1em; font-weight: bold;">
-            Detalhe: {{ active_promo.promo_qtd_necessaria }} por R$ {{ "%.2f"|format(active_promo.promo_qtd_valor) }}
-        </p>
+            <p style="margin-top: 1rem; color: #333; font-size: 1.1em; font-weight: bold;">
+                Detalhe: {{ active_promo.promo_qtd_necessaria }} por R$ {{ "%.2f"|format(active_promo.promo_qtd_valor) }}
+            </p>
+        {% elif active_promo.promo_tipo == 'limite' %}
+             <p style="margin-top: 1rem; color: #333; font-size: 1.1em; font-weight: bold;">
+                Detalhe: {{ active_promo.promo_qtd_necessaria }}+ unidades por R$ {{ "%.2f"|format(active_promo.promo_unidade_valor) }}/un
+            </p>
+        {% elif active_promo.promo_tipo == 'unidade' %}
+             <p style="margin-top: 1rem; color: #333; font-size: 1.1em; font-weight: bold;">
+                Detalhe: Preço reduzido
+                {% if normal_price_obj %}
+                    (de R$ {{ "%.2f"|format(normal_price_obj.valor) }})
+                {% endif %}
+            </p>
         {% endif %}
-
         <p style="margin-top: 1rem; color: #333;">
             Promoção válida até: <strong>{{ active_promo.data_expiracao.strftime('%d/%m/%Y') }}</strong>
         </p>
     </div>
     {% endif %}
+
     <h3>Todos os Registros (do mais antigo ao mais novo)</h3>
     {% if precos %}
         <table class="tabela-cards">
@@ -78,7 +88,7 @@
                     {% if current_user.role == 'admin' %}
                     <th>Ações</th>
                     {% endif %}
-                    </tr>
+                </tr>
             </thead>
             <tbody>
                 {% for preco in precos %}
@@ -104,7 +114,7 @@
                         </a>
                     </td>
                     {% endif %}
-                    </tr>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
