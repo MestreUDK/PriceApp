@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Sugerir Edição de Item</h2>
+    <p>Viu um nome de produto errado ou um endereço de mercado desatualizado? Nos ajude a corrigir!</p>
+
+    <form method="POST">
+        <label for="tipo_item">1. O que você quer sugerir editar?</label>
+        <select name="tipo_item" id="tipo_item" required>
+            <option value="" disabled selected>-- Selecione o tipo --</option>
+            <option value="produto">Produto</option>
+            <option value="supermercado">Supermercado</option>
+            <option value="marca">Marca</option>
+        </select>
+
+        <div id="div_produto" class="item_dropdown" style="display: none;">
+            <label for="item_id_produto">2. Qual Produto?</label>
+            <input type="text" id="produto_filtro" placeholder="Filtrar produto..." style="margin-bottom: 0.5rem; background-color: #f8f9fa;">
+            <select name="item_id_produto" id="item_id_produto">
+                <option value="" disabled selected>-- Selecione um produto --</option>
+                {% for produto in produtos %}
+                    <option value="{{ produto.id }}">{{ produto.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="div_supermercado" class="item_dropdown" style="display: none;">
+            <label for="item_id_supermercado">2. Qual Supermercado?</label>
+            <input type="text" id="supermercado_filtro" placeholder="Filtrar supermercado..." style="margin-bottom: 0.5rem; background-color: #f8f9fa;">
+            <select name="item_id_supermercado" id="item_id_supermercado">
+                <option value="" disabled selected>-- Selecione um supermercado --</option>
+                {% for mercado in supermercados %}
+                    <option value="{{ mercado.id }}">{{ mercado.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div id="div_marca" class="item_dropdown" style="display: none;">
+            <label for="item_id_marca">2. Qual Marca?</label>
+            <input type="text" id="marca_filtro" placeholder="Filtrar marca..." style="margin-bottom: 0.5rem; background-color: #f8f9fa;">
+            <select name="item_id_marca" id="item_id_marca">
+                <option value="" disabled selected>-- Selecione uma marca --</option>
+                {% for marca in marcas %}
+                    <option value="{{ marca.id }}">{{ marca.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <input type="hidden" name="item_id" id="item_id_hidden">
+        
+        <label for="campo_sugerido">3. Qual campo você quer corrigir?</label>
+        <select name="campo_sugerido" id="campo_sugerido" required>
+            <option value="" disabled selected>-- Selecione o tipo primeiro --</option>
+            </select>
+        
+        <label for="valor_sugerido">4. Qual o novo valor correto?</label>
+        <input type="text" name="valor_sugerido" id="valor_sugerido" placeholder="Digite o valor corrigido" required>
+
+        <label for="justificativa">5. Justificativa (Opcional)</label>
+        <textarea name="justificativa" id="justificativa" placeholder="Ex: O nome correto é X, vi na embalagem."></textarea>
+        
+        <button type="submit">Enviar Sugestão de Edição</button>
+    </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const tipoItemSelect = document.getElementById('tipo_item');
+    const campoSelect = document.getElementById('campo_sugerido');
+    const hiddenItemIdInput = document.getElementById('item_id_hidden');
+    
+    const dropdowns = {
+        produto: document.getElementById('div_produto'),
+        supermercado: document.getElementById('div_supermercado'),
+        marca: document.getElementById('div_marca')
+    };
+    
+    const selects = {
+        produto: document.getElementById('item_id_produto'),
+        supermercado: document.getElementById('item_id_supermercado'),
+        marca: document.getElementById('item_id_marca')
+    }
+
+    const campos = {
+        produto: [{value: 'nome', text: 'Nome do Produto'}],
+        supermercado: [{value: 'nome', text: 'Nome do Supermercado'}, {value: 'endereço', text: 'Endereço'}],
+        marca: [{value: 'nome', text: 'Nome da Marca'}]
+    };
+
+    tipoItemSelect.addEventListener('change', () => {
+        const tipo = tipoItemSelect.value;
+        
+        // Esconde todos os dropdowns de item
+        Object.values(dropdowns).forEach(div => div.style.display = 'none');
+        // Desativa todos os selects de item
+        Object.values(selects).forEach(sel => sel.disabled = true);
+        
+        // Mostra o dropdown de item correto e ativa
+        if (dropdowns[tipo]) {
+            dropdowns[tipo].style.display = 'block';
+            selects[tipo].disabled = false;
+        }
+        
+        // Preenche o dropdown de "campo"
+        campoSelect.innerHTML = '<option value="" disabled selected>-- Selecione um campo --</option>';
+        if (campos[tipo]) {
+            campos[tipo].forEach(campo => {
+                const option = new Option(campo.text, campo.value);
+                campoSelect.add(option);
+            });
+        }
+    });
+    
+    // Sincroniza o ID do item selecionado para o campo hidden
+    Object.keys(selects).forEach(key => {
+        selects[key].addEventListener('change', () => {
+            hiddenItemIdInput.value = selects[key].value;
+        });
+    });
+
+    // Ativa os filtros de busca
+    setupSelectFilter('produto_filtro', 'item_id_produto');
+    setupSelectFilter('supermercado_filtro', 'item_id_supermercado');
+    setupSelectFilter('marca_filtro', 'item_id_marca');
+});
+</script>
+
+{% endblock %}
