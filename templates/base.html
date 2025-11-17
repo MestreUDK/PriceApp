@@ -8,29 +8,26 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   </head>
   <body>
-    
+
     <header class="header-bar">
         <a href="{{ url_for('core.index') }}" class="logo">PriceApp</a>
-        
-      
-   {% if current_user.is_authenticated %}
+
+        {% if current_user.is_authenticated %}
             <div class="header-right-group">
                 <form class="search-form" method="GET" action="{{ url_for('core.busca') }}">
                     <input type="search" name="q" placeholder="Buscar..." required>
                     <button type="submit">Buscar</button>
-                
- </form>
-                
+                </form>
+
                 <a href="{{ url_for('auth.perfil') }}" class="profile-link" title="Meu Perfil">👤</a>
             </div>
         {% endif %}
     </header>
 
     <div class="container">
-        
+
         {% with messages = get_flashed_messages(with_categories=true) %}
-          
- {% if messages %}
+          {% if messages %}
             {% for category, message in messages %}
               <div class="flash {{ category }}">{{ message }}</div>
             {% endfor %}
@@ -41,7 +38,6 @@
     </div>
 
     <nav class="bottom-nav">
- 
         {% if current_user.is_authenticated %}
             <a href="{{ url_for('core.index') }}">Início</a>
             <a href="{{ url_for('products.gerenciar_produtos') }}">Produtos</a>
@@ -49,21 +45,18 @@
             <a href="{{ url_for('lists.gerenciar_listas') }}">Listas</a>
             <a href="{{ url_for('core.leitor_offline') }}" style="color: #17a2b8;">Leitor Offline</a>
 
-            
- {% if current_user.role == 'admin' %}
+            {% if current_user.role == 'admin' %}
                 <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar</b></a>
                 <a href="{{ url_for('brands.gerenciar_marcas') }}">Marcas</a>
                 <a href="{{ url_for('suggestions.admin_sugestoes') }}" style="color: #ffc107;">Sugestões Preço</a>
                 <a href="{{ url_for('suggestions_edit.admin_sugestoes_edicao') }}" style="color: #fd7e14;">Sugestões Edição</a>
-             
-    {% else %}
+            {% else %}
                 <a href="{{ url_for('suggestions.sugerir_preco') }}"><b>Sugerir Preço</b></a>
                 <a href="{{ url_for('suggestions_edit.sugerir_edicao') }}" style="color: #fd7e14;">Sugerir Edição</a>
-                {% endif %}
-            
+            {% endif %}
+
             <a href="{{ url_for('auth.logout') }}" style="color: #ffc107;">Sair</a>
-      
-       
+
         {% else %}
             <a href="{{ url_for('auth.login') }}"><b>Entrar</b></a>
             <a href="{{ url_for('auth.register') }}">Registrar</a>
@@ -73,51 +66,46 @@
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register("{{ url_for('core.service_worker') }}")
-          
-       .then(function(registration) {
+                .then(function(registration) {
                    console.log('Service Worker registrado com sucesso:', registration);
- })
+                })
                 .catch(function(error) {
                     console.log('Falha ao registrar Service Worker:', error);
                 });
- }
+        }
     </script>
     <script>
         // Script do Botão de Sincronização Offline (MANTIDO IGUAL)
         const syncButton = document.getElementById('syncButton');
- const syncStatus = document.getElementById('syncStatus');
+        const syncStatus = document.getElementById('syncStatus');
 
         if (syncButton) {
             syncButton.addEventListener('click', () => {
                 syncStatus.textContent = 'Sincronizando...';
                 syncStatus.style.color = '#007bff';
-                
-                fetch("{{ url_for('core.download_backup') }}") 
-        
-             .then(response => {
+
+                fetch("{{ url_for('core.download_backup') }}")
+                    .then(response => {
                         if (!response.ok) {
                             throw new Error('Falha ao buscar dados do servidor.');
                         }
- 
                         return response.text(); 
                     })
                     .then(jsonData => {
                         localStorage.setItem('priceapp_offline_db', jsonData);
-        
-                 syncStatus.textContent = 'Pronto! Dados sincronizados para uso offline.';
+                        syncStatus.textContent = 'Pronto! Dados sincronizados para uso offline.';
                         syncStatus.style.color = 'green';
                         console.log('Dados salvos no localStorage.');
                     })
-    
-                 .catch(error => {
+                    .catch(error => {
                         syncStatus.textContent = `Erro na sincronização: ${error.message}`;
- syncStatus.style.color = 'red';
+                        syncStatus.style.color = 'red';
                         console.error('Erro ao sincronizar:', error);
                     });
             });
         }
     </script>
-    
+
     <script>
     /**
      * Adiciona um filtro de texto a um <select>
@@ -126,41 +114,39 @@
      */
     function setupSelectFilter(inputId, selectId) {
         const input = document.getElementById(inputId);
- const select = document.getElementById(selectId);
-        
+        const select = document.getElementById(selectId);
+
         if (!input || !select) return;
 
         // Guarda as opções originais
         const originalOptions = Array.from(select.options);
- input.addEventListener('keyup', () => {
+        
+        input.addEventListener('keyup', () => {
             const filterText = input.value.toLowerCase();
-            
+
             // Limpa o select
             Array.from(select.options).forEach(option => {
                 if(option.value) { // Não remove a option "Selecione..."
-                  
-   select.remove(option.index);
+                   select.remove(option.index);
                 }
             });
-            
+
             // Adiciona de volta as opções que passam no filtro
             originalOptions.forEach(option => {
-                if (!option.value) { // Sempre mostra a 
- option "Selecione..."
+                if (!option.value) { // Sempre mostra a option "Selecione..."
                     select.add(option);
                 }
                 else if (option.text.toLowerCase().includes(filterText)) {
                     select.add(option);
                 }
-        
-     });
+            });
         });
- }
-    
+    }
+
     // --- INÍCIO DA MUDANÇA: Lógica de formulário atualizada ---
     function togglePromoFields() {
         const promoCheckbox = document.getElementById('e_promocao');
- const promoFieldsDiv = document.getElementById('promo_fields');
+        const promoFieldsDiv = document.getElementById('promo_fields');
         const tipoPromoRadios = document.querySelectorAll('input[name="promo_tipo"]');
 
         // Div dos campos individuais
@@ -168,38 +154,40 @@
         const divPromoQtdNecessaria = document.getElementById('div_promo_qtd_necessaria');
         const divPromoQtdValor = document.getElementById('div_promo_qtd_valor');
 
- if (!promoCheckbox || !promoFieldsDiv || !tipoPromoRadios.length || !divPromoUnidadeValor || !divPromoQtdNecessaria || !divPromoQtdValor) {
+        if (!promoCheckbox || !promoFieldsDiv || !tipoPromoRadios.length || !divPromoUnidadeValor || !divPromoQtdNecessaria || !divPromoQtdValor) {
             return;
- }
+        }
 
         // Mostra/esconde a div principal de promoções
-        promoFieldsDiv.style.display = promoCheckbox.checked ?
- 'block' : 'none';
+        promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
 
         // Função para atualizar os campos de tipo
         const updateTipoCampos = () => {
             const tipoSelecionado = document.querySelector('input[name="promo_tipo"]:checked').value;
-            
+
             // Lógica para mostrar/esconder campos individuais
             divPromoUnidadeValor.style.display = (tipoSelecionado === 'unidade' || tipoSelecionado === 'limite') ? 'block' : 'none';
             divPromoQtdNecessaria.style.display = (tipoSelecionado === 'quantidade' || tipoSelecionado === 'limite') ? 'block' : 'none';
             divPromoQtdValor.style.display = (tipoSelecionado === 'quantidade') ? 'block' : 'none';
         };
- // Adiciona listener ao checkbox
+        
+        // Adiciona listener ao checkbox
         promoCheckbox.addEventListener('change', () => {
             promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
             if(promoCheckbox.checked) {
                 updateTipoCampos();
             }
         });
- // Adiciona listener aos radios
+        
+        // Adiciona listener aos radios
         tipoPromoRadios.forEach(radio => {
             radio.addEventListener('change', updateTipoCampos);
         });
- // Executa no carregamento da página
+        
+        // Executa no carregamento da página
         if(promoCheckbox.checked) {
             promoFieldsDiv.style.display = 'block';
- updateTipoCampos();
+            updateTipoCampos();
         }
     }
     // --- FIM DA MUDANÇA ---
@@ -209,6 +197,6 @@
         togglePromoFields();
         // Os filtros são ativados nos templates específicos
     });
- </script>
-    </body>
+    </script>
+  </body>
 </html>
