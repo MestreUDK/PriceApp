@@ -1,5 +1,6 @@
 # routes/routes_lists.py
-from flask import (
+from flask 
+ import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
@@ -12,13 +13,13 @@ import json
 
 lists_bp = Blueprint('lists', __name__, template_folder='../templates')
 
-# --- INÍCIO DA MUDANÇA (ETAPA 20) ---
+# --- INÍCIO DA MUDANÇA (LÓGICA DE CÁLCULO) ---
 # Função auxiliar para calcular o custo de um item com base na quantidade e promoções
 def calcular_custo_total_item(preco_obj, quantidade_desejada):
     """
     Calcula o custo total para um item, considerando a quantidade
     e os diferentes tipos de promoção.
-    """
+ """
     
     # Se não houver promoção válida, retorna o preço base
     if not preco_obj.e_promocao or preco_obj.data_expiracao < datetime.utcnow():
@@ -28,9 +29,31 @@ def calcular_custo_total_item(preco_obj, quantidade_desejada):
     if preco_obj.promo_tipo == 'unidade' and preco_obj.promo_unidade_valor:
         return preco_obj.promo_unidade_valor * quantidade_desejada
     
+    # --- INÍCIO DA NOVA LÓGICA (PROMOÇÃO DE LIMITE) ---
+    elif (preco_obj.promo_tipo == 'limite' and
+          preco_obj.promo_qtd_necessaria and
+          preco_obj.promo_unidade_valor):
+        
+        try:
+            qtd_minima = int(preco_obj.promo_qtd_necessaria)
+            novo_valor_unitario = float(preco_obj.promo_unidade_valor)
+
+            # Se o usuário comprou a quantidade mínima ou mais
+            if quantidade_desejada >= qtd_minima:
+                # Aplica o novo preço a TODAS as unidades
+                return novo_valor_unitario * quantidade_desejada
+            else:
+                # Se não atingiu o limite, paga o preço normal
+                return preco_obj.valor * quantidade_desejada
+
+        except (ValueError, TypeError, ZeroDivisionError):
+            return preco_obj.valor * quantidade_desejada
+    # --- FIM DA NOVA LÓGICA ---
+
     # Se a promoção for de 'quantidade' (Ex: 3 por R$10)
-    if (preco_obj.promo_tipo == 'quantidade' and 
-        preco_obj.promo_qtd_necessaria and 
+    elif (preco_obj.promo_tipo == 'quantidade' and 
+   
+      preco_obj.promo_qtd_necessaria and 
         preco_obj.promo_qtd_valor):
         
         try:
@@ -38,20 +61,23 @@ def calcular_custo_total_item(preco_obj, quantidade_desejada):
             valor_promo = float(preco_obj.promo_qtd_valor)
             
             if qtd_promo <= 0: # Evita divisão por zero
-                return preco_obj.valor * quantidade_desejada
+         
+        return preco_obj.valor * quantidade_desejada
 
             # Calcula quantos "pacotes" de promoção o usuário está comprando
             num_pacotes_promo = quantidade_desejada // qtd_promo
             custo_dos_pacotes = num_pacotes_promo * valor_promo
             
             # Calcula o custo dos itens restantes (que não fecharam um pacote)
-            qtd_restante = quantidade_desejada % qtd_promo
+  
+           qtd_restante = quantidade_desejada % qtd_promo
             custo_restante = qtd_restante * preco_obj.valor # Preço base
             
             return custo_dos_pacotes + custo_restante
             
         except (ValueError, TypeError):
-            # Fallback em caso de dados mal formatados
+            # Fallback em caso de dados 
+ mal formatados
             return preco_obj.valor * quantidade_desejada
 
     # Fallback: Se for 'e_promocao' mas os campos estiverem errados, usa o preço base
@@ -66,7 +92,8 @@ def gerenciar_listas():
         nome_lista = request.form.get('nome')
         
         if not nome_lista:
-            flash('O nome da lista é obrigatório.', 'error')
+            flash('O nome da lista é 
+ obrigatório.', 'error')
         else:
             nova_lista = Lista(nome=nome_lista, user_id=current_user.id)
             db.session.add(nova_lista)
@@ -82,7 +109,8 @@ def gerenciar_listas():
 
 @lists_bp.route('/lista/<int:lista_id>', methods=['GET'])
 @login_required
-def ver_lista(lista_id):
+def 
+ ver_lista(lista_id):
     lista = db.session.get(Lista, lista_id)
     if not lista:
         abort(404)
@@ -102,6 +130,7 @@ def add_item_lista(lista_id):
     if lista.user_id != current_user.id:
         abort(403)
         
+ 
     produto_id = request.form.get('produto_id')
     quantidade_str = request.form.get('quantidade', '1') 
     
@@ -110,7 +139,8 @@ def add_item_lista(lista_id):
         if quantidade <= 0:
             raise ValueError()
     except ValueError:
-        flash('Quantidade inválida. Deve ser um número maior que zero.', 'error')
+        flash('Quantidade inválida.
+ Deve ser um número maior que zero.', 'error')
         return redirect(url_for('lists.ver_lista', lista_id=lista_id))
 
     if not produto_id:
@@ -123,7 +153,8 @@ def add_item_lista(lista_id):
         item_existente.quantidade = quantidade
         flash('Quantidade do item atualizada!', 'success')
     else:
-        novo_item = ListaItem(
+      
+   novo_item = ListaItem(
             lista_id=lista_id,
             produto_id=produto_id,
             quantidade=quantidade
@@ -139,7 +170,8 @@ def add_item_lista(lista_id):
 def delete_item_lista(item_id):
     item = db.session.get(ListaItem, item_id)
     if not item:
-        abort(404)
+   
+      abort(404)
     
     if item.lista.user_id != current_user.id:
         abort(403)
@@ -159,6 +191,7 @@ def delete_lista(lista_id):
     if not lista:
         abort(404)
     if lista.user_id != current_user.id:
+ 
         abort(403)
         
     db.session.delete(lista)
@@ -167,7 +200,7 @@ def delete_lista(lista_id):
     flash(f'Lista "{lista.nome}" excluída com sucesso.', 'success')
     return redirect(url_for('lists.gerenciar_listas'))
 
-# --- INÍCIO DA MUDANÇA (ETAPA 17 & 20) ---
+# --- Rota de Comparação (já utiliza a função atualizada) ---
 @lists_bp.route('/lista/<int:lista_id>/comparar')
 @login_required
 def comparar_lista(lista_id):
@@ -178,7 +211,8 @@ def comparar_lista(lista_id):
         abort(403)
 
     if not lista.itens:
-        flash('Sua lista está vazia. Adicione produtos antes de comparar.', 'error')
+       
+  flash('Sua lista está vazia. Adicione produtos antes de comparar.', 'error')
         return redirect(url_for('lists.ver_lista', lista_id=lista_id))
 
     itens_da_lista = lista.itens
@@ -191,7 +225,8 @@ def comparar_lista(lista_id):
         
         # 1. Pega TODOS os preços válidos para este produto
         #    (Onde a promoção não está expirada)
-        precos_validos = Preco.query.filter(
+  
+       precos_validos = Preco.query.filter(
             Preco.produto_id == item.produto_id,
             or_(
                 Preco.e_promocao == False,
@@ -199,7 +234,8 @@ def comparar_lista(lista_id):
             )
         ).all()
 
-        if not precos_validos:
+        if not 
+ precos_validos:
             resultados.append({"item": item, "found": False})
             continue
 
@@ -209,13 +245,15 @@ def comparar_lista(lista_id):
 
         for preco_obj in precos_validos:
             # 3. Usa a nova função para calcular o custo
-            custo_total_deste_preco = calcular_custo_total_item(
+  
+           custo_total_deste_preco = calcular_custo_total_item(
                 preco_obj, 
                 item.quantidade
             )
             
             if custo_total_deste_preco < melhor_custo_total:
-                melhor_custo_total = custo_total_deste_preco
+                
+ melhor_custo_total = custo_total_deste_preco
                 melhor_preco_obj = preco_obj
 
         # 4. Salva o melhor resultado para este item
@@ -223,7 +261,8 @@ def comparar_lista(lista_id):
             grand_total += melhor_custo_total
             resultados.append({
                 "item": item,
-                "best_price": melhor_preco_obj,
+            
+     "best_price": melhor_preco_obj,
                 "total_cost": melhor_custo_total,
                 "found": True
             })
@@ -232,20 +271,23 @@ def comparar_lista(lista_id):
 
     # 7. Prepara dados para o script de "Copiar Lista"
     resultados_json_list = []
-    for res in resultados:
+    for res in 
+ resultados:
         if res["found"]:
             # Calcula o preço unitário efetivo para o JSON
             preco_unit_efetivo = res["total_cost"] / res["item"].quantidade
             
             resultados_json_list.append({
                 "nome": res["item"].produto.nome,
-                "qtde": res["item"].quantidade,
+              
+   "qtde": res["item"].quantidade,
                 "preco_unit": preco_unit_efetivo, # Preço unitário efetivo
                 "total_item": res["total_cost"],
                 "mercado": res["best_price"].supermercado.nome,
                 "marca": res["best_price"].marca.nome if res["best_price"].marca else "Sem marca"
             })
-        else:
+        
+ else:
              resultados_json_list.append({
                 "nome": res["item"].produto.nome,
                 "qtde": res["item"].quantidade,
@@ -255,9 +297,9 @@ def comparar_lista(lista_id):
     # 8. Renderiza o template
     return render_template(
         'lista_comparar.html', 
-        lista=lista, 
+  
+       lista=lista, 
         resultados=resultados, 
         grand_total=grand_total,
         resultados_json=json.dumps(resultados_json_list) 
     )
-# --- FIM DA MUDANÇA ---
