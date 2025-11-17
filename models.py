@@ -77,7 +77,7 @@ class Preco(db.Model):
     data_expiracao = db.Column(db.DateTime, nullable=True) 
     
     # Novos campos para tipos de promoção
-    promo_tipo = db.Column(db.String(50), nullable=False, default='unidade') # 'unidade' ou 'quantidade'
+    promo_tipo = db.Column(db.String(50), nullable=False, default='unidade') # 'unidade', 'quantidade', 'limite'
     promo_unidade_valor = db.Column(db.Float, nullable=True) # Ex: Preço normal 5.00, promo 3.99
     promo_qtd_necessaria = db.Column(db.Integer, nullable=True) # Ex: 3
     promo_qtd_valor = db.Column(db.Float, nullable=True) # Ex: 10.00 (para 3 unidades)
@@ -107,7 +107,7 @@ class SugestaoPreco(db.Model):
     data_expiracao = db.Column(db.DateTime, nullable=True) 
     
     # Novos campos para tipos de promoção
-    promo_tipo = db.Column(db.String(50), nullable=False, default='unidade') # 'unidade' ou 'quantidade'
+    promo_tipo = db.Column(db.String(50), nullable=False, default='unidade') # 'unidade', 'quantidade', 'limite'
     promo_unidade_valor = db.Column(db.Float, nullable=True) 
     promo_qtd_necessaria = db.Column(db.Integer, nullable=True)
     promo_qtd_valor = db.Column(db.Float, nullable=True)
