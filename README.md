@@ -20,10 +20,10 @@ O principal diferencial é seu sistema de **Lista de Compras Otimizada**, que ca
 
 ## 📋 Tabela de Conteúdos
 
-* [Principais Funcionalidades](#-principais-funcionalidades)
-* [Como Funciona](#-como-funciona-fluxo-de-uso)
-* [Tecnologias Utilizadas](#-tecnologias-utilizadas)
-* [Licença](#-licença)
+* [Principais Funcionalidades](#principais-funcionalidades)
+* [Como Funciona (Fluxo de Uso)](#como-funciona-fluxo-de-uso)
+* [Tecnologias Utilizadas](#tecnologias-utilizadas)
+* [Licença](#licença)
 
 ---
 
