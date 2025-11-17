@@ -1,5 +1,5 @@
 // static/sw.js
-const CACHE_NAME = 'priceapp-cache-v1';
+const CACHE_NAME = 'priceapp-cache-v8';
 const urlsToCache = [
   '/',
   '/registrar-preco',
