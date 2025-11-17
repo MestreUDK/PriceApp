@@ -27,6 +27,10 @@ class User(db.Model, UserMixin):
 
     sugestoes_feitas = db.relationship('SugestaoPreco', backref='sugerido_por', lazy=True, foreign_keys='SugestaoPreco.sugerido_por_id')
     
+    # --- INÍCIO DA MUDANÇA (ETAPA 18) ---
+    sugestoes_edicao_feitas = db.relationship('SugestaoEdicao', backref='sugerido_por', lazy=True)
+    # --- FIM DA MUDANÇA ---
+    
     listas = db.relationship('Lista', backref='criada_por', lazy=True)
 
 # ----------------------------------------
@@ -63,11 +67,21 @@ class Marca(db.Model):
 
 class Preco(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    
+    # --- INÍCIO DA MUDANÇA (ETAPA 20) ---
+    # 'valor' agora é o preço base/normal da unidade
     valor = db.Column(db.Float, nullable=False)
     data_cadastro = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
     e_promocao = db.Column(db.Boolean, default=False, nullable=False)
     data_expiracao = db.Column(db.DateTime, nullable=True) 
+    
+    # Novos campos para tipos de promoção
+    promo_tipo = db.Column(db.String(50), nullable=False, default='unidade') # 'unidade' ou 'quantidade'
+    promo_unidade_valor = db.Column(db.Float, nullable=True) # Ex: Preço normal 5.00, promo 3.99
+    promo_qtd_necessaria = db.Column(db.Integer, nullable=True) # Ex: 3
+    promo_qtd_valor = db.Column(db.Float, nullable=True) # Ex: 10.00 (para 3 unidades)
+    # --- FIM DA MUDANÇA ---
     
     # Chaves estrangeiras
     produto_id = db.Column(db.Integer, db.ForeignKey('produto.id'), nullable=False)
@@ -84,10 +98,20 @@ class SugestaoPreco(db.Model):
     produto_id = db.Column(db.Integer, db.ForeignKey('produto.id'), nullable=False)
     supermercado_id = db.Column(db.Integer, db.ForeignKey('supermercado.id'), nullable=False)
     marca_id = db.Column(db.Integer, db.ForeignKey('marca.id'), nullable=True) 
+    
+    # --- INÍCIO DA MUDANÇA (ETAPA 20) ---
+    # 'valor' é o preço base/normal sugerido
     valor = db.Column(db.Float, nullable=False)
     
     e_promocao = db.Column(db.Boolean, default=False, nullable=False)
     data_expiracao = db.Column(db.DateTime, nullable=True) 
+    
+    # Novos campos para tipos de promoção
+    promo_tipo = db.Column(db.String(50), nullable=False, default='unidade') # 'unidade' ou 'quantidade'
+    promo_unidade_valor = db.Column(db.Float, nullable=True) 
+    promo_qtd_necessaria = db.Column(db.Integer, nullable=True)
+    promo_qtd_valor = db.Column(db.Float, nullable=True)
+    # --- FIM DA MUDANÇA ---
     
     sugerido_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     data_sugestao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -119,3 +143,24 @@ class ListaItem(db.Model):
     produto_id = db.Column(db.Integer, db.ForeignKey('produto.id'), nullable=False)
     
     __table_args__ = (db.UniqueConstraint('lista_id', 'produto_id', name='_lista_produto_uc'),)
+
+# --- INÍCIO DA MUDANÇA (ETAPA 18) ---
+# --- NOVA TABELA PARA SUGESTÕES DE EDIÇÃO ---
+# ---------------------------------------------
+class SugestaoEdicao(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    
+    tipo_item = db.Column(db.String(50), nullable=False) # 'produto', 'supermercado', 'marca'
+    item_id = db.Column(db.Integer, nullable=False)
+    
+    campo_sugerido = db.Column(db.String(50), nullable=False) # 'nome', 'endereço'
+    valor_antigo = db.Column(db.String(300), nullable=False)
+    valor_sugerido = db.Column(db.String(300), nullable=False)
+    
+    justificativa = db.Column(db.Text, nullable=True)
+    
+    sugerido_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    data_sugestao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
+    status = db.Column(db.String(50), nullable=False, default='pendente') # 'pendente', 'aprovado', 'rejeitado'
+# --- FIM DA MUDANÇA ---
