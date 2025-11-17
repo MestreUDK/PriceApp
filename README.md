@@ -97,4 +97,4 @@ O PriceApp foi construído com um roadmap robusto, resultando nas seguintes func
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença [LICENSE MIT]. Veja o arquivo [LICENSE](https://github.com/MestreUDK/PriceApp/blob/main/LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença **LICENSE MIT**. Veja o arquivo [LICENSE](https://github.com/MestreUDK/PriceApp/blob/main/LICENSE) para mais detalhes.
