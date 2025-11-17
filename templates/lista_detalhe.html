@@ -16,12 +16,13 @@
     <hr>
 
     <h3>Adicionar Produto à Lista</h3>
-    <form method="POST" action="{{ url_for('lists.add_item_lista', lista_id=lista.id) }}" style="display: flex; gap: 10px; align-items: flex-end;">
+    <form method="POST" action="{{ url_for('lists.add_item_lista', lista_id=lista.id) }}" style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
         
-        <div style="flex-grow: 1;">
+        <div style="flex-grow: 1; min-width: 200px;">
             <label for="produto_id">Produto:</label>
-            <select name="produto_id" id="produto_id" required>
-                <option value="" disabled selected>-- Selecione um produto --</option>
+            <input type="text" id="produto_filtro" placeholder="Filtrar produto..." style="margin-bottom: 0.5rem; background-color: #f8f9fa;">
+            <select name="produto_id" id="produto" required>
+            <option value="" disabled selected>-- Selecione um produto --</option>
                 {% for produto in produtos %}
                     <option value="{{ produto.id }}">{{ produto.nome }}</option>
                 {% endfor %}
@@ -79,4 +80,9 @@
         <button type="submit" style="background-color: #dc3545; width: auto;">Excluir esta Lista</button>
     </form>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    setupSelectFilter('produto_filtro', 'produto');
+});
+</script>
 {% endblock %}
