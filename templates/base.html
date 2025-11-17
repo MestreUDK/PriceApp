@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="pt-br">
   <head>
@@ -49,8 +48,12 @@
             {% if current_user.role == 'admin' %}
                 <a href="{{ url_for('prices.registrar_preco') }}"><b>Registrar</b></a>
                 <a href="{{ url_for('brands.gerenciar_marcas') }}">Marcas</a>
-                <a href="{{ url_for('suggestions.admin_sugestoes') }}" style="color: #ffc107;">Sugestões</a>
-            {% endif %}
+                <a href="{{ url_for('suggestions.admin_sugestoes') }}" style="color: #ffc107;">Sugestões Preço</a>
+                <a href="{{ url_for('suggestions_edit.admin_sugestoes_edicao') }}" style="color: #fd7e14;">Sugestões Edição</a>
+                {% else %}
+                <a href="{{ url_for('suggestions.sugerir_preco') }}"><b>Sugerir Preço</b></a>
+                <a href="{{ url_for('suggestions_edit.sugerir_edicao') }}" style="color: #fd7e14;">Sugerir Edição</a>
+                {% endif %}
             
             <a href="{{ url_for('auth.logout') }}" style="color: #ffc107;">Sair</a>
             
@@ -72,7 +75,7 @@
         }
     </script>
     <script>
-        // Script do Botão de Sincronização Offline (Etapa 15: MANTIDO IGUAL)
+        // Script do Botão de Sincronização Offline (MANTIDO IGUAL)
         const syncButton = document.getElementById('syncButton');
         const syncStatus = document.getElementById('syncStatus');
 
@@ -81,7 +84,6 @@
                 syncStatus.textContent = 'Sincronizando...';
                 syncStatus.style.color = '#007bff';
                 
-                // Este fetch APONTA PARA A ROTA JSON ORIGINAL
                 fetch("{{ url_for('core.download_backup') }}") 
                     .then(response => {
                         if (!response.ok) {
@@ -103,5 +105,91 @@
             });
         }
     </script>
-  </body>
+    
+    <script>
+    /**
+     * Adiciona um filtro de texto a um <select>
+     * @param {string} inputId O ID do <input> de filtro
+     * @param {string} selectId O ID do <select> a ser filtrado
+     */
+    function setupSelectFilter(inputId, selectId) {
+        const input = document.getElementById(inputId);
+        const select = document.getElementById(selectId);
+        
+        if (!input || !select) return;
+
+        // Guarda as opções originais
+        const originalOptions = Array.from(select.options);
+
+        input.addEventListener('keyup', () => {
+            const filterText = input.value.toLowerCase();
+            
+            // Limpa o select
+            Array.from(select.options).forEach(option => {
+                if(option.value) { // Não remove a option "Selecione..."
+                    select.remove(option.index);
+                }
+            });
+            
+            // Adiciona de volta as opções que passam no filtro
+            originalOptions.forEach(option => {
+                if (!option.value) { // Sempre mostra a option "Selecione..."
+                    select.add(option);
+                }
+                else if (option.text.toLowerCase().includes(filterText)) {
+                    select.add(option);
+                }
+            });
+        });
+    }
+    
+    // Função para mostrar/esconder campos dinâmicos de formulário
+    function togglePromoFields() {
+        const promoCheckbox = document.getElementById('e_promocao');
+        const promoFieldsDiv = document.getElementById('promo_fields');
+        const tipoPromoRadios = document.querySelectorAll('input[name="promo_tipo"]');
+        const camposUnidade = document.getElementById('campos_promo_unidade');
+        const camposQtd = document.getElementById('campos_promo_quantidade');
+
+        if (!promoCheckbox || !promoFieldsDiv || !tipoPromoRadios.length || !camposUnidade || !camposQtd) {
+            return;
+        }
+
+        // Mostra/esconde a div principal de promoções
+        promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
+
+        // Função para atualizar os campos de tipo
+        const updateTipoCampos = () => {
+            const tipoSelecionado = document.querySelector('input[name="promo_tipo"]:checked').value;
+            camposUnidade.style.display = (tipoSelecionado === 'unidade') ? 'block' : 'none';
+            camposQtd.style.display = (tipoSelecionado === 'quantidade') ? 'block' : 'none';
+        };
+
+        // Adiciona listener ao checkbox
+        promoCheckbox.addEventListener('change', () => {
+            promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
+            if(promoCheckbox.checked) {
+                updateTipoCampos();
+            }
+        });
+
+        // Adiciona listener aos radios
+        tipoPromoRadios.forEach(radio => {
+            radio.addEventListener('change', updateTipoCampos);
+        });
+
+        // Executa no carregamento da página
+        if(promoCheckbox.checked) {
+            promoFieldsDiv.style.display = 'block';
+            updateTipoCampos();
+        }
+    }
+
+    // Roda os scripts no carregamento da DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        togglePromoFields();
+        // Os filtros são ativados nos templates específicos
+    });
+    </script>
+    </body>
 </html>
