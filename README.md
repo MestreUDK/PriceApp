@@ -43,6 +43,7 @@ O PriceApp foi construído com um roadmap robusto, resultando nas seguintes func
 * **Tipos de Promoção:** Suporte para dois tipos de promoção:
     1.  **Preço Reduzido:** (Ex: De R$ 5,00 por R$ 3,99).
     2.  **Por Quantidade:** (Ex: 3 unidades por R$ 10,00).
+    3. **A partir de uma quantidade** (Ex: A partir de 3 unidades, o valor unitário fica por R$ 8,00)
 * **Card de Desconto:** A página de histórico exibe um card de destaque para promoções ativas, mostrando o valor do desconto.
 
 ### 🛒 Listas de Compras Inteligentes
