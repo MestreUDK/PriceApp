@@ -17,12 +17,12 @@
     </h4>
     <hr>
 
-    <h3>Flutuação de Preço</h3>
+    <h3>Flutuação de Preço (Base)</h3>
     <div style="width: 100%; max-width: 900px; margin-bottom: 2rem;">
         <canvas id="graficoHistorico"></canvas>
     </div>
 
-    {% if active_promo %}
+    {% if active_promo and promo_effective_price is not none %}
     <div style="background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
         <h3 style="margin-top: 0; color: #d46b08;">⚡ Promoção Ativa Encontrada!</h3>
         
@@ -30,7 +30,7 @@
             
             {% if normal_price_obj %}
             <div>
-                <span style="font-size: 0.9em; color: #555; display: block;">Preço Normal (Recente)</span>
+                <span style="font-size: 0.9em; color: #555; display: block;">Preço Base Normal</span>
                 <span style="font-size: 1.5em; color: #dc3545; text-decoration: line-through;">
                     R$ {{ "%.2f"|format(normal_price_obj.valor) }}
                 </span>
@@ -38,14 +38,14 @@
             {% endif %}
 
             <div>
-                <span style="font-size: 0.9em; color: #555; display: block;">Preço Promocional</span>
+                <span style="font-size: 0.9em; color: #555; display: block;">Preço Unit. Efetivo (Promo)</span>
                 <span style="font-size: 1.5em; color: #28a745; font-weight: bold;">
-                    R$ {{ "%.2f"|format(active_promo.valor) }}
+                    R$ {{ "%.2f"|format(promo_effective_price) }}
                 </span>
             </div>
 
-            {% if normal_price_obj and normal_price_obj.valor > 0 %}
-            {% set desconto = ((normal_price_obj.valor - active_promo.valor) / normal_price_obj.valor) * 100 %}
+            {% if normal_price_obj and normal_price_obj.valor > 0 and promo_effective_price < normal_price_obj.valor %}
+            {% set desconto = ((normal_price_obj.valor - promo_effective_price) / normal_price_obj.valor) * 100 %}
             <div>
                 <span style="font-size: 0.9em; color: #555; display: block;">Desconto</span>
                 <span style="font-size: 1.5em; color: #007bff; font-weight: bold;">
@@ -55,6 +55,12 @@
             {% endif %}
 
         </div>
+        
+        {% if active_promo.promo_tipo == 'quantidade' %}
+        <p style="margin-top: 1rem; color: #333; font-size: 1.1em; font-weight: bold;">
+            Detalhe: {{ active_promo.promo_qtd_necessaria }} por R$ {{ "%.2f"|format(active_promo.promo_qtd_valor) }}
+        </p>
+        {% endif %}
 
         <p style="margin-top: 1rem; color: #333;">
             Promoção válida até: <strong>{{ active_promo.data_expiracao.strftime('%d/%m/%Y') }}</strong>
@@ -66,15 +72,18 @@
         <table class="tabela-cards">
             <thead>
                 <tr>
-                    <th>Preço (R$)</th>
+                    <th>Preço Base (R$)</th>
                     <th>Registrado em</th>
                     <th>Registrado por</th>
-                </tr>
+                    {% if current_user.role == 'admin' %}
+                    <th>Ações</th>
+                    {% endif %}
+                    </tr>
             </thead>
             <tbody>
                 {% for preco in precos %}
                 <tr>
-                    <td data-label="Preço">
+                    <td data-label="Preço Base">
                         R$ {{ "%.2f"|format(preco.valor) }}
                         {% if preco.e_promocao %}
                             <span title="Preço Promocional">⚡</span>
@@ -88,7 +97,14 @@
                             N/D
                         {% endif %}
                     </td>
-                </tr>
+                    {% if current_user.role == 'admin' %}
+                    <td class="actions-cell">
+                        <a href="{{ url_for('prices.edit_preco', preco_id=preco.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
+                            ✏️ Editar
+                        </a>
+                    </td>
+                    {% endif %}
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -98,6 +114,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    // Gráfico continua mostrando o valor BASE
     const labels = {{ labels_json | safe }};
     const dataValues = {{ valores_json | safe }};
     const ctx = document.getElementById('graficoHistorico');
@@ -106,7 +123,7 @@
         data: {
             labels: labels, 
             datasets: [{
-                label: 'Preço (R$)', 
+                label: 'Preço Base (R$)', 
                 data: dataValues, 
                 fill: false,
                 borderColor: 'rgb(0, 123, 255)', 
