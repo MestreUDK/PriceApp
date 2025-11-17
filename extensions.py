@@ -1,4 +1,3 @@
-
 # extensions.py
 # Este arquivo cria as extensões (como o DB) para que elas
 # possam ser importadas por outros arquivos sem causar
