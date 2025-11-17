@@ -6,12 +6,8 @@ from extensions import db
 from models import Supermercado, Produto, Preco, User, Marca
 from flask_login import login_required 
 import json 
-
-# --- INÍCIO DA CORREÇÃO (ETAPA 15) ---
 import openpyxl
-# A linha "from openpyxl.writer.excel import save_virtual_workbook" FOI REMOVIDA
 from io import BytesIO 
-# --- FIM DA CORREÇÃO ---
 
 core_bp = Blueprint('core', __name__,
                     template_folder='../templates',
@@ -50,7 +46,8 @@ def busca():
 @core_bp.route('/backup/download')
 @login_required
 def download_backup():
-    # Esta rota JSON é mantida para o Leitor Offline
+    # ... (toda a sua lógica de backup JSON que já existe) ...
+    # (O código aqui dentro está correto, não precisa mudar)
     usuarios = User.query.all()
     produtos = Produto.query.all()
     mercados = Supermercado.query.all()
@@ -99,42 +96,36 @@ def download_backup():
         headers={"Content-Disposition": "attachment;filename=priceapp_backup.json"}
     )
 
-# --- INÍCIO DA CORREÇÃO (ETAPA 15) ---
 @core_bp.route('/backup/download_excel')
 @login_required
 def download_excel_backup():
-    # 1. Cria o Workbook (o arquivo Excel)
+    # ... (toda a sua lógica de backup Excel que já existe) ...
+    # (O código aqui dentro está correto, não precisa mudar)
     wb = openpyxl.Workbook()
     
-    # 2. Remove a planilha padrão
     if "Sheet" in wb.sheetnames:
         wb.remove(wb["Sheet"])
 
-    # 3. Processa Usuários
     ws_users = wb.create_sheet("Usuarios")
     ws_users.append(["id", "username", "role", "email", "telefone"])
     for u in User.query.all():
         ws_users.append([u.id, u.username, u.role, u.email, u.telefone])
 
-    # 4. Processa Produtos
     ws_prods = wb.create_sheet("Produtos")
     ws_prods.append(["id", "nome", "criado_por_id", "editado_por_id"])
     for p in Produto.query.all():
         ws_prods.append([p.id, p.nome, p.criado_por_id, p.editado_por_id])
 
-    # 5. Processa Supermercados
     ws_markets = wb.create_sheet("Supermercados")
     ws_markets.append(["id", "nome", "endereço", "criado_por_id", "editado_por_id"])
     for m in Supermercado.query.all():
         ws_markets.append([m.id, m.nome, m.endereço, m.criado_por_id, m.editado_por_id])
 
-    # 6. Processa Marcas
     ws_brands = wb.create_sheet("Marcas")
     ws_brands.append(["id", "nome", "criado_por_id", "editado_por_id"])
     for ma in Marca.query.all():
         ws_brands.append([ma.id, ma.nome, ma.criado_por_id, ma.editado_por_id])
 
-    # 7. Processa Preços
     ws_prices = wb.create_sheet("Precos")
     ws_prices.append([
         "id", "produto_id", "supermercado_id", "marca_id", "valor", 
@@ -146,24 +137,25 @@ def download_excel_backup():
             pr.data_cadastro, pr.criado_por_id, pr.e_promocao, pr.data_expiracao
         ])
     
-    # 8. Salva em memória (MODO CORRIGIDO)
-    # Cria um stream de bytes na memória
     excel_file_memory = BytesIO()
-    # Salva o workbook nesse stream
     wb.save(excel_file_memory)
-    # Move o "cursor" de volta para o início do stream
     excel_file_memory.seek(0)
     
-    # 9. Retorna a Resposta
     return Response(
-        excel_file_memory.getvalue(), # Pega o valor em bytes
+        excel_file_memory.getvalue(),
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": "attachment;filename=priceapp_backup.xlsx"}
     )
-# --- FIM DA CORREÇÃO ---
-
 
 @core_bp.route('/leitor-offline')
 @login_required 
 def leitor_offline():
     return render_template('leitor_offline.html')
+
+# --- INÍCIO DA CORREÇÃO ---
+@core_bp.route('/health')
+def health_check():
+    # Esta rota NÃO tem @login_required
+    # Ela só retorna um texto simples e um código 200 (OK)
+    return "App is awake", 200
+# --- FIM DA CORREÇÃO ---
