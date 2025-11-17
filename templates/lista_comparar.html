@@ -2,8 +2,7 @@
 
 {% block content %}
     <a href="{{ url_for('lists.ver_lista', lista_id=lista.id) }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
-        &larr;
- Voltar para a Lista
+        &larr; Voltar para a Lista
     </a>
 
     <h2>Resultados da Comparação Otimizada:</h2>
@@ -18,13 +17,11 @@
         </span>
     </div>
 
- 
     <button 
         class="btn-copy-list"
         data-list-nome="{{ lista.nome }}"
         data-list-total="{{ "%.2f"|format(grand_total) }}"
-        data-list-items='{{ resultados_json |
- safe }}'
+        data-list-items='{{ resultados_json | safe }}'
         style="background-color: #17a2b8; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; font-size: 1em; cursor: pointer; width: 100%; margin-bottom: 1.5rem;">
         📋 Copiar Lista Otimizada
     </button>
@@ -32,47 +29,38 @@
     <p>Abaixo está a combinação de produtos mais baratos encontrados em todos os mercados, considerando a quantidade desejada.</p>
 
     {% if not resultados %}
-        <p>Não foi possível gerar uma comparação.
- Verifique se os produtos da sua lista têm preços cadastrados.</p>
+        <p>Não foi possível gerar uma comparação. Verifique se os produtos da sua lista têm preços cadastrados.</p>
     {% else %}
         <table class="tabela-cards">
             <thead>
                 <tr>
                     <th>Produto</th>
                     <th>Qtde</th>
-        
-             <th>Preço Unit.
- (Efetivo)</th>
+                    <th>Preço Unit. (Efetivo)</th>
                     <th>Mercado</th>
                     <th>Detalhe Promoção</th>
                     <th>Total Item</th>
                 </tr>
             </thead>
-          
-   <tbody>
+            <tbody>
                 {% for res in resultados %}
                 <tr>
                     <td data-label="Produto">{{ res.item.produto.nome }}</td>
                     <td data-label="Qtde" style="text-align: center;">{{ res.item.quantidade }}x</td>
-             
-        
+                    
                     {% if res.found %}
                         {% set preco_unit_efetivo = res.total_cost / res.item.quantidade %}
-                        <td data-label="Preço Unit."
- style="font-weight: bold; color: #28a745;">
+                        <td data-label="Preço Unit." style="font-weight: bold; color: #28a745;">
                             R$ {{ "%.2f"|format(preco_unit_efetivo) }}
                             {% if res.best_price.e_promocao %}
                                 <span title="Preço Promocional">⚡</span>
- 
                             {% endif %}
                         </td>
                         <td data-label="Mercado">{{ res.best_price.supermercado.nome }}</td>
-                    
-     <td data-label="Promoção">
+                        <td data-label="Promoção">
                             {% if res.best_price.e_promocao %}
                                 {% if res.best_price.promo_tipo == 'unidade' %}
-                           
-          Preço Reduzido
+                                    Preço Reduzido
                                 {% elif res.best_price.promo_tipo == 'quantidade' %}
                                     {{ res.best_price.promo_qtd_necessaria }} por R$ {{ "%.2f"|format(res.best_price.promo_qtd_valor) }}
                                 {% elif res.best_price.promo_tipo == 'limite' %}
@@ -80,25 +68,20 @@
                                 {% else %}
                                     Promo
                                 {% endif %}
-      
-                       {% else %}
+                            {% else %}
                                 Preço Normal
                             {% endif %}
-             
-            </td>
+                        </td>
                         <td data-label="Total Item" style="font-weight: bold;">
                             R$ {{ "%.2f"|format(res.total_cost) }}
                         </td>
-      
-               {% else %}
-                        <td data-label="Preço Un."
- colspan="4" style="text-align: center; color: #dc3545;">
+                    {% else %}
+                        <td data-label="Preço Un." colspan="4" style="text-align: center; color: #dc3545;">
                             Preço não encontrado
                         </td>
                     {% endif %}
                 </tr>
-    
-             {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
     {% endif %}
@@ -110,56 +93,52 @@ document.addEventListener('DOMContentLoaded', () => {
     if (copyButton) {
         copyButton.addEventListener('click', () => {
             try {
-                
- const nomeLista = copyButton.getAttribute('data-list-nome');
+                const nomeLista = copyButton.getAttribute('data-list-nome');
                 const total = copyButton.getAttribute('data-list-total');
                 const itemsJson = copyButton.getAttribute('data-list-items');
                 const items = JSON.parse(itemsJson);
 
                 let clipboardText = `🛒 Lista Otimizada - ${nomeLista} 🛒\n`;
-                
- clipboardText += "---------------------------------\n\n";
+                clipboardText += "---------------------------------\n\n";
                 
                 items.forEach(item => {
                     if (item.found === false) {
                         clipboardText += `❌ ${item.qtde}x ${item.nome}\n`;
- clipboardText += `    (Item não encontrado)\n\n`;
+                        clipboardText += `    (Item não encontrado)\n\n`;
                     } else {
                         // INÍCIO DA MUDANÇA (ETAPA 20)
                         const itemLine = `✅ ${item.qtde}x ${item.nome} (${item.marca})\n`;
- // Mostra o preço unitário efetivo
+                        // Mostra o preço unitário efetivo
                         const priceLine = `    @ ${item.mercado} (R$ ${item.preco_unit.toFixed(2)}/un) .... Total: R$ ${item.total_item.toFixed(2)}\n\n`;
- // FIM DA MUDANÇA
+                        // FIM DA MUDANÇA
                         clipboardText += itemLine + priceLine;
- }
+                    }
                 });
                 
                 clipboardText += "---------------------------------\n";
- clipboardText += `VALOR TOTAL: R$ ${total}`;
+                clipboardText += `VALOR TOTAL: R$ ${total}`;
                 
                 navigator.clipboard.writeText(clipboardText).then(() => {
                     copyButton.textContent = 'Copiado! ✅';
                     copyButton.style.backgroundColor = '#28a745'; 
                     
                     setTimeout(() => {
-    
-                     copyButton.textContent = '📋 Copiar Lista Otimizada';
+                        copyButton.textContent = '📋 Copiar Lista Otimizada';
                         copyButton.style.backgroundColor = '#17a2b8';
                     }, 2000);
 
                 }).catch(err => {
-          
-           copyButton.textContent = 'Erro ao copiar';
+                    copyButton.textContent = 'Erro ao copiar';
                     copyButton.style.backgroundColor = '#dc3545';
                     console.error('Falha ao copiar para o clipboard: ', err);
                 });
- } catch (e) {
+            } catch (e) {
                 copyButton.textContent = 'Erro (JSON)';
- copyButton.style.backgroundColor = '#dc3545';
+                copyButton.style.backgroundColor = '#dc3545';
                 console.error('Erro ao processar o JSON dos itens: ', e);
- }
+            }
         });
     }
 });
- </script>
+</script>
 {% endblock %}
