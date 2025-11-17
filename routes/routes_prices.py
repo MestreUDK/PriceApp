@@ -1,6 +1,7 @@
 # routes/routes_prices.py
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, abort
+    Blueprint, render_template, request, redirect, url_for, flash, 
+    abort
 )
 from extensions import db
 from models import Supermercado, Produto, Preco, Marca
@@ -11,7 +12,7 @@ import json
 
 prices_bp = Blueprint('prices', __name__, template_folder='../templates')
 
-# --- INÍCIO DA MUDANÇA (ETAPA 20) ---
+# --- INÍCIO DA MUDANÇA (LÓGICA DO PREÇO EFETIVO) ---
 # Função auxiliar para calcular o PREÇO UNITÁRIO EFETIVO
 def get_effective_unit_price(preco_obj):
     """Calcula o preço unitário efetivo de um item para COMPARAÇÃO."""
@@ -20,8 +21,9 @@ def get_effective_unit_price(preco_obj):
     if not preco_obj.e_promocao or preco_obj.data_expiracao < datetime.utcnow():
         return preco_obj.valor
     
-    # Promoção de unidade (preço reduzido)
-    if preco_obj.promo_tipo == 'unidade' and preco_obj.promo_unidade_valor:
+    # --- MUDANÇA: 'unidade' e 'limite' usam a mesma lógica aqui ---
+    # Promoção de unidade (preço reduzido) OU Limite (preço unitário reduzido)
+    if (preco_obj.promo_tipo == 'unidade' or preco_obj.promo_tipo == 'limite') and preco_obj.promo_unidade_valor:
         return preco_obj.promo_unidade_valor
     
     # Promoção de quantidade (ex: 3 por R$10)
@@ -49,7 +51,7 @@ def registrar_preco():
     if request.method == 'POST':
         produto_id = request.form.get('produto')
         supermercado_id = request.form.get('supermercado')
-        # --- INÍCIO DA MUDANÇA (ETAPA 20) ---
+        # --- INÍCIO DA MUDANÇA (LÓGICA DE SALVAR) ---
         valor = request.form.get('valor') # Este é o valor BASE
         
         marca_id = request.form.get('marca')
@@ -77,7 +79,8 @@ def registrar_preco():
         promo_unidade_valor = request.form.get('promo_unidade_valor')
         promo_qtd_necessaria = request.form.get('promo_qtd_necessaria')
         promo_qtd_valor = request.form.get('promo_qtd_valor')
-
+        
+        # --- MUDANÇA: Define os valores com base no tipo de promo ---
         novo_preco = Preco(
             produto_id=produto_id,
             supermercado_id=supermercado_id,
@@ -87,8 +90,14 @@ def registrar_preco():
             e_promocao=e_promocao,
             data_expiracao=data_expiracao,
             promo_tipo=promo_tipo if e_promocao else 'unidade',
-            promo_unidade_valor=float(promo_unidade_valor) if e_promocao and promo_tipo == 'unidade' and promo_unidade_valor else None,
-            promo_qtd_necessaria=int(promo_qtd_necessaria) if e_promocao and promo_tipo == 'quantidade' and promo_qtd_necessaria else None,
+            
+            # Salva promo_unidade_valor se for 'unidade' OU 'limite'
+            promo_unidade_valor=float(promo_unidade_valor) if e_promocao and (promo_tipo == 'unidade' or promo_tipo == 'limite') and promo_unidade_valor else None,
+            
+            # Salva promo_qtd_necessaria se for 'quantidade' OU 'limite'
+            promo_qtd_necessaria=int(promo_qtd_necessaria) if e_promocao and (promo_tipo == 'quantidade' or promo_tipo == 'limite') and promo_qtd_necessaria else None,
+            
+            # Salva promo_qtd_valor APENAS se for 'quantidade'
             promo_qtd_valor=float(promo_qtd_valor) if e_promocao and promo_tipo == 'quantidade' and promo_qtd_valor else None
         )
         # --- FIM DA MUDANÇA ---
@@ -122,7 +131,6 @@ def comparar_produto(produto_id):
         func.max(Preco.data_cadastro).label('max_data')
     ).filter(
         Preco.produto_id == produto_id,
-        
         or_(
             Preco.e_promocao == False,
             Preco.data_expiracao > datetime.utcnow()
@@ -183,6 +191,7 @@ def ver_historico(produto_id, supermercado_id, marca_str):
     if not produto or not supermercado:
         abort(404)
     
+ 
     # --- INÍCIO DA MUDANÇA (ETAPA 14 & 20) ---
     
     # 1. Busca de promoções ativas (para este item/mercado/marca)
@@ -258,6 +267,7 @@ def edit_preco(preco_id):
         # Pega todos os dados do formulário
         preco.produto_id = request.form.get('produto')
         preco.supermercado_id = request.form.get('supermercado')
+        
         marca_id = request.form.get('marca')
         preco.marca_id = marca_id if marca_id else None
         
@@ -285,16 +295,24 @@ def edit_preco(preco_id):
             flash('Promoções devem ter uma data de expiração obrigatória.', 'error')
             return redirect(url_for('prices.edit_preco', preco_id=preco.id))
 
-        # Lógica para salvar os novos campos de promoção
+   
+      # --- MUDANÇA: Lógica para salvar os novos campos de promoção ---
         promo_tipo = request.form.get('promo_tipo')
         promo_unidade_valor = request.form.get('promo_unidade_valor')
         promo_qtd_necessaria = request.form.get('promo_qtd_necessaria')
         promo_qtd_valor = request.form.get('promo_qtd_valor')
         
         preco.promo_tipo = promo_tipo if preco.e_promocao else 'unidade'
-        preco.promo_unidade_valor = float(promo_unidade_valor) if preco.e_promocao and promo_tipo == 'unidade' and promo_unidade_valor else None
-        preco.promo_qtd_necessaria = int(promo_qtd_necessaria) if preco.e_promocao and promo_tipo == 'quantidade' and promo_qtd_necessaria else None
+
+        # Salva promo_unidade_valor se for 'unidade' OU 'limite'
+        preco.promo_unidade_valor = float(promo_unidade_valor) if preco.e_promocao and (promo_tipo == 'unidade' or promo_tipo == 'limite') and promo_unidade_valor else None
+        
+        # Salva promo_qtd_necessaria se for 'quantidade' OU 'limite'
+        preco.promo_qtd_necessaria = int(promo_qtd_necessaria) if preco.e_promocao and (promo_tipo == 'quantidade' or promo_tipo == 'limite') and promo_qtd_necessaria else None
+        
+        # Salva promo_qtd_valor APENAS se for 'quantidade'
         preco.promo_qtd_valor = float(promo_qtd_valor) if preco.e_promocao and promo_tipo == 'quantidade' and promo_qtd_valor else None
+        # --- FIM DA MUDANÇA ---
         
         db.session.commit()
         flash('Registro de preço atualizado com sucesso!', 'success')
