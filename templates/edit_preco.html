@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <a href="{{ url_for('prices.ver_historico', produto_id=preco.produto_id, supermercado_id=preco.supermercado_id, marca_str=preco.marca.nome if preco.marca else 'sem-marca') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+        &larr; Voltar para Histórico
+    </a>
+    <h2>Editando Registro de Preço (ID: {{ preco.id }})</h2>
+
+    <form method="POST">
+        <label for="produto">1. Produto:</label>
+        <input type="text" id="produto_filtro" placeholder="Filtrar produto..." style="margin-bottom: 0.5rem; background-color: #f8f9fa;">
+        <select name="produto" id="produto" required>
+            {% for produto in produtos %}
+                <option value="{{ produto.id }}" {% if produto.id == preco.produto_id %}selected{% endif %}>
+                    {{ produto.nome }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="marca">2. Marca (Opcional):</label>
+        <input type="text" id="marca_filtro" placeholder="Filtrar marca..." style="margin-bottom: 0.5rem; background-color: #f8f9fa;">
+        <select name="marca" id="marca">
+            <option value="">-- Sem marca --</option>
+            {% for marca in marcas %}
+                 <option value="{{ marca.id }}" {% if marca.id == preco.marca_id %}selected{% endif %}>
+                    {{ marca.nome }}
+                </option>
+            {% endfor %}
+        </select>
+        
+        <label for="supermercado">3. Supermercado:</label>
+        <input type="text" id="supermercado_filtro" placeholder="Filtrar supermercado..." style="margin-bottom: 0.5rem; background-color: #f8f9fa;">
+        <select name="supermercado" id="supermercado" required>
+            {% for mercado in supermercados %}
+                <option value="{{ mercado.id }}" {% if mercado.id == preco.supermercado_id %}selected{% endif %}>
+                    {{ mercado.nome }}
+                </option>
+            {% endfor %}
+        </select>
+        
+        <label for="data_cadastro">Data do Registro:</label>
+        <input type="datetime-local" name="data_cadastro" id="data_cadastro" 
+               value="{{ preco.data_cadastro.strftime('%Y-%m-%dT%H:%M') }}" required>
+
+        <label for="valor">4. Preço Base (R$):</label>
+        <input type="number" step="0.01" name="valor" id="valor" value="{{ preco.valor }}" required>
+
+        <div style="margin: 1rem 0; padding: 10px 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #f9f9f9;">
+            
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" name="e_promocao" id="e_promocao"
+                    style="width: auto; min-width: 0; margin: 0 10px 0 0;"
+                    {% if preco.e_promocao %}checked{% endif %}>
+                <label for="e_promocao" style="display: inline; font-weight: bold; margin: 0; padding: 0;">Este item está em promoção?</label>
+            </div>
+            
+            <label for="data_expiracao" style="margin-top: 10px;">Data de Expiração:</label>
+            <input type="date" name="data_expiracao" id="data_expiracao" style="padding: 0.5rem;"
+                   value="{{ preco.data_expiracao.strftime('%Y-%m-%d') if preco.data_expiracao else '' }}">
+            
+            <div id="promo_fields" style="display: {{ 'block' if preco.e_promocao else 'none' }}; margin-top: 1rem; border-top: 1px dashed #ccc; padding-top: 1rem;">
+                <label>Tipo de Promoção:</label>
+                <div style="margin-bottom: 1rem;">
+                    <input type="radio" name="promo_tipo" id="promo_unidade" value="unidade"
+                           {% if preco.promo_tipo == 'unidade' %}checked{% endif %}
+                           style="width: auto; min-width: 0; margin-right: 5px;">
+                    <label for="promo_unidade" style="font-weight: normal; margin-right: 15px;">Preço Reduzido</label>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <input type="radio" name="promo_tipo" id="promo_quantidade" value="quantidade"
+                           {% if preco.promo_tipo == 'quantidade' %}checked{% endif %}
+                           style="width: auto; min-width: 0; margin-right: 5px;">
+                    <label for="promo_quantidade" style="font-weight: normal;">Quantidade</label>
+                </div>
+
+                <div id="campos_promo_unidade" style="display: {{ 'block' if preco.promo_tipo == 'unidade' else 'none' }};">
+                    <label for="promo_unidade_valor">Novo Preço da Unidade (R$):</label>
+                    <input type="number" step="0.01" name="promo_unidade_valor" id="promo_unidade_valor" 
+                           value="{{ preco.promo_unidade_valor or '' }}">
+                </div>
+                
+                <div id="campos_promo_quantidade" style="display: {{ 'block' if preco.promo_tipo == 'quantidade' else 'none' }};">
+                    <label for="promo_qtd_necessaria">Quantidade de Itens (Ex: 3):</label>
+                    <input type="number" step="1" name="promo_qtd_necessaria" id="promo_qtd_necessaria"
+                           value="{{ preco.promo_qtd_necessaria or '' }}">
+                    
+                    <label for="promo_qtd_valor">Valor Total (R$) (Ex: 10.00):</label>
+                    <input type="number" step="0.01" name="promo_qtd_valor" id="promo_qtd_valor"
+                           value="{{ preco.promo_qtd_valor or '' }}">
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" style="background-color: #28a745;">Salvar Alterações</button>
+    </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Ativa os filtros
+    setupSelectFilter('produto_filtro', 'produto');
+    setupSelectFilter('marca_filtro', 'marca');
+    setupSelectFilter('supermercado_filtro', 'supermercado');
+    
+    // Ativa a lógica de mostrar/esconder campos da promoção
+    // (a função já está no base.html)
+});
+</script>
+
+{% endblock %}
