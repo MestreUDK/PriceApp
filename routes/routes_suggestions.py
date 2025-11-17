@@ -19,13 +19,14 @@ def sugerir_preco():
     if request.method == 'POST':
         produto_id = request.form.get('produto')
         supermercado_id = request.form.get('supermercado')
-        valor = request.form.get('valor')
+        # --- INÍCIO DA MUDANÇA (ETAPA 20) ---
+        valor = request.form.get('valor') # Valor BASE
         
         marca_id = request.form.get('marca')
         if marca_id == "":
             marca_id = None
         
-        e_promocao = request.form.get('e_promocao') == 'true' 
+        e_promocao = request.form.get('e_promocao') == 'on' # Checkbox 'on'
         
         data_expiracao_str = request.form.get('data_expiracao')
         data_expiracao = None
@@ -41,6 +42,12 @@ def sugerir_preco():
             flash('Promoções devem ter uma data de expiração obrigatória.', 'error')
             return redirect(url_for('suggestions.sugerir_preco'))
 
+        # Lógica para salvar os novos campos de promoção
+        promo_tipo = request.form.get('promo_tipo')
+        promo_unidade_valor = request.form.get('promo_unidade_valor')
+        promo_qtd_necessaria = request.form.get('promo_qtd_necessaria')
+        promo_qtd_valor = request.form.get('promo_qtd_valor')
+
         nova_sugestao = SugestaoPreco(
             produto_id=produto_id,
             supermercado_id=supermercado_id,
@@ -49,8 +56,14 @@ def sugerir_preco():
             sugerido_por_id=current_user.id,
             status='pendente',
             e_promocao=e_promocao,
-            data_expiracao=data_expiracao
+            data_expiracao=data_expiracao,
+            promo_tipo=promo_tipo if e_promocao else 'unidade',
+            promo_unidade_valor=float(promo_unidade_valor) if e_promocao and promo_tipo == 'unidade' and promo_unidade_valor else None,
+            promo_qtd_necessaria=int(promo_qtd_necessaria) if e_promocao and promo_tipo == 'quantidade' and promo_qtd_necessaria else None,
+            promo_qtd_valor=float(promo_qtd_valor) if e_promocao and promo_tipo == 'quantidade' and promo_qtd_valor else None
         )
+        # --- FIM DA MUDANÇA ---
+        
         db.session.add(nova_sugestao)
         db.session.commit()
      
@@ -86,6 +99,7 @@ def aprovar_sugestao(sugestao_id):
         flash('Sugestão não encontrada ou já processada.', 'error')
         return redirect(url_for('suggestions.admin_sugestoes'))
     
+    # --- INÍCIO DA MUDANÇA (ETAPA 20) ---
     novo_preco = Preco(
         produto_id=sugestao.produto_id,
         supermercado_id=sugestao.supermercado_id,
@@ -94,8 +108,14 @@ def aprovar_sugestao(sugestao_id):
         criado_por_id=sugestao.sugerido_por_id,
         data_cadastro=sugestao.data_sugestao,
         e_promocao=sugestao.e_promocao,
-        data_expiracao=sugestao.data_expiracao
+        data_expiracao=sugestao.data_expiracao,
+        # Copia os campos de promoção da sugestão para o preço
+        promo_tipo=sugestao.promo_tipo,
+        promo_unidade_valor=sugestao.promo_unidade_valor,
+        promo_qtd_necessaria=sugestao.promo_qtd_necessaria,
+        promo_qtd_valor=sugestao.promo_qtd_valor
     )
+    # --- FIM DA MUDANÇA ---
     
     sugestao.status = 'aprovado'
     
