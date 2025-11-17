@@ -8,16 +8,61 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError 
 from sqlalchemy import or_
 from datetime import datetime
-import json # <-- INÍCIO DA CORREÇÃO (LINHA ADICIONADA)
+import json 
 
-# Cria o Blueprint
 lists_bp = Blueprint('lists', __name__, template_folder='../templates')
+
+# --- INÍCIO DA MUDANÇA (ETAPA 20) ---
+# Função auxiliar para calcular o custo de um item com base na quantidade e promoções
+def calcular_custo_total_item(preco_obj, quantidade_desejada):
+    """
+    Calcula o custo total para um item, considerando a quantidade
+    e os diferentes tipos de promoção.
+    """
+    
+    # Se não houver promoção válida, retorna o preço base
+    if not preco_obj.e_promocao or preco_obj.data_expiracao < datetime.utcnow():
+        return preco_obj.valor * quantidade_desejada
+
+    # Se a promoção for de 'unidade' (preço reduzido)
+    if preco_obj.promo_tipo == 'unidade' and preco_obj.promo_unidade_valor:
+        return preco_obj.promo_unidade_valor * quantidade_desejada
+    
+    # Se a promoção for de 'quantidade' (Ex: 3 por R$10)
+    if (preco_obj.promo_tipo == 'quantidade' and 
+        preco_obj.promo_qtd_necessaria and 
+        preco_obj.promo_qtd_valor):
+        
+        try:
+            qtd_promo = int(preco_obj.promo_qtd_necessaria)
+            valor_promo = float(preco_obj.promo_qtd_valor)
+            
+            if qtd_promo <= 0: # Evita divisão por zero
+                return preco_obj.valor * quantidade_desejada
+
+            # Calcula quantos "pacotes" de promoção o usuário está comprando
+            num_pacotes_promo = quantidade_desejada // qtd_promo
+            custo_dos_pacotes = num_pacotes_promo * valor_promo
+            
+            # Calcula o custo dos itens restantes (que não fecharam um pacote)
+            qtd_restante = quantidade_desejada % qtd_promo
+            custo_restante = qtd_restante * preco_obj.valor # Preço base
+            
+            return custo_dos_pacotes + custo_restante
+            
+        except (ValueError, TypeError):
+            # Fallback em caso de dados mal formatados
+            return preco_obj.valor * quantidade_desejada
+
+    # Fallback: Se for 'e_promocao' mas os campos estiverem errados, usa o preço base
+    return preco_obj.valor * quantidade_desejada
+# --- FIM DA MUDANÇA ---
+
 
 @lists_bp.route('/listas', methods=['GET', 'POST'])
 @login_required
 def gerenciar_listas():
     if request.method == 'POST':
-        # Lógica para CRIAR uma nova lista
         nome_lista = request.form.get('nome')
         
         if not nome_lista:
@@ -30,7 +75,6 @@ def gerenciar_listas():
         
         return redirect(url_for('lists.gerenciar_listas'))
 
-    # Lógica para MOSTRAR as listas do usuário
     listas = Lista.query.filter_by(user_id=current_user.id).order_by(Lista.data_criacao.desc()).all()
     
     return render_template('listas.html', listas=listas)
@@ -39,17 +83,14 @@ def gerenciar_listas():
 @lists_bp.route('/lista/<int:lista_id>', methods=['GET'])
 @login_required
 def ver_lista(lista_id):
-    # 1. Pega a lista e verifica se pertence ao usuário
     lista = db.session.get(Lista, lista_id)
     if not lista:
         abort(404)
     if lista.user_id != current_user.id:
-        abort(403) # Não tem permissão
+        abort(403) 
 
-    # 2. Pega todos os produtos (para o <select> "Adicionar Item")
     produtos = Produto.query.order_by(Produto.nome).all()
     
-    # 3. Renderiza o template
     return render_template('lista_detalhe.html', lista=lista, produtos=produtos)
 
 @lists_bp.route('/lista/<int:lista_id>/add_item', methods=['POST'])
@@ -62,7 +103,7 @@ def add_item_lista(lista_id):
         abort(403)
         
     produto_id = request.form.get('produto_id')
-    quantidade_str = request.form.get('quantidade', '1') # Padrão é 1
+    quantidade_str = request.form.get('quantidade', '1') 
     
     try:
         quantidade = int(quantidade_str)
@@ -76,15 +117,12 @@ def add_item_lista(lista_id):
         flash('Nenhum produto selecionado.', 'error')
         return redirect(url_for('lists.ver_lista', lista_id=lista_id))
         
-    # Verifica se o item já existe na lista
     item_existente = ListaItem.query.filter_by(lista_id=lista_id, produto_id=produto_id).first()
     
     if item_existente:
-        # Se existe, atualiza a quantidade
         item_existente.quantidade = quantidade
         flash('Quantidade do item atualizada!', 'success')
     else:
-        # Se não existe, cria um novo
         novo_item = ListaItem(
             lista_id=lista_id,
             produto_id=produto_id,
@@ -103,11 +141,10 @@ def delete_item_lista(item_id):
     if not item:
         abort(404)
     
-    # Segurança: Verifica se o usuário é dono da lista onde o item está
     if item.lista.user_id != current_user.id:
         abort(403)
         
-    lista_id = item.lista_id # Salva o ID para o redirect
+    lista_id = item.lista_id 
     
     db.session.delete(item)
     db.session.commit()
@@ -130,11 +167,10 @@ def delete_lista(lista_id):
     flash(f'Lista "{lista.nome}" excluída com sucesso.', 'success')
     return redirect(url_for('lists.gerenciar_listas'))
 
-# --- ROTA DE COMPARAÇÃO (ETAPA 17) ---
+# --- INÍCIO DA MUDANÇA (ETAPA 17 & 20) ---
 @lists_bp.route('/lista/<int:lista_id>/comparar')
 @login_required
 def comparar_lista(lista_id):
-    # 1. Pega a lista e verifica a permissão
     lista = db.session.get(Lista, lista_id)
     if not lista:
         abort(404)
@@ -147,55 +183,64 @@ def comparar_lista(lista_id):
 
     itens_da_lista = lista.itens
     
-    resultados = [] # Lista para guardar o resultado de CADA ITEM
+    resultados = [] 
     grand_total = 0.0
+    now = datetime.utcnow()
 
-    # 2. Itera em CADA item da lista de compras
     for item in itens_da_lista:
         
-        # 3. Encontra o preço mais recente e válido (incluindo filtro de promoção)
-        #    para ESTE item, em QUALQUER mercado
-        best_price_obj = Preco.query.filter(
+        # 1. Pega TODOS os preços válidos para este produto
+        #    (Onde a promoção não está expirada)
+        precos_validos = Preco.query.filter(
             Preco.produto_id == item.produto_id,
-            # Reutiliza a lógica de promoção (preço válido)
             or_(
                 Preco.e_promocao == False,
-                Preco.data_expiracao > datetime.utcnow()
+                Preco.data_expiracao > now
             )
-        ).order_by(
-            Preco.valor.asc() # Pega o mais barato
-        ).first()
+        ).all()
 
-        if best_price_obj:
-            # 4. Se achou o preço, multiplica pela quantidade
-            custo_item = best_price_obj.valor * item.quantidade
-            grand_total += custo_item
+        if not precos_validos:
+            resultados.append({"item": item, "found": False})
+            continue
+
+        # 2. Calcula o custo total mais barato para a quantidade desejada
+        melhor_custo_total = float('inf')
+        melhor_preco_obj = None
+
+        for preco_obj in precos_validos:
+            # 3. Usa a nova função para calcular o custo
+            custo_total_deste_preco = calcular_custo_total_item(
+                preco_obj, 
+                item.quantidade
+            )
             
-            # 5. Guarda o resultado deste item
+            if custo_total_deste_preco < melhor_custo_total:
+                melhor_custo_total = custo_total_deste_preco
+                melhor_preco_obj = preco_obj
+
+        # 4. Salva o melhor resultado para este item
+        if melhor_preco_obj:
+            grand_total += melhor_custo_total
             resultados.append({
                 "item": item,
-                "best_price": best_price_obj,
-                "total_cost": custo_item,
+                "best_price": melhor_preco_obj,
+                "total_cost": melhor_custo_total,
                 "found": True
             })
         else:
-            # 6. Se não achou preço para este item
-            resultados.append({
-                "item": item,
-                "best_price": None,
-                "total_cost": 0.0,
-                "found": False
-            })
+            resultados.append({"item": item, "found": False})
 
     # 7. Prepara dados para o script de "Copiar Lista"
-    # (Enviamos os dados completos para o JS processar)
-    resultados_json_list = [] # Mudei o nome para evitar conflito com o 'json' importado
+    resultados_json_list = []
     for res in resultados:
         if res["found"]:
+            # Calcula o preço unitário efetivo para o JSON
+            preco_unit_efetivo = res["total_cost"] / res["item"].quantidade
+            
             resultados_json_list.append({
                 "nome": res["item"].produto.nome,
                 "qtde": res["item"].quantidade,
-                "preco_unit": res["best_price"].valor,
+                "preco_unit": preco_unit_efetivo, # Preço unitário efetivo
                 "total_item": res["total_cost"],
                 "mercado": res["best_price"].supermercado.nome,
                 "marca": res["best_price"].marca.nome if res["best_price"].marca else "Sem marca"
@@ -207,11 +252,12 @@ def comparar_lista(lista_id):
                 "found": False
             })
 
-    # 8. Renderiza o template de resultados (agora com a nova lógica)
+    # 8. Renderiza o template
     return render_template(
         'lista_comparar.html', 
         lista=lista, 
         resultados=resultados, 
         grand_total=grand_total,
-        resultados_json=json.dumps(resultados_json_list) # <-- FIM DA CORREÇÃO
+        resultados_json=json.dumps(resultados_json_list) 
     )
+# --- FIM DA MUDANÇA ---
