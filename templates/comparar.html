@@ -16,7 +16,9 @@
             <thead>
                 <tr>
                     <th>Supermercado</th>
-                    <th>Marca</th> <th>Preço (R$)</th>
+                    <th>Marca</th>
+                    <th>Preço Unit. (Efetivo)</th>
+                    <th>Detalhe Promoção</th>
                     <th>Registrado em</th>
                     <th>Ações</th>
                 </tr>
@@ -28,16 +30,30 @@
                     
                     <td data-label="Marca">
                         {% if preco.marca %}
-                            {{ preco.marca.nome }}
+                             {{ preco.marca.nome }}
                         {% else %}
                             Sem marca
                         {% endif %}
                     </td>
                     
-                    <td data-label="Preço">
-                        R$ {{ "%.2f"|format(preco.valor) }}
+                    <td data-label="Preço Efetivo">
+                        R$ {{ "%.2f"|format(preco.effective_price) }}
                         {% if preco.e_promocao %}
                             <span title="Preço Promocional">⚡</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td data-label="Promoção">
+                        {% if preco.e_promocao %}
+                            {% if preco.promo_tipo == 'unidade' and preco.promo_unidade_valor %}
+                                Preço Reduzido
+                            {% elif preco.promo_tipo == 'quantidade' and preco.promo_qtd_necessaria and preco.promo_qtd_valor %}
+                                {{ preco.promo_qtd_necessaria }} por R$ {{ "%.2f"|format(preco.promo_qtd_valor) }}
+                            {% else %}
+                                N/D
+                            {% endif %}
+                        {% else %}
+                             Preço Normal
                         {% endif %}
                     </td>
                     <td data-label="Data">{{ preco.data_cadastro.strftime('%d/%m/%Y') }}</td>
