@@ -2,7 +2,7 @@
 
 {% block content %}
     <h2>Gerenciar Sugestões de Preços</h2>
-    <p>Revise as sugestões enviadas pelos usuários. Itens aprovados serão adicionados ao histórico de preços.</p>
+    <p>Revise as sugestões enviadas pelos usuários.</p>
 
     {% if sugestoes %}
         <table class="tabela-cards">
@@ -22,6 +22,9 @@
                 <tr>
                     <td data-label="Produto">
                         {{ sugestao.produto.nome }}
+                        {% if sugestao.produto.medida %}
+                            <small>({{ sugestao.produto.medida }}{{ sugestao.produto.unidade }})</small>
+                        {% endif %}
                         {% if sugestao.e_promocao %}
                             <span title="Preço Promocional">⚡</span>
                         {% endif %}
@@ -34,19 +37,21 @@
                         {% endif %}
                     </td>
                     <td data-label="Supermercado">{{ sugestao.supermercado.nome }}</td>
-                    <td data-label="Valor" style="font-weight: bold; color: #28a745;">R$ {{ "%.2f"|format(sugestao.valor) }}</td>
+                    <td data-label="Valor" style="font-weight: bold; color: var(--success);">
+                        R$ {{ "%.2f"|format(sugestao.valor) }}
+                    </td>
                     <td data-label="Sugerido por">{{ sugestao.sugerido_por.username }}</td>
                     <td data-label="Data">{{ sugestao.data_sugestao.strftime('%d/%m/%Y %H:%M') }}</td>
 
                     <td class="actions-cell">
                         <form method="POST" action="{{ url_for('suggestions.aprovar_sugestao', sugestao_id=sugestao.id) }}" style="display: inline-block;">
-                            <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
+                            <button type="submit" style="background-color: var(--success); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
                                 ✔️ Aprovar
                             </button>
                         </form>
 
                         <form method="POST" action="{{ url_for('suggestions.rejeitar_sugestao', sugestao_id=sugestao.id) }}" style="display: inline-block;">
-                            <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9em; cursor: pointer;" onclick="return confirm('Tem certeza que deseja rejeitar esta sugestão?');">
+                            <button type="submit" style="background-color: var(--danger); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9em; cursor: pointer;" onclick="return confirm('Tem certeza que deseja rejeitar esta sugestão?');">
                                 ❌ Rejeitar
                             </button>
                         </form>
@@ -57,7 +62,7 @@
         </table>
     {% else %}
         <hr>
-        <p style="text-align: center; font-size: 1.1em; color: #555;">Tudo limpo! Não há nenhuma sugestão pendente no momento.</p>
+        <p style="text-align: center; font-size: 1.1em; color: var(--text-sec);">Tudo limpo! Não há nenhuma sugestão pendente no momento.</p>
     {% endif %}
 
 {% endblock %}
