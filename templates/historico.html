@@ -1,16 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; color: var(--primary); margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Comparação
     </a>
 
     <h2>Histórico de Preço para:</h2>
-    <h3>{{ produto.nome }} {% if marca %}({{ marca.nome }}){% else %}(Sem marca){% endif %}</h3>
+    <h3>
+        {{ produto.nome }} 
+        {% if produto.medida %}
+            <span style="color: var(--text-sec); font-size: 0.8em;">({{ produto.medida }}{{ produto.unidade }})</span>
+        {% endif %}
+        {% if marca %}({{ marca.nome }}){% else %}<span style="font-weight:normal; font-size:0.8em;">(Sem marca)</span>{% endif %}
+    </h3>
     
     <h4>Em: {{ supermercado.nome }}
         {% if supermercado.endereço %}
-            <span style="font-weight: normal; font-size: 0.9em; color: #555;">
+            <span style="font-weight: normal; font-size: 0.9em; color: var(--text-sec);">
                 ({{ supermercado.endereço }})
             </span>
         {% endif %}
@@ -23,23 +29,23 @@
     </div>
 
     {% if active_promo and promo_effective_price is not none %}
-    <div style="background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
-        <h3 style="margin-top: 0; color: #d46b08;">⚡ Promoção Ativa Encontrada!</h3>
+    <div style="background-color: rgba(255, 193, 7, 0.15); border: 1px solid var(--warning); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+        <h3 style="margin-top: 0; color: var(--warning);">⚡ Promoção Ativa Encontrada!</h3>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
             
             {% if normal_price_obj %}
             <div>
-                <span style="font-size: 0.9em; color: #555; display: block;">Preço Base Normal</span>
-                <span style="font-size: 1.5em; color: #dc3545; text-decoration: line-through;">
+                <span style="font-size: 0.9em; color: var(--text-sec); display: block;">Preço Base Normal</span>
+                <span style="font-size: 1.5em; color: var(--danger); text-decoration: line-through;">
                     R$ {{ "%.2f"|format(normal_price_obj.valor) }}
                 </span>
             </div>
             {% endif %}
 
             <div>
-                <span style="font-size: 0.9em; color: #555; display: block;">Preço Unit. Efetivo (Promo)</span>
-                <span style="font-size: 1.5em; color: #28a745; font-weight: bold;">
+                <span style="font-size: 0.9em; color: var(--text-sec); display: block;">Preço Unit. Efetivo (Promo)</span>
+                <span style="font-size: 1.5em; color: var(--success); font-weight: bold;">
                     R$ {{ "%.2f"|format(promo_effective_price) }}
                 </span>
             </div>
@@ -47,8 +53,8 @@
             {% if normal_price_obj and normal_price_obj.valor > 0 and promo_effective_price < normal_price_obj.valor %}
             {% set desconto = ((normal_price_obj.valor - promo_effective_price) / normal_price_obj.valor) * 100 %}
             <div>
-                <span style="font-size: 0.9em; color: #555; display: block;">Desconto</span>
-                <span style="font-size: 1.5em; color: #007bff; font-weight: bold;">
+                <span style="font-size: 0.9em; color: var(--text-sec); display: block;">Desconto</span>
+                <span style="font-size: 1.5em; color: var(--primary); font-weight: bold;">
                     {{ "%.0f"|format(desconto) }}% OFF
                 </span>
             </div>
@@ -56,28 +62,26 @@
         </div>
         
         {% if active_promo.promo_tipo == 'quantidade' %}
-            <p style="margin-top: 1rem; color: #333; font-size: 1.1em; font-weight: bold;">
-                Detalhe: {{ active_promo.promo_qtd_necessaria }} por R$ {{ "%.2f"|format(active_promo.promo_qtd_valor) }}
+            <p style="margin-top: 1rem; color: var(--text-main); font-size: 1.1em; font-weight: bold;">
+                Detalhe (Pacote): {{ active_promo.promo_qtd_necessaria }} por R$ {{ "%.2f"|format(active_promo.promo_qtd_valor) }}
             </p>
         {% elif active_promo.promo_tipo == 'limite' %}
-             <p style="margin-top: 1rem; color: #333; font-size: 1.1em; font-weight: bold;">
-                Detalhe: {{ active_promo.promo_qtd_necessaria }}+ unidades por R$ {{ "%.2f"|format(active_promo.promo_unidade_valor) }}/un
+            <p style="margin-top: 1rem; color: var(--text-main); font-size: 1.1em; font-weight: bold;">
+                Detalhe (Limite): {{ active_promo.promo_qtd_necessaria }}+ unidades por R$ {{ "%.2f"|format(active_promo.promo_unidade_valor) }} cada
             </p>
         {% elif active_promo.promo_tipo == 'unidade' %}
-             <p style="margin-top: 1rem; color: #333; font-size: 1.1em; font-weight: bold;">
-                Detalhe: Preço reduzido
-                {% if normal_price_obj %}
-                    (de R$ {{ "%.2f"|format(normal_price_obj.valor) }})
-                {% endif %}
+            <p style="margin-top: 1rem; color: var(--text-main); font-size: 1.1em; font-weight: bold;">
+                Detalhe (Unidade): Preço reduzido
             </p>
         {% endif %}
-        <p style="margin-top: 1rem; color: #333;">
+
+        <p style="margin-top: 1rem; color: var(--text-main);">
             Promoção válida até: <strong>{{ active_promo.data_expiracao.strftime('%d/%m/%Y') }}</strong>
         </p>
     </div>
     {% endif %}
 
-    <h3>Todos os Registros (do mais antigo ao mais novo)</h3>
+    <h3>Todos os Registros</h3>
     {% if precos %}
         <table class="tabela-cards">
             <thead>
@@ -109,7 +113,7 @@
                     </td>
                     {% if current_user.role == 'admin' %}
                     <td class="actions-cell">
-                        <a href="{{ url_for('prices.edit_preco', preco_id=preco.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
+                        <a href="{{ url_for('prices.edit_preco', preco_id=preco.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: var(--warning); color: black; border-radius: 4px; font-size: 0.9em;">
                             ✏️ Editar
                         </a>
                     </td>
@@ -124,7 +128,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Gráfico continua mostrando o valor BASE
     const labels = {{ labels_json | safe }};
     const dataValues = {{ valores_json | safe }};
     const ctx = document.getElementById('graficoHistorico');
@@ -155,9 +158,7 @@
                     callbacks: {
                         label: function(context) {
                             let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
+                            if (label) { label += ': '; }
                             if (context.parsed.y !== null) {
                                 label += 'R$ ' + context.parsed.y.toFixed(2);
                             }
@@ -169,5 +170,4 @@
         }
     });
 </script>
-
 {% endblock %}
