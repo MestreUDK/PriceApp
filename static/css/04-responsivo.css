@@ -25,10 +25,11 @@
     .tabela-cards tr {
         display: block;
         margin-bottom: 1.5rem;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid var(--border-color); /* Era fixo, agora variável */
+        border-radius: 12px;
+        box-shadow: var(--shadow);
         overflow: hidden;
+        background-color: var(--bg-card); /* Era fixo, agora variável */
     }
 
     .tabela-cards td {
@@ -36,7 +37,8 @@
         text-align: right; 
         position: relative;
         padding-left: 50%; 
-        border-bottom: 1px solid #eee; 
+        border-bottom: 1px solid var(--border-color); 
+        color: var(--text-main);
     }
 
     .tabela-cards td:last-child {
@@ -51,17 +53,19 @@
         padding-left: 1rem;
         font-weight: bold;
         text-align: left;
-        color: #333;
+        color: var(--text-main); /* Corrigido para tema */
+        opacity: 0.8;
     }
 
     /* Título do card (primeira célula) */
     .tabela-cards td:first-child {
-        background-color: #f8f8f8;
+        background-color: var(--icon-bg); /* Era #f8f8f8 */
         font-weight: bold;
         font-size: 1.1em;
         text-align: left; 
         padding-left: 1rem; 
         padding-right: 1rem;
+        color: var(--text-main);
     }
 
     /* Esconde o 'data-label' da primeira célula (o título) */
