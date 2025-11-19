@@ -5,19 +5,20 @@
     max-width: 900px;
     margin: 1rem auto; 
     padding: 1.5rem; 
-    background-color: white; 
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: var(--bg-card); 
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
 }
 
 /* --- BARRA SUPERIOR FIXA (HEADER) --- */
 .header-bar {
-    background-color: #fff;
-    padding: 0.75rem 1rem;
+    background-color: var(--nav-bg);
+    padding: 0.5rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-color);
     position: fixed;
     top: 0;
     left: 0;
@@ -25,11 +26,12 @@
     height: 60px;
     z-index: 100;
     box-sizing: border-box;
+    box-shadow: var(--shadow);
 }
 
 /* --- BARRA INFERIOR FIXA (NAVEGAÇÃO) --- */
 .bottom-nav {
-    background-color: #333;
+    background-color: var(--bottom-nav-bg);
     display: flex;
     overflow-x: auto;
     white-space: nowrap;
@@ -38,7 +40,8 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: 65px;
     z-index: 100;
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+    border-top: 1px solid var(--border-color);
 }
