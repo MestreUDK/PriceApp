@@ -63,20 +63,36 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74"></path><path d="M9 7.5h-.5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-.5"></path></svg>
                 Listas
             </a>
+            <a href="{{ url_for('core.leitor_offline') }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Offline
+            </a>
             
             {% if current_user.role == 'admin' %}
                  <a href="{{ url_for('prices.registrar_preco') }}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
                     Registrar
                 </a>
+                <a href="{{ url_for('brands.gerenciar_marcas') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                    Marcas
+                </a>
                 <a href="{{ url_for('suggestions.admin_sugestoes') }}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#ffc107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
-                    Sugestões
+                    Sug. Preço
+                </a>
+                <a href="{{ url_for('suggestions_edit.admin_sugestoes_edicao') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#fd7e14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Sug. Edição
                 </a>
             {% else %}
                 <a href="{{ url_for('suggestions.sugerir_preco') }}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
                     Sugerir
+                </a>
+                <a href="{{ url_for('suggestions_edit.sugerir_edicao') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#fd7e14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Corrigir
                 </a>
             {% endif %}
             
@@ -108,14 +124,13 @@
                 });
         }
 
-        // --- LÓGICA DO DARK MODE (Trazida do ClasseApp) ---
+        // --- LÓGICA DO DARK MODE ---
         const toggleBtn = document.getElementById('theme-toggle');
-        if (toggleBtn) { // Só executa se o botão existir (usuário logado)
+        if (toggleBtn) { 
             const html = document.documentElement;
             const moonIcon = document.querySelector('.moon');
             const sunIcon = document.querySelector('.sun');
 
-            // Verifica preferência salva ou do sistema
             const savedTheme = localStorage.getItem('theme');
             const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -143,10 +158,7 @@
     </script>
     
     <script>
-    // ... (Seus outros scripts, como o de busca e promo, ficam aqui) ...
-    /**
-     * Adiciona um filtro de texto a um <select>
-     */
+    // Scripts auxiliares e filtros
     function setupSelectFilter(inputId, selectId) {
         const input = document.getElementById(inputId);
         const select = document.getElementById(selectId);
@@ -164,7 +176,6 @@
         });
     }
 
-    // Script do Botão de Sincronização Offline
     const syncButton = document.getElementById('syncButton');
     const syncStatus = document.getElementById('syncStatus');
     if (syncButton) {
@@ -188,7 +199,6 @@
         });
     }
 
-    // Lógica de Promos Dinâmicas
     function togglePromoFields() {
         const promoCheckbox = document.getElementById('e_promocao');
         const promoFieldsDiv = document.getElementById('promo_fields');
