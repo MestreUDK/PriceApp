@@ -1,15 +1,63 @@
 /* ================================================
-   1. ESTILOS GERAIS (Body, Títulos)
+   1. ESTILOS GERAIS (Body, Títulos, Variáveis)
    ================================================ */
-body { 
-    font-family: sans-serif;
-    margin: 0; 
-    background-color: #f4f4f9;
-    /* Preenchimento para não ficar atrás das barras fixas */
-    padding-top: 60px; /* Altura da barra superior */
-    padding-bottom: 60px; /* Altura da barra inferior */
+
+/* --- VARIÁVEIS DE CORES (TEMA CLARO PADRÃO) --- */
+:root {
+    --bg-body: #f4f4f9;
+    --bg-card: #ffffff;
+    --text-main: #333333;
+    --text-sec: #666666;
+    --border-color: #dddddd;
+    --primary: #007bff;
+    --primary-hover: #0056b3;
+    --nav-bg: #ffffff;
+    --bottom-nav-bg: #333333; /* Cor específica da barra inferior no PriceApp */
+    --bottom-nav-text: #ffffff;
+    --shadow: 0 2px 4px rgba(0,0,0,0.1);
+    --input-bg: #ffffff;
+    --icon-bg: #e9ecef;
+    
+    /* Cores de Status */
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
 }
-h1, h2 { 
-    color: #333;
+
+/* --- TEMA ESCURO --- */
+[data-theme="dark"] {
+    --bg-body: #121212;
+    --bg-card: #1e1e1e;
+    --text-main: #e0e0e0;
+    --text-sec: #aaaaaa;
+    --border-color: #333333;
+    --primary: #4da3ff;
+    --primary-hover: #007bff;
+    --nav-bg: #1e1e1e;
+    --bottom-nav-bg: #000000;
+    --bottom-nav-text: #e0e0e0;
+    --shadow: 0 2px 4px rgba(0,0,0,0.3);
+    --input-bg: #2c2c2c;
+    --icon-bg: #333333;
+}
+
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0; 
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    /* Preenchimento para não ficar atrás das barras fixas */
+    padding-top: 70px; /* Ajustado um pouco */
+    padding-bottom: 70px; 
+}
+
+h1, h2, h3, h4, h5 { 
+    color: var(--text-main);
     margin-top: 0;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 1.5rem 0;
 }
