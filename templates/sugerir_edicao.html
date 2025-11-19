@@ -86,4 +86,39 @@
 
         const campos = {
             produto: [{value: 'nome', text: 'Nome do Produto'}, {value: 'medida', text: 'Medida'}, {value: 'unidade', text: 'Unidade'}],
-            supermercado: [{value: 'nome', text: 'Nome do Supermercado'}, {value: 'endereço', text
+            supermercado: [{value: 'nome', text: 'Nome do Supermercado'}, {value: 'endereço', text: 'Endereço'}],
+            marca: [{value: 'nome', text: 'Nome da Marca'}]
+        };
+
+        tipoItemSelect.addEventListener('change', () => {
+            const tipo = tipoItemSelect.value;
+            
+            Object.values(dropdowns).forEach(div => div.style.display = 'none');
+            Object.values(selects).forEach(sel => sel.disabled = true);
+            
+            if (dropdowns[tipo]) {
+                dropdowns[tipo].style.display = 'block';
+                selects[tipo].disabled = false;
+            }
+            
+            campoSelect.innerHTML = '<option value="" disabled selected>-- Selecione um campo --</option>';
+            if (campos[tipo]) {
+                campos[tipo].forEach(campo => {
+                    const option = new Option(campo.text, campo.value);
+                    campoSelect.add(option);
+                });
+            }
+        });
+        
+        Object.keys(selects).forEach(key => {
+            selects[key].addEventListener('change', () => {
+                hiddenItemIdInput.value = selects[key].value;
+            });
+        });
+
+        setupSelectFilter('produto_filtro', 'item_id_produto');
+        setupSelectFilter('supermercado_filtro', 'item_id_supermercado');
+        setupSelectFilter('marca_filtro', 'item_id_marca');
+    });
+    </script>
+{% endblock %}
