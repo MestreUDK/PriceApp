@@ -1,24 +1,46 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{{ url_for('products.gerenciar_produtos') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <a href="{{ url_for('products.gerenciar_produtos') }}" style="text-decoration: none; color: var(--primary); margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Produtos
     </a>
     <h2>Editando Produto</h2>
 
-    <form method="POST">
-        <label for="nome">Nome do Produto:</label>
-        <input type="text" name="nome" id="nome" value="{{ produto.nome }}" required>
+    <div class="card-form">
+        <form method="POST">
+            <label for="nome">Nome do Produto:</label>
+            <input type="text" name="nome" id="nome" value="{{ produto.nome }}" required>
 
-        <button type="submit" style="background-color: #28a745;">Salvar Alterações</button>
-    </form>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label for="medida">Medida (Opcional):</label>
+                    <input type="number" step="0.01" name="medida" id="medida" value="{{ produto.medida or '' }}">
+                </div>
+                <div style="flex: 1;">
+                    <label for="unidade">Unidade:</label>
+                    <select name="unidade" id="unidade">
+                        <option value="" {% if not produto.unidade %}selected{% endif %}>-- Nenhuma --</option>
+                        <option value="kg" {% if produto.unidade == 'kg' %}selected{% endif %}>kg</option>
+                        <option value="g" {% if produto.unidade == 'g' %}selected{% endif %}>g</option>
+                        <option value="L" {% if produto.unidade == 'L' %}selected{% endif %}>L</option>
+                        <option value="ml" {% if produto.unidade == 'ml' %}selected{% endif %}>ml</option>
+                        <option value="un" {% if produto.unidade == 'un' %}selected{% endif %}>un</option>
+                        <option value="pct" {% if produto.unidade == 'pct' %}selected{% endif %}>pct</option>
+                        <option value="cx" {% if produto.unidade == 'cx' %}selected{% endif %}>cx</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" style="margin-top: 10px;">Salvar Alterações</button>
+        </form>
+    </div>
 
     <hr style="margin: 2rem 0;">
 
     <h2>Zona de Perigo</h2>
     <form method="POST" action="{{ url_for('products.delete_produto', produto_id=produto.id) }}" onsubmit="return confirm('ATENÇÃO: Isso excluirá este produto e TODOS os preços e sugestões registrados para ele. Tem certeza?');">
         <p>Esta ação não pode ser desfeita.</p>
-        <button type="submit" style="background-color: #dc3545;">Excluir Permanentemente este Produto</button>
+        <button type="submit" style="background-color: var(--danger);">Excluir Permanentemente este Produto</button>
     </form>
     
 {% endblock %}
