@@ -1,12 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{{ url_for('products.gerenciar_produtos') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <a href="{{ url_for('products.gerenciar_produtos') }}" style="text-decoration: none; color: var(--primary); margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Produtos
     </a>
 
     <h2>Comparando Preços para:</h2>
-    <h1>{{ produto.nome }}</h1>
+    <h1>
+        {{ produto.nome }} 
+        {% if produto.medida %}
+            <span style="color: var(--text-sec); font-size: 0.6em;">({{ produto.medida }}{{ produto.unidade }})</span>
+        {% endif %}
+    </h1>
     
     <hr>
     <h3>Preços Atuais (do mais barato para o mais caro)</h3>
@@ -25,19 +30,21 @@
             </thead>
             <tbody>
                 {% for preco in precos %}
-                <tr style="{% if loop.first %}background-color: #d4edda; font-weight: bold;{% endif %}">
+                <tr style="{% if loop.first %}background-color: rgba(40, 167, 69, 0.1); font-weight: bold;{% endif %}">
                     <td data-label="Supermercado">{{ preco.supermercado.nome }}</td>
                     
                     <td data-label="Marca">
                         {% if preco.marca %}
                              {{ preco.marca.nome }}
                         {% else %}
-                            Sem marca
+                            <span style="color: var(--text-sec); font-style: italic;">Sem marca</span>
                         {% endif %}
                     </td>
                     
                     <td data-label="Preço Efetivo">
-                        R$ {{ "%.2f"|format(preco.effective_price) }}
+                        <span style="color: var(--success); font-weight: bold;">
+                            R$ {{ "%.2f"|format(preco.effective_price) }}
+                        </span>
                         {% if preco.e_promocao %}
                             <span title="Preço Promocional">⚡</span>
                         {% endif %}
@@ -55,7 +62,7 @@
                                 N/D
                             {% endif %}
                         {% else %}
-                             Preço Normal
+                             -
                         {% endif %}
                     </td>
                     
@@ -78,7 +85,7 @@
     {% else %}
         <p>Ainda não há preços cadastrados para este produto.</p>
         {% if current_user.role == 'admin' %}
-            <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+            <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: var(--primary); color: white; text-decoration: none; border-radius: 5px;">
                 + Registrar o primeiro preço
             </a>
         {% endif %}
