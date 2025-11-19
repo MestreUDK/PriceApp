@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{{ url_for('lists.ver_lista', lista_id=lista.id) }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <a href="{{ url_for('lists.ver_lista', lista_id=lista.id) }}" style="text-decoration: none; color: var(--primary); margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para a Lista
     </a>
 
@@ -10,9 +10,9 @@
     
     <hr>
 
-    <div style="background-color: #f4f4f9; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
-        <span style="font-size: 1.1em; color: #333; display: block;">Custo Total Otimizado</span>
-        <span style="font-size: 2.5em; color: #28a745; font-weight: bold;">
+    <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; text-align: center; box-shadow: var(--shadow);">
+        <span style="font-size: 1.1em; color: var(--text-main); display: block;">Custo Total Otimizado</span>
+        <span style="font-size: 2.5em; color: var(--success); font-weight: bold;">
             R$ {{ "%.2f"|format(grand_total) }}
         </span>
     </div>
@@ -45,12 +45,17 @@
             <tbody>
                 {% for res in resultados %}
                 <tr>
-                    <td data-label="Produto">{{ res.item.produto.nome }}</td>
+                    <td data-label="Produto">
+                        {{ res.item.produto.nome }}
+                        {% if res.item.produto.medida %}
+                            <span style="color: var(--text-sec); font-size: 0.9em;">({{ res.item.produto.medida }}{{ res.item.produto.unidade }})</span>
+                        {% endif %}
+                    </td>
                     <td data-label="Qtde" style="text-align: center;">{{ res.item.quantidade }}x</td>
                     
                     {% if res.found %}
                         {% set preco_unit_efetivo = res.total_cost / res.item.quantidade %}
-                        <td data-label="Preço Unit." style="font-weight: bold; color: #28a745;">
+                        <td data-label="Preço Unit." style="font-weight: bold; color: var(--success);">
                             R$ {{ "%.2f"|format(preco_unit_efetivo) }}
                             {% if res.best_price.e_promocao %}
                                 <span title="Preço Promocional">⚡</span>
@@ -76,7 +81,7 @@
                             R$ {{ "%.2f"|format(res.total_cost) }}
                         </td>
                     {% else %}
-                        <td data-label="Preço Un." colspan="4" style="text-align: center; color: #dc3545;">
+                        <td data-label="Preço Un." colspan="4" style="text-align: center; color: var(--danger);">
                             Preço não encontrado
                         </td>
                     {% endif %}
