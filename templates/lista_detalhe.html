@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{{ url_for('lists.gerenciar_listas') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <a href="{{ url_for('lists.gerenciar_listas') }}" style="text-decoration: none; color: var(--primary); margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Todas as Listas
     </a>
 
@@ -9,36 +9,40 @@
     <h1>{{ lista.nome }}</h1>
 
     {% if lista.itens %}
-        <a href="{{ url_for('lists.comparar_lista', lista_id=lista.id) }}" style="display: inline-block; padding: 1rem; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 1rem; font-weight: bold;">
+        <a href="{{ url_for('lists.comparar_lista', lista_id=lista.id) }}" style="display: inline-block; padding: 1rem; background-color: var(--success); color: white; text-decoration: none; border-radius: 5px; margin-bottom: 1rem; font-weight: bold;">
             🛒 Comparar Preços desta Lista
         </a>
     {% endif %}
     <hr>
 
-    <h3>Adicionar Produto à Lista</h3>
-    <form method="POST" action="{{ url_for('lists.add_item_lista', lista_id=lista.id) }}" style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
-        
-        <div style="flex-grow: 1; min-width: 200px;">
-            <label for="produto_id">Produto:</label>
-            <input type="text" id="produto_filtro" placeholder="Filtrar produto..." style="margin-bottom: 0.5rem; background-color: #f8f9fa;">
-            <select name="produto_id" id="produto" required>
-            <option value="" disabled selected>-- Selecione um produto --</option>
-                {% for produto in produtos %}
-                    <option value="{{ produto.id }}">{{ produto.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
+    <div class="card-form">
+        <h3>Adicionar Produto à Lista</h3>
+        <form method="POST" action="{{ url_for('lists.add_item_lista', lista_id=lista.id) }}" style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+            
+            <div style="flex-grow: 1; min-width: 200px;">
+                <label for="produto_id">Produto:</label>
+                <input type="text" id="produto_filtro" placeholder="Filtrar produto...">
+                <select name="produto_id" id="produto" required>
+                    <option value="" disabled selected>-- Selecione um produto --</option>
+                    {% for produto in produtos %}
+                        <option value="{{ produto.id }}">
+                            {{ produto.nome }} {% if produto.medida %}({{ produto.medida }}{{ produto.unidade }}){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <div style="width: 100px;">
-            <label for="quantidade">Qtde:</label>
-            <input type="number" name="quantidade" id="quantidade" value="1" min="1" step="1" required style="padding: 0.75rem 0.5rem;">
-        </div>
+            <div style="width: 100px;">
+                <label for="quantidade">Qtde:</label>
+                <input type="number" name="quantidade" id="quantidade" value="1" min="1" step="1" required>
+            </div>
 
-        <button type="submit" style="width: auto; height: 44px; margin-bottom: 1rem;">Adicionar</button>
-    </form>
-    <p style="margin-top: -0.5rem; font-size: 0.9em; color: #555;">
-        Dica: Se adicionar um produto que já está na lista, a quantidade será atualizada.
-    </p>
+            <button type="submit" style="width: auto; height: 48px; margin-bottom: 1rem;">Adicionar</button>
+        </form>
+        <p style="margin-top: -0.5rem; font-size: 0.9em; color: var(--text-sec);">
+            Dica: Se adicionar um produto que já está na lista, a quantidade será atualizada.
+        </p>
+    </div>
 
     <hr style="margin: 2rem 0;">
 
@@ -55,11 +59,16 @@
             <tbody>
                 {% for item in lista.itens %}
                 <tr>
-                    <td data-label="Produto">{{ item.produto.nome }}</td>
+                    <td data-label="Produto">
+                        {{ item.produto.nome }}
+                        {% if item.produto.medida %}
+                            <span style="color: var(--text-sec); font-size: 0.9em;">({{ item.produto.medida }}{{ item.produto.unidade }})</span>
+                        {% endif %}
+                    </td>
                     <td data-label="Quantidade">{{ item.quantidade }}</td>
                     <td style="text-align: right;" class="actions-cell">
                         <form method="POST" action="{{ url_for('lists.delete_item_lista', item_id=item.id) }}" style="display: inline-block;">
-                            <button type="submit" style="background-color: #dc3545; width: auto; padding: 0.5rem 1rem; font-size: 0.9em;">
+                            <button type="submit" style="background-color: var(--danger); width: auto; padding: 0.5rem 1rem; font-size: 0.9em;">
                                 Remover
                             </button>
                         </form>
@@ -74,15 +83,15 @@
 
     <hr style="margin: 3rem 0;">
 
-    <h3 style="color: #dc3545;">Zona de Perigo</h3>
+    <h3 style="color: var(--danger);">Zona de Perigo</h3>
     <p>Esta ação não pode ser desfeita. Todos os itens da lista serão perdidos.</p>
     <form method="POST" action="{{ url_for('lists.delete_lista', lista_id=lista.id) }}" onsubmit="return confirm('Tem certeza que deseja EXCLUIR permanentemente esta lista e todos os seus itens?');">
-        <button type="submit" style="background-color: #dc3545; width: auto;">Excluir esta Lista</button>
+        <button type="submit" style="background-color: var(--danger); width: auto;">Excluir esta Lista</button>
     </form>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    setupSelectFilter('produto_filtro', 'produto');
-});
-</script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setupSelectFilter('produto_filtro', 'produto');
+    });
+    </script>
 {% endblock %}
