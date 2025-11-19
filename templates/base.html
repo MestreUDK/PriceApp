@@ -33,7 +33,6 @@
     </header>
 
     <div class="container">
-        
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
@@ -115,16 +114,10 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register("{{ url_for('core.service_worker') }}")
-                .then(function(registration) {
-                   console.log('Service Worker registrado com sucesso:', registration);
-                })
-                .catch(function(error) {
-                    console.log('Falha ao registrar Service Worker:', error);
-                });
+            navigator.serviceWorker.register("{{ url_for('core.service_worker') }}");
         }
 
-        // --- LÓGICA DO DARK MODE ---
+        // Lógica Dark Mode
         const toggleBtn = document.getElementById('theme-toggle');
         if (toggleBtn) { 
             const html = document.documentElement;
@@ -155,87 +148,40 @@
                 }
             });
         }
-    </script>
-    
-    <script>
-    // Scripts auxiliares e filtros
-    function setupSelectFilter(inputId, selectId) {
-        const input = document.getElementById(inputId);
-        const select = document.getElementById(selectId);
-        if (!input || !select) return;
-        const originalOptions = Array.from(select.options);
-        input.addEventListener('keyup', () => {
-            const filterText = input.value.toLowerCase();
-            Array.from(select.options).forEach(option => {
-                if(option.value) select.remove(option.index);
-            });
-            originalOptions.forEach(option => {
-                if (!option.value) select.add(option);
-                else if (option.text.toLowerCase().includes(filterText)) select.add(option);
-            });
-        });
-    }
 
-    const syncButton = document.getElementById('syncButton');
-    const syncStatus = document.getElementById('syncStatus');
-    if (syncButton) {
-        syncButton.addEventListener('click', () => {
-            syncStatus.textContent = 'Sincronizando...';
-            syncStatus.style.color = 'var(--primary)';
-            fetch("{{ url_for('core.download_backup') }}") 
-                .then(response => {
-                    if (!response.ok) throw new Error('Falha ao buscar dados.');
-                    return response.text(); 
-                })
-                .then(jsonData => {
-                    localStorage.setItem('priceapp_offline_db', jsonData);
-                    syncStatus.textContent = 'Pronto! Dados sincronizados.';
-                    syncStatus.style.color = 'var(--success)';
-                })
-                .catch(error => {
-                    syncStatus.textContent = `Erro: ${error.message}`;
-                    syncStatus.style.color = 'var(--danger)';
+        // Helpers
+        function setupSelectFilter(inputId, selectId) {
+            const input = document.getElementById(inputId);
+            const select = document.getElementById(selectId);
+            if (!input || !select) return;
+            const originalOptions = Array.from(select.options);
+            input.addEventListener('keyup', () => {
+                const filterText = input.value.toLowerCase();
+                Array.from(select.options).forEach(option => {
+                    if(option.value) select.remove(option.index);
                 });
-        });
-    }
-
-    function togglePromoFields() {
-        const promoCheckbox = document.getElementById('e_promocao');
-        const promoFieldsDiv = document.getElementById('promo_fields');
-        const tipoPromoRadios = document.querySelectorAll('input[name="promo_tipo"]');
-        const divPromoUnidadeValor = document.getElementById('div_promo_unidade_valor');
-        const divPromoQtdNecessaria = document.getElementById('div_promo_qtd_necessaria');
-        const divPromoQtdValor = document.getElementById('div_promo_qtd_valor');
-
-        if (!promoCheckbox || !promoFieldsDiv || !tipoPromoRadios.length || !divPromoUnidadeValor || !divPromoQtdNecessaria || !divPromoQtdValor) return;
-
-        promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
-
-        const updateTipoCampos = () => {
-            const tipoSelecionado = document.querySelector('input[name="promo_tipo"]:checked').value;
-            divPromoUnidadeValor.style.display = (tipoSelecionado === 'unidade' || tipoSelecionado === 'limite') ? 'block' : 'none';
-            divPromoQtdNecessaria.style.display = (tipoSelecionado === 'quantidade' || tipoSelecionado === 'limite') ? 'block' : 'none';
-            divPromoQtdValor.style.display = (tipoSelecionado === 'quantidade') ? 'block' : 'none';
-        };
-        
-        promoCheckbox.addEventListener('change', () => {
-            promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
-            if(promoCheckbox.checked) updateTipoCampos();
-        });
-        
-        tipoPromoRadios.forEach(radio => {
-            radio.addEventListener('change', updateTipoCampos);
-        });
-        
-        if(promoCheckbox.checked) {
-            promoFieldsDiv.style.display = 'block';
-            updateTipoCampos();
+                originalOptions.forEach(option => {
+                    if (!option.value) select.add(option);
+                    else if (option.text.toLowerCase().includes(filterText)) select.add(option);
+                });
+            });
         }
-    }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        togglePromoFields();
-    });
+        const syncButton = document.getElementById('syncButton');
+        const syncStatus = document.getElementById('syncStatus');
+        if (syncButton) {
+            syncButton.addEventListener('click', () => {
+                syncStatus.textContent = 'Sincronizando...';
+                syncStatus.style.color = 'var(--primary)';
+                fetch("{{ url_for('core.download_backup') }}") 
+                    .then(r => r.text())
+                    .then(d => {
+                        localStorage.setItem('priceapp_offline_db', d);
+                        syncStatus.textContent = 'Pronto! Dados offline atualizados.';
+                        syncStatus.style.color = 'var(--success)';
+                    });
+            });
+        }
     </script>
   </body>
 </html>
