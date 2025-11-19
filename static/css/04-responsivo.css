@@ -1,23 +1,35 @@
 /* ================================================
-   4. RESPONSIVIDADE
+   4. RESPONSIVIDADE (Media Queries)
    ================================================ */
 
+/* --- Em telas de 480px ou menos --- */
 @media (max-width: 480px) {
-    .header-bar .logo { display: none; }
-    .search-form { flex-grow: 1; }
+    .header-bar .logo {
+        display: none; /* Esconde o logo para dar espaço à busca */
+    }
+    .search-form {
+        flex-grow: 1; /* Faz a busca ocupar todo o espaço */
+    }
+    .header-right-group {
+        flex-grow: 1; /* Faz o grupo ocupar todo o espaço */
+    }
 }
 
+/* --- Tabelas Responsivas (Padrão de Cards) --- */
+/* Em telas de 600px ou menos */
 @media (max-width: 600px) {
-    .tabela-cards thead { display: none; }
+    .tabela-cards thead {
+        display: none;
+    }
 
     .tabela-cards tr {
         display: block;
         margin-bottom: 1.5rem;
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--border-color); /* Era fixo, agora variável */
         border-radius: 12px;
         box-shadow: var(--shadow);
-        background-color: var(--bg-card);
         overflow: hidden;
+        background-color: var(--bg-card); /* Era fixo, agora variável */
     }
 
     .tabela-cards td {
@@ -29,7 +41,9 @@
         color: var(--text-main);
     }
 
-    .tabela-cards td:last-child { border-bottom: none; }
+    .tabela-cards td:last-child {
+        border-bottom: none;
+    }
 
     .tabela-cards td::before {
         content: attr(data-label); 
@@ -39,27 +53,37 @@
         padding-left: 1rem;
         font-weight: bold;
         text-align: left;
-        color: var(--text-main);
+        color: var(--text-main); /* Corrigido para tema */
         opacity: 0.8;
     }
 
-    /* Título do card */
+    /* Título do card (primeira célula) */
     .tabela-cards td:first-child {
-        background-color: var(--icon-bg);
+        background-color: var(--icon-bg); /* Era #f8f8f8 */
         font-weight: bold;
         font-size: 1.1em;
         text-align: left; 
-        padding: 0.8rem 1rem;
+        padding-left: 1rem; 
+        padding-right: 1rem;
+        color: var(--text-main);
     }
-    .tabela-cards td:first-child::before { display: none; }
 
-    /* Botões */
+    /* Esconde o 'data-label' da primeira célula (o título) */
+    .tabela-cards td:first-child::before {
+        display: none;
+    }
+
+    /* Estilo para células que contêm botões (Centralizado) */
     .tabela-cards td.actions-cell {
         display: flex;
         flex-wrap: wrap; 
-        justify-content: center;
+        justify-content: center; /* Centraliza os botões */
         gap: 0.5rem; 
-        padding: 1rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: none; 
     }
-    .tabela-cards td.actions-cell::before { display: none; }
+    .tabela-cards td.actions-cell::before {
+        display: none; /* Remove o label "Ações" */
+    }
 }
