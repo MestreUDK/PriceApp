@@ -16,18 +16,31 @@ def gerenciar_produtos():
             abort(403)
             
         nome_produto = request.form.get('nome')
-
-        filtro = Produto.query.filter_by(nome=nome_produto).first()
+        # --- INÍCIO DA MUDANÇA ---
+        medida = request.form.get('medida')
+        unidade = request.form.get('unidade')
+        
+        # Trata medida vazia
+        if medida and medida.strip() == "":
+            medida = None
+        
+        # Verifica duplicidade considerando nome E medida
+        # Ex: Pode ter "Arroz" (5kg) e "Arroz" (1kg)
+        filtro = Produto.query.filter_by(nome=nome_produto, medida=medida, unidade=unidade).first()
+        
         if filtro:
-            flash('Este produto já está cadastrado.', 'error')
+            flash('Este produto (com esta medida) já está cadastrado.', 'error')
         else:
             novo_produto = Produto(
-                nome=nome_produto, 
+                nome=nome_produto,
+                medida=float(medida) if medida else None,
+                unidade=unidade if unidade else None,
                 criado_por_id=current_user.id
             )
             db.session.add(novo_produto)
             db.session.commit()
             flash('Produto adicionado com sucesso!', 'success')
+        # --- FIM DA MUDANÇA ---
         return redirect(url_for('products.gerenciar_produtos'))
 
     produtos = Produto.query.order_by(Produto.nome).all()
@@ -45,6 +58,17 @@ def edit_produto(produto_id):
 
     if request.method == 'POST':
         produto.nome = request.form.get('nome')
+        
+        # --- INÍCIO DA MUDANÇA ---
+        medida = request.form.get('medida')
+        produto.unidade = request.form.get('unidade')
+        
+        if medida and medida.strip():
+             produto.medida = float(medida)
+        else:
+             produto.medida = None
+        # --- FIM DA MUDANÇA ---
+        
         produto.editado_por_id = current_user.id
         
         db.session.commit()
@@ -65,13 +89,12 @@ def delete_produto(produto_id):
     
     from models import Preco, SugestaoPreco, ListaItem
     
-    # Exclui Preços, Sugestões e Itens de Lista associados
     Preco.query.filter_by(produto_id=produto.id).delete()
     SugestaoPreco.query.filter_by(produto_id=produto.id).delete()
-    ListaItem.query.filter_by(produto_id=produto.id).delete() # Importante
+    ListaItem.query.filter_by(produto_id=produto.id).delete()
     
     db.session.delete(produto)
     db.session.commit()
     
-    flash(f'Produto "{produto.nome}" e todos os seus preços/sugestões/itens de lista foram excluídos com sucesso!', 'success')
+    flash(f'Produto "{produto.nome}" excluído com sucesso!', 'success')
     return redirect(url_for('products.gerenciar_produtos'))
