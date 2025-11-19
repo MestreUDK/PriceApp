@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{{ url_for('markets.gerenciar_mercados') }}" style="text-decoration: none; color: #007bff; margin-bottom: 1rem; display: inline-block;">
+    <a href="{{ url_for('markets.gerenciar_mercados') }}" style="text-decoration: none; color: var(--primary); margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Mercados
     </a>
 
@@ -22,9 +22,14 @@
             <tbody>
                 {% for produto in produtos %}
                 <tr>
-                    <td data-label="Produto">{{ produto.nome }}</td>
+                    <td data-label="Produto">
+                        {{ produto.nome }} 
+                        {% if produto.medida %}
+                            <span style="color: var(--text-sec); font-size: 0.9em;">({{ produto.medida }}{{ produto.unidade }})</span>
+                        {% endif %}
+                    </td>
                     <td class="actions-cell">
-                        <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; border-radius: 4px; font-size: 0.9em;">
+                        <a href="{{ url_for('prices.comparar_produto', produto_id=produto.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: var(--success); color: white; border-radius: 4px; font-size: 0.9em;">
                             🛒 Ver Preços
                         </a>
                     </td>
