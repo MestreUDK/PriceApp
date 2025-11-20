@@ -1,6 +1,6 @@
 # routes/routes_products.py
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, abort
+    Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify
 )
 from extensions import db
 from models import Produto
@@ -24,6 +24,7 @@ def gerenciar_produtos():
         # --- NOVA MUDANÇA ---
         imagem_url = request.form.get('imagem_url')
         
+        # Tratamento de campos vazios
         if medida and medida.strip() == "": medida = None
         if codigo_barras and codigo_barras.strip() == "": codigo_barras = None
         if detalhes and detalhes.strip() == "": detalhes = None
@@ -41,7 +42,7 @@ def gerenciar_produtos():
             unidade=unidade if unidade else None,
             codigo_barras=codigo_barras,
             detalhes=detalhes,
-            imagem_url=imagem_url, # Salva a URL
+            imagem_url=imagem_url, # Salva a URL da imagem
             criado_por_id=current_user.id
         )
         
@@ -101,7 +102,6 @@ def edit_produto(produto_id):
 
     return render_template('edit_produto.html', produto=produto)
 
-# ... (Mantenha a rota delete_produto igual) ...
 @products_bp.route('/delete-produto/<int:produto_id>', methods=['POST'])
 @login_required 
 def delete_produto(produto_id):
@@ -123,3 +123,24 @@ def delete_produto(produto_id):
     
     flash(f'Produto "{produto.nome}" excluído com sucesso!', 'success')
     return redirect(url_for('products.gerenciar_produtos'))
+
+# --- NOVA ROTA API PARA O SCANNER (Usada pelo frontend) ---
+@products_bp.route('/api/check-ean/<ean>', methods=['GET'])
+@login_required
+def check_ean(ean):
+    # Limpa o código (remove espaços)
+    ean = ean.strip()
+    
+    # Busca no banco
+    produto = Produto.query.filter_by(codigo_barras=ean).first()
+    
+    if produto:
+        # Se achou, retorna o ID para redirecionar
+        return jsonify({
+            'found': True, 
+            'id': produto.id, 
+            'nome': produto.nome
+        })
+    else:
+        # Se não achou, avisa para redirecionar pro cadastro
+        return jsonify({'found': False})
