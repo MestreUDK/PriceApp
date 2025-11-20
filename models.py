@@ -1,4 +1,6 @@
 # models.py
+# Define a estrutura de todas as tabelas do banco de dados
+
 from extensions import db
 from datetime import datetime
 from flask_login import UserMixin 
@@ -45,9 +47,10 @@ class Produto(db.Model):
     medida = db.Column(db.Float, nullable=True) 
     unidade = db.Column(db.String(10), nullable=True) 
     
-    # --- INÍCIO DA MUDANÇA (ETAPA 2.5) ---
-    codigo_barras = db.Column(db.String(100), unique=True, nullable=True) # Novo campo EAN
-    detalhes = db.Column(db.Text, nullable=True) # Novo campo Detalhes
+    # --- INÍCIO DA MUDANÇA (ETAPAS 2.5 e 2.6) ---
+    codigo_barras = db.Column(db.String(100), unique=True, nullable=True) # EAN/GTIN
+    detalhes = db.Column(db.Text, nullable=True) # Informações extras
+    imagem_url = db.Column(db.Text, nullable=True) # Link da foto do produto
     # --- FIM DA MUDANÇA ---
 
     precos = db.relationship('Preco', backref='produto', lazy=True)
