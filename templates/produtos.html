@@ -8,6 +8,21 @@
         <form method="POST">
             <h3 style="margin-top: 0;">Adicionar Novo Produto</h3>
             
+            <div id="leitor-camera" style="display: none; margin-bottom: 15px; text-align: center; background: #000; border-radius: 8px; overflow: hidden;">
+                <div id="reader" style="width: 100%; margin: 0 auto;"></div>
+                <button type="button" onclick="pararScanner()" style="background-color: var(--danger); width: 100%; border-radius: 0;">Fechar Câmera</button>
+            </div>
+
+            <label for="codigo_barras">Código de Barras (EAN):</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                <input type="text" name="codigo_barras" id="codigo_barras" placeholder="Escaneie ou digite..." style="margin-bottom: 0; flex-grow: 1;" onblur="buscarDadosProduto(this.value)">
+                <button type="button" onclick="iniciarScanner()" style="width: auto; margin-bottom: 0; padding: 10px 15px; background-color: var(--primary);" title="Abrir Câmera">
+                    📷
+                </button>
+            </div>
+            
+            <p id="api-status" style="display: none; font-size: 0.9em; margin-top: -5px; margin-bottom: 10px; font-weight: bold; color: var(--primary);">🔍 Buscando dados do produto...</p>
+
             <label for="nome">Nome do Produto:</label>
             <input type="text" name="nome" id="nome" placeholder="Ex: Arroz, Refrigerante" required>
 
@@ -30,27 +45,19 @@
                     </select>
                 </div>
             </div>
-
-            <div id="leitor-camera" style="display: none; margin-bottom: 15px; text-align: center;">
-                <div id="reader" style="width: 100%; max-width: 400px; margin: 0 auto; border: 2px solid var(--primary); border-radius: 8px;"></div>
-                <button type="button" onclick="pararScanner()" style="background-color: var(--danger); margin-top: 10px;">Fechar Câmera</button>
-            </div>
-
-            <label for="codigo_barras">Código de Barras (EAN):</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" name="codigo_barras" id="codigo_barras" placeholder="Escaneie ou digite" style="flex-grow: 1;">
-                <button type="button" onclick="iniciarScanner()" style="width: auto; background-color: var(--primary); padding: 10px 15px;">
-                    📷
-                </button>
-            </div>
             
             <label for="imagem_url">URL da Imagem (Foto):</label>
-            <input type="url" name="imagem_url" id="imagem_url" placeholder="https://...">
+            <input type="url" name="imagem_url" id="imagem_url" placeholder="https://..." onchange="atualizarPreview(this.value)">
+            
+            <div id="preview-container" style="display: none; margin-bottom: 1rem; text-align: center;">
+                <p style="font-size: 0.8em; color: var(--text-sec); margin-bottom: 5px;">Prévia:</p>
+                <img id="img-preview" src="" alt="Prévia" style="max-height: 150px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow);">
+            </div>
 
             <label for="detalhes">Detalhes:</label>
             <textarea name="detalhes" id="detalhes" rows="2"></textarea>
 
-            <button type="submit" style="width: 100%; margin-top: 10px;">Adicionar Produto</button>
+            <button type="submit" style="margin-top: 10px;">Adicionar Produto</button>
         </form>
     </div>
     <hr>
@@ -71,7 +78,7 @@
             <tr>
                 <td data-label="Produto" style="display: flex; align-items: center; gap: 10px;">
                     {% if produto.imagem_url %}
-                        <img src="{{ produto.imagem_url }}" alt="Foto" style="width: 50px; height: 50px; object-fit: contain; border-radius: 4px; border: 1px solid var(--border-color); background: white;">
+                        <img src="{{ produto.imagem_url }}" alt="Foto" style="width: 50px; height: 50px; object-fit: contain; background: #fff; border-radius: 4px; border: 1px solid var(--border-color);">
                     {% else %}
                         <div style="width: 50px; height: 50px; background: var(--icon-bg); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">📦</div>
                     {% endif %}
@@ -119,41 +126,41 @@
             border-radius: 4px;
             font-weight: bold;
             font-size: 0.9em;
+            color: var(--text-main);
         }
     </style>
 
     <script>
         let html5QrcodeScanner = null;
 
+        // 1. Funções da Câmera
         function iniciarScanner() {
             const readerDiv = document.getElementById('leitor-camera');
             readerDiv.style.display = 'block';
 
             html5QrcodeScanner = new Html5Qrcode("reader");
-            
             const config = { fps: 10, qrbox: { width: 250, height: 150 } };
             
-            // Tenta usar a câmera traseira ("environment")
             html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess)
             .catch(err => {
-                console.error("Erro ao iniciar câmera", err);
-                alert("Erro ao abrir câmera: " + err);
+                console.error("Erro câmera", err);
+                alert("Erro ao abrir câmera. Verifique permissões.");
+                readerDiv.style.display = 'none';
             });
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // 1. Preenche o input
+            // Preenche o campo
             document.getElementById('codigo_barras').value = decodedText;
             
-            // 2. Toca um bipe (opcional, feedback sonoro)
-            // const audio = new Audio('https://www.soundjay.com/button/beep-07.wav');
-            // audio.play();
+            // Feedback Sonoro
+            try { navigator.vibrate(200); } catch(e){}
 
-            // 3. Para o scanner e fecha a div
+            // Fecha câmera
             pararScanner();
             
-            // 4. (Opcional) Aqui poderíamos chamar a API OpenFoodFacts para preencher o nome e foto!
-            // buscarDadosProduto(decodedText); 
+            // CHAMA A API AUTOMATICAMENTE!
+            buscarDadosProduto(decodedText);
         }
 
         function pararScanner() {
@@ -164,6 +171,96 @@
                 }).catch(err => console.log(err));
             } else {
                 document.getElementById('leitor-camera').style.display = 'none';
+            }
+        }
+
+        // 2. Função Mágica: Open Food Facts API
+        async function buscarDadosProduto(ean) {
+            if (!ean || ean.length < 8) return;
+
+            const statusEl = document.getElementById('api-status');
+            const nomeEl = document.getElementById('nome');
+            const imgInput = document.getElementById('imagem_url');
+            
+            statusEl.style.display = 'block';
+            statusEl.textContent = '🔍 Buscando dados no OpenFoodFacts...';
+            statusEl.style.color = 'var(--primary)';
+
+            try {
+                // Chama a API gratuita
+                const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${ean}.json`);
+                const data = await response.json();
+
+                if (data.status === 1) {
+                    const produto = data.product;
+                    
+                    // 1. Preenche Nome
+                    if (produto.product_name) {
+                        nomeEl.value = produto.product_name;
+                        statusEl.textContent = '✅ Produto encontrado!';
+                        statusEl.style.color = 'var(--success)';
+                    }
+
+                    // 2. Preenche Imagem
+                    if (produto.image_front_url) {
+                        imgInput.value = produto.image_front_url;
+                        atualizarPreview(produto.image_front_url);
+                    }
+
+                    // 3. Tenta adivinhar a Quantidade (Bônus)
+                    if (produto.quantity) {
+                        parseQuantidade(produto.quantity);
+                    }
+
+                } else {
+                    statusEl.textContent = '⚠️ Produto não encontrado na base global.';
+                    statusEl.style.color = 'var(--warning)';
+                }
+
+            } catch (error) {
+                console.error(error);
+                statusEl.textContent = '❌ Erro ao consultar API.';
+                statusEl.style.color = 'var(--danger)';
+            }
+        }
+
+        // 3. Helpers Visuais
+        function atualizarPreview(url) {
+            const container = document.getElementById('preview-container');
+            const img = document.getElementById('img-preview');
+            
+            if (url) {
+                img.src = url;
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function parseQuantidade(textoQtd) {
+            // Tenta extrair números e letras de strings como "350 ml" ou "1 kg"
+            // Regex simples
+            const match = textoQtd.match(/([\d\.]+)\s*([a-zA-Z]+)/);
+            if (match) {
+                document.getElementById('medida').value = match[1];
+                
+                // Tenta selecionar a unidade correta no dropdown
+                const unidadeStr = match[2].toLowerCase();
+                const selectUnidade = document.getElementById('unidade');
+                
+                // Mapeamento simples
+                const mapa = {'l': 'L', 'liter': 'L', 'ml': 'ml', 'kg': 'kg', 'g': 'g', 'grm': 'g'};
+                if (mapa[unidadeStr]) {
+                    selectUnidade.value = mapa[unidadeStr];
+                } else {
+                    // Tenta match direto
+                    for (let i = 0; i < selectUnidade.options.length; i++) {
+                        if (selectUnidade.options[i].value === unidadeStr) {
+                            selectUnidade.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
             }
         }
 
