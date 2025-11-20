@@ -4,7 +4,7 @@ from flask import (
     abort
 )
 from extensions import db
-from models import Supermercado, Produto, Preco, Marca
+from models import Supermercado, Produto, Preco, Categoria
 from sqlalchemy import func, desc, and_, or_
 from datetime import datetime 
 from flask_login import login_required, current_user 
@@ -12,8 +12,7 @@ import json
 
 prices_bp = Blueprint('prices', __name__, template_folder='../templates')
 
-# --- INÍCIO DA MUDANÇA (LÓGICA DO PREÇO EFETIVO) ---
-# Função auxiliar para calcular o PREÇO UNITÁRIO EFETIVO
+# --- FUNÇÃO AUXILIAR (PREÇO EFETIVO) ---
 def get_effective_unit_price(preco_obj):
     """Calcula o preço unitário efetivo de um item para COMPARAÇÃO."""
 
@@ -21,7 +20,6 @@ def get_effective_unit_price(preco_obj):
     if not preco_obj.e_promocao or preco_obj.data_expiracao < datetime.utcnow():
         return preco_obj.valor
 
-    # --- MUDANÇA: 'unidade' e 'limite' usam a mesma lógica aqui ---
     # Promoção de unidade (preço reduzido) OU Limite (preço unitário reduzido)
     if (preco_obj.promo_tipo == 'unidade' or preco_obj.promo_tipo == 'limite') and preco_obj.promo_unidade_valor:
         return preco_obj.promo_unidade_valor
@@ -39,7 +37,6 @@ def get_effective_unit_price(preco_obj):
 
     # Fallback para promoções antigas ou mal formatadas
     return preco_obj.valor
-# --- FIM DA MUDANÇA ---
 
 
 @prices_bp.route('/registrar-preco', methods=['GET', 'POST'])
@@ -51,12 +48,12 @@ def registrar_preco():
     if request.method == 'POST':
         produto_id = request.form.get('produto')
         supermercado_id = request.form.get('supermercado')
-        # --- INÍCIO DA MUDANÇA (LÓGICA DE SALVAR) ---
         valor = request.form.get('valor') # Este é o valor BASE
 
-        marca_id = request.form.get('marca')
-        if marca_id == "": 
-            marca_id = None
+        # MUDANÇA: Categoria em vez de Marca
+        categoria_id = request.form.get('categoria')
+        if categoria_id == "": 
+            categoria_id = None
 
         e_promocao = request.form.get('e_promocao') == 'on' # Checkbox 'on'
 
@@ -80,11 +77,10 @@ def registrar_preco():
         promo_qtd_necessaria = request.form.get('promo_qtd_necessaria')
         promo_qtd_valor = request.form.get('promo_qtd_valor')
 
-        # --- MUDANÇA: Define os valores com base no tipo de promo ---
         novo_preco = Preco(
             produto_id=produto_id,
             supermercado_id=supermercado_id,
-            marca_id=marca_id, 
+            categoria_id=categoria_id, # MUDANÇA
             valor=float(valor),
             criado_por_id=current_user.id,
             e_promocao=e_promocao,
@@ -100,7 +96,6 @@ def registrar_preco():
             # Salva promo_qtd_valor APENAS se for 'quantidade'
             promo_qtd_valor=float(promo_qtd_valor) if e_promocao and promo_tipo == 'quantidade' and promo_qtd_valor else None
         )
-        # --- FIM DA MUDANÇA ---
 
         db.session.add(novo_preco)
         db.session.commit()
@@ -110,11 +105,13 @@ def registrar_preco():
 
     produtos = Produto.query.order_by(Produto.nome).all()
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
-    marcas = Marca.query.order_by(Marca.nome).all()
+    # MUDANÇA: Categorias
+    categorias = Categoria.query.order_by(Categoria.nome).all()
+    
     return render_template('registrar_preco.html', 
                            produtos=produtos, 
                            supermercados=supermercados,
-                           marcas=marcas)
+                           categorias=categorias)
 
 @prices_bp.route('/comparar/<int:produto_id>')
 @login_required 
@@ -123,11 +120,10 @@ def comparar_produto(produto_id):
     if not produto:
         abort(404) 
 
-    # --- INÍCIO DA MUDANÇA (ETAPA 20) ---
-    # A subquery continua a mesma, pois ela só filtra por DATA e PROMO VÁLIDA
+    # Subquery para pegar apenas o preço mais recente de cada combinação (mercado + categoria)
     subquery = db.session.query(
         Preco.supermercado_id,
-        Preco.marca_id,
+        Preco.categoria_id, # MUDANÇA
         func.max(Preco.data_cadastro).label('max_data')
     ).filter(
         Preco.produto_id == produto_id,
@@ -137,7 +133,7 @@ def comparar_produto(produto_id):
         )
     ).group_by(
         Preco.supermercado_id,
-        Preco.marca_id
+        Preco.categoria_id # MUDANÇA
     ).subquery()
 
     precos_recentes_db = db.session.query(Preco).join(
@@ -146,10 +142,10 @@ def comparar_produto(produto_id):
             Preco.supermercado_id == subquery.c.supermercado_id,
             Preco.data_cadastro == subquery.c.max_data,
             or_(
-                Preco.marca_id == subquery.c.marca_id,
+                Preco.categoria_id == subquery.c.categoria_id, # MUDANÇA
                 and_(
-                    Preco.marca_id.is_(None),
-                    subquery.c.marca_id.is_(None)
+                    Preco.categoria_id.is_(None), # MUDANÇA
+                    subquery.c.categoria_id.is_(None) # MUDANÇA
                 )
             )
         )
@@ -169,38 +165,37 @@ def comparar_produto(produto_id):
     )
 
     return render_template('comparar.html', produto=produto, precos=precos_recentes_ordenados)
-    # --- FIM DA MUDANÇA ---
 
-@prices_bp.route('/historico/<int:produto_id>/<int:supermercado_id>/<marca_str>')
+
+@prices_bp.route('/historico/<int:produto_id>/<int:supermercado_id>/<categoria_str>')
 @login_required 
-def ver_historico(produto_id, supermercado_id, marca_str):
+def ver_historico(produto_id, supermercado_id, categoria_str): # MUDANÇA no parâmetro
     produto = db.session.get(Produto, produto_id)
     supermercado = db.session.get(Supermercado, supermercado_id)
 
-    marca = None
-    if marca_str == "sem-marca":
-        marca_id = None
+    # MUDANÇA: Lógica de Categoria
+    categoria = None
+    if categoria_str == "sem-categoria":
+        categoria_id = None
     else:
-        marca = Marca.query.filter_by(nome=marca_str).first()
-        if marca:
-            marca_id = marca.id
+        categoria = Categoria.query.filter_by(nome=categoria_str).first()
+        if categoria:
+            categoria_id = categoria.id
         else:
             abort(404) 
 
     if not produto or not supermercado:
         abort(404)
 
-    # --- INÍCIO DA MUDANÇA (ETAPA 14 & 20) ---
-
-    # 1. Busca de promoções ativas (para este item/mercado/marca)
+    # 1. Busca de promoções ativas (para este item/mercado/categoria)
     active_promo = Preco.query.filter(
         Preco.produto_id == produto_id,
         Preco.supermercado_id == supermercado_id,
-        Preco.marca_id == marca_id,
+        Preco.categoria_id == categoria_id, # MUDANÇA
         Preco.e_promocao == True,
         Preco.data_expiracao > datetime.utcnow()
     ).order_by(
-        Preco.data_cadastro.desc() # Pega a promo mais RECENTE
+        Preco.data_cadastro.desc()
     ).first()
 
     # 2. Busca o preço normal mais recente (para comparar)
@@ -209,10 +204,10 @@ def ver_historico(produto_id, supermercado_id, marca_str):
         normal_price_obj = Preco.query.filter(
             Preco.produto_id == produto_id,
             Preco.supermercado_id == supermercado_id,
-            Preco.marca_id == marca_id,
-            Preco.e_promocao == False # Busca o preço que NÃO é promoção
+            Preco.categoria_id == categoria_id, # MUDANÇA
+            Preco.e_promocao == False 
         ).order_by(
-            Preco.data_cadastro.desc() # Pega o mais recente
+            Preco.data_cadastro.desc()
         ).first()
 
     # 3. Calcula o preço unitário efetivo da promoção (se existir)
@@ -224,12 +219,10 @@ def ver_historico(produto_id, supermercado_id, marca_str):
     precos_historico = Preco.query.filter_by(
         produto_id=produto_id,
         supermercado_id=supermercado_id,
-        marca_id=marca_id
+        categoria_id=categoria_id # MUDANÇA
     ).order_by(
         Preco.data_cadastro.asc()
     ).all()
-
-    # --- FIM DA MUDANÇA ---
 
     # O gráfico continua mostrando o valor BASE
     labels = [preco.data_cadastro.strftime('%d/%m/%Y') for preco in precos_historico]
@@ -241,16 +234,16 @@ def ver_historico(produto_id, supermercado_id, marca_str):
     return render_template('historico.html',
                            produto=produto,
                            supermercado=supermercado,
-                           marca=marca, 
+                           categoria=categoria, # MUDANÇA (usar 'categoria' no template em vez de 'marca')
                            precos=precos_historico,
                            labels_json=labels_json,
                            valores_json=valores_json,
                            active_promo=active_promo,
                            normal_price_obj=normal_price_obj,
-                           promo_effective_price=promo_effective_price # Passa o preço efetivo
+                           promo_effective_price=promo_effective_price
                            )
 
-# --- INÍCIO DA MUDANÇA (ETAPA 21) ---
+
 @prices_bp.route('/edit-preco/<int:preco_id>', methods=['GET', 'POST'])
 @login_required
 def edit_preco(preco_id):
@@ -266,8 +259,9 @@ def edit_preco(preco_id):
         preco.produto_id = request.form.get('produto')
         preco.supermercado_id = request.form.get('supermercado')
 
-        marca_id = request.form.get('marca')
-        preco.marca_id = marca_id if marca_id else None
+        # MUDANÇA: Categoria
+        categoria_id = request.form.get('categoria')
+        preco.categoria_id = categoria_id if categoria_id else None
 
         preco.valor = float(request.form.get('valor'))
 
@@ -293,7 +287,7 @@ def edit_preco(preco_id):
             flash('Promoções devem ter uma data de expiração obrigatória.', 'error')
             return redirect(url_for('prices.edit_preco', preco_id=preco.id))
 
-        # --- MUDANÇA: Lógica para salvar os novos campos de promoção ---
+        # Lógica para salvar os novos campos de promoção
         promo_tipo = request.form.get('promo_tipo')
         promo_unidade_valor = request.form.get('promo_unidade_valor')
         promo_qtd_necessaria = request.form.get('promo_qtd_necessaria')
@@ -301,33 +295,28 @@ def edit_preco(preco_id):
 
         preco.promo_tipo = promo_tipo if preco.e_promocao else 'unidade'
 
-        # Salva promo_unidade_valor se for 'unidade' OU 'limite'
         preco.promo_unidade_valor = float(promo_unidade_valor) if preco.e_promocao and (promo_tipo == 'unidade' or promo_tipo == 'limite') and promo_unidade_valor else None
-
-        # Salva promo_qtd_necessaria se for 'quantidade' OU 'limite'
         preco.promo_qtd_necessaria = int(promo_qtd_necessaria) if preco.e_promocao and (promo_tipo == 'quantidade' or promo_tipo == 'limite') and promo_qtd_necessaria else None
-
-        # Salva promo_qtd_valor APENAS se for 'quantidade'
         preco.promo_qtd_valor = float(promo_qtd_valor) if preco.e_promocao and promo_tipo == 'quantidade' and promo_qtd_valor else None
-        # --- FIM DA MUDANÇA ---
 
         db.session.commit()
         flash('Registro de preço atualizado com sucesso!', 'success')
 
-        marca_str = preco.marca.nome if preco.marca else 'sem-marca'
+        # MUDANÇA: URL de redirecionamento usa categoria
+        categoria_str = preco.categoria.nome if preco.categoria else 'sem-categoria'
         return redirect(url_for('prices.ver_historico', 
                                 produto_id=preco.produto_id, 
                                 supermercado_id=preco.supermercado_id,
-                                marca_str=marca_str))
+                                categoria_str=categoria_str))
 
     # GET
     produtos = Produto.query.order_by(Produto.nome).all()
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
-    marcas = Marca.query.order_by(Marca.nome).all()
+    # MUDANÇA: Categorias
+    categorias = Categoria.query.order_by(Categoria.nome).all()
 
     return render_template('edit_preco.html',
                            preco=preco,
                            produtos=produtos, 
                            supermercados=supermercados,
-                           marcas=marcas)
-# --- FIM DA MUDANÇA ---
+                           categorias=categorias)
