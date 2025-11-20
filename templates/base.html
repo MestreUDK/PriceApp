@@ -10,6 +10,7 @@
   </head>
   <body>
     
+    <!-- MODAL DE SCANNER GLOBAL (Escondido por padrão) -->
     <div id="global-scanner-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; flex-direction: column;">
         <div style="position: relative; width: 90%; max-width: 500px;">
             <div id="global-reader" style="width: 100%;"></div>
@@ -23,8 +24,12 @@
         
         {% if current_user.is_authenticated %}
             <div class="header-right-group">
+                <!-- BUSCA COM BOTÃO DE SCAN -->
                 <form class="search-form" method="GET" action="{{ url_for('core.busca') }}" style="position: relative;">
-                    <input type="search" name="q" placeholder="Buscar..." required style="padding-right: 40px;"> <button type="button" onclick="abrirScannerGlobal()" style="position: absolute; right: 45px; top: 0; bottom: 0; background: none; border: none; padding: 0 8px; cursor: pointer;" title="Escanear Produto">
+                    <input type="search" name="q" placeholder="Buscar..." required style="padding-right: 40px;"> <!-- Espaço pro ícone -->
+                    
+                    <!-- Botão de Scan dentro da barra -->
+                    <button type="button" onclick="abrirScannerGlobal()" style="position: absolute; right: 45px; top: 0; bottom: 0; background: none; border: none; padding: 0 8px; cursor: pointer;" title="Escanear Produto">
                         📷
                     </button>
 
@@ -44,6 +49,7 @@
     </header>
 
     <div class="container">
+        
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
@@ -83,9 +89,9 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
                     Registrar
                 </a>
-                <a href="{{ url_for('brands.gerenciar_marcas') }}">
+                <a href="{{ url_for('categories.gerenciar_categorias') }}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-                    Marcas
+                    Categorias
                 </a>
                 <a href="{{ url_for('suggestions.admin_sugestoes') }}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#ffc107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
@@ -159,21 +165,16 @@
 
         async function onGlobalScanSuccess(decodedText, decodedResult) {
             fecharScannerGlobal();
-            // Feedback sonoro
             try { navigator.vibrate(200); } catch(e){}
             
-            // Chama a API do Backend para verificar se existe
             try {
                 const res = await fetch(`/api/check-ean/${decodedText}`);
                 const data = await res.json();
                 
                 if (data.found) {
-                    // CENÁRIO 1: Produto EXISTE -> Vai para Comparação
                     window.location.href = `/comparar/${data.id}`;
                 } else {
-                    // CENÁRIO 2: Produto NOVO -> Vai para Cadastro (pré-preenchido)
                     if(confirm(`Produto não cadastrado (EAN: ${decodedText}). Deseja cadastrar agora?`)) {
-                        // Redireciona para a página de produtos com o EAN na URL
                         window.location.href = `/produtos?ean=${decodedText}`;
                     }
                 }
@@ -214,7 +215,7 @@
             });
         }
 
-        // ... (Outros scripts auxiliares mantidos) ...
+        // Helpers
         function setupSelectFilter(inputId, selectId) {
             const input = document.getElementById(inputId);
             const select = document.getElementById(selectId);
@@ -248,3 +249,4 @@
     </script>
   </body>
 </html>
+
