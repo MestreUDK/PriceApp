@@ -266,6 +266,22 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             setupSelectFilter('produto_filtro', 'produto');
+            
+            // NOVO: Verifica se veio um EAN pela URL (Redirecionamento do Scanner Global)
+            const urlParams = new URLSearchParams(window.location.search);
+            const eanUrl = urlParams.get('ean');
+            
+            if (eanUrl) {
+                // Se veio da URL, preenche o campo e busca na API automaticamente
+                const inputEan = document.getElementById('codigo_barras');
+                if (inputEan) {
+                    inputEan.value = eanUrl;
+                    buscarDadosProduto(eanUrl); // Chama a API OpenFoodFacts
+                    
+                    // Rola a tela até o formulário (útil no mobile)
+                    inputEan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
         });
     </script>
 {% endblock %}
