@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{{ url_for('prices.ver_historico', produto_id=preco.produto_id, supermercado_id=preco.supermercado_id, marca_str=preco.marca.nome if preco.marca else 'sem-marca') }}" style="color: var(--primary); text-decoration: none; margin-bottom: 1rem; display: inline-block;">
+    <a href="{{ url_for('prices.ver_historico', produto_id=preco.produto_id, supermercado_id=preco.supermercado_id, categoria_str=preco.categoria.nome if preco.categoria else 'sem-categoria') }}" style="color: var(--primary); text-decoration: none; margin-bottom: 1rem; display: inline-block;">
         &larr; Voltar para Histórico
     </a>
     <h2>Editando Registro de Preço</h2>
@@ -13,18 +13,18 @@
             <select name="produto" id="produto" required>
                 {% for produto in produtos %}
                     <option value="{{ produto.id }}" {% if produto.id == preco.produto_id %}selected{% endif %}>
-                        {{ produto.nome }}
+                        {{ produto.nome }} {% if produto.medida %}({{ produto.medida }}{{ produto.unidade }}){% endif %}
                     </option>
                 {% endfor %}
             </select>
 
-            <label for="marca">2. Marca:</label>
-            <input type="text" id="marca_filtro" placeholder="Filtrar...">
-            <select name="marca" id="marca">
-                <option value="">-- Sem marca --</option>
-                {% for marca in marcas %}
-                     <option value="{{ marca.id }}" {% if marca.id == preco.marca_id %}selected{% endif %}>
-                        {{ marca.nome }}
+            <label for="categoria">2. Categoria:</label>
+            <input type="text" id="categoria_filtro" placeholder="Filtrar...">
+            <select name="categoria" id="categoria">
+                <option value="">-- Sem categoria --</option>
+                {% for categoria in categorias %}
+                     <option value="{{ categoria.id }}" {% if categoria.id == preco.categoria_id %}selected{% endif %}>
+                        {{ categoria.nome }}
                      </option>
                 {% endfor %}
             </select>
@@ -73,7 +73,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             setupSelectFilter('produto_filtro', 'produto');
-            setupSelectFilter('marca_filtro', 'marca');
+            setupSelectFilter('categoria_filtro', 'categoria');
             setupSelectFilter('supermercado_filtro', 'supermercado');
              // Dispara evento para ajustar campos da promo
              const promoCheckbox = document.getElementById('e_promocao');
@@ -81,3 +81,4 @@
         });
     </script>
 {% endblock %}
+
