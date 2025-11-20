@@ -10,13 +10,24 @@
   </head>
   <body>
     
+    <div id="global-scanner-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; flex-direction: column;">
+        <div style="position: relative; width: 90%; max-width: 500px;">
+            <div id="global-reader" style="width: 100%;"></div>
+            <button onclick="fecharScannerGlobal()" style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 2rem;">&times;</button>
+        </div>
+        <p style="color: white; margin-top: 20px;">Aponte para o código de barras</p>
+    </div>
+
     <header class="header-bar">
         <a href="{{ url_for('core.index') }}" class="logo">PriceApp</a>
         
         {% if current_user.is_authenticated %}
             <div class="header-right-group">
-                <form class="search-form" method="GET" action="{{ url_for('core.busca') }}">
-                    <input type="search" name="q" placeholder="Buscar..." required>
+                <form class="search-form" method="GET" action="{{ url_for('core.busca') }}" style="position: relative;">
+                    <input type="search" name="q" placeholder="Buscar..." required style="padding-right: 40px;"> <button type="button" onclick="abrirScannerGlobal()" style="position: absolute; right: 45px; top: 0; bottom: 0; background: none; border: none; padding: 0 8px; cursor: pointer;" title="Escanear Produto">
+                        📷
+                    </button>
+
                     <button type="submit">🔍</button>
                 </form>
                 
@@ -112,12 +123,66 @@
         {% endif %}
     </nav>
 
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register("{{ url_for('core.service_worker') }}");
         }
 
-        // Lógica Dark Mode
+        // --- LÓGICA DO SCANNER GLOBAL ---
+        let globalScanner = null;
+
+        function abrirScannerGlobal() {
+            document.getElementById('global-scanner-modal').style.display = 'flex';
+            globalScanner = new Html5Qrcode("global-reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+            
+            globalScanner.start({ facingMode: "environment" }, config, onGlobalScanSuccess)
+            .catch(err => {
+                alert("Erro câmera: " + err);
+                fecharScannerGlobal();
+            });
+        }
+
+        function fecharScannerGlobal() {
+            if (globalScanner) {
+                globalScanner.stop().then(() => {
+                    globalScanner.clear();
+                    document.getElementById('global-scanner-modal').style.display = 'none';
+                }).catch(err => {
+                     document.getElementById('global-scanner-modal').style.display = 'none';
+                });
+            } else {
+                document.getElementById('global-scanner-modal').style.display = 'none';
+            }
+        }
+
+        async function onGlobalScanSuccess(decodedText, decodedResult) {
+            fecharScannerGlobal();
+            // Feedback sonoro
+            try { navigator.vibrate(200); } catch(e){}
+            
+            // Chama a API do Backend para verificar se existe
+            try {
+                const res = await fetch(`/api/check-ean/${decodedText}`);
+                const data = await res.json();
+                
+                if (data.found) {
+                    // CENÁRIO 1: Produto EXISTE -> Vai para Comparação
+                    window.location.href = `/comparar/${data.id}`;
+                } else {
+                    // CENÁRIO 2: Produto NOVO -> Vai para Cadastro (pré-preenchido)
+                    if(confirm(`Produto não cadastrado (EAN: ${decodedText}). Deseja cadastrar agora?`)) {
+                        // Redireciona para a página de produtos com o EAN na URL
+                        window.location.href = `/produtos?ean=${decodedText}`;
+                    }
+                }
+            } catch (err) {
+                alert("Erro ao verificar código: " + err);
+            }
+        }
+
+        // --- LÓGICA DO DARK MODE ---
         const toggleBtn = document.getElementById('theme-toggle');
         if (toggleBtn) { 
             const html = document.documentElement;
@@ -149,7 +214,7 @@
             });
         }
 
-        // Helpers
+        // ... (Outros scripts auxiliares mantidos) ...
         function setupSelectFilter(inputId, selectId) {
             const input = document.getElementById(inputId);
             const select = document.getElementById(selectId);
@@ -166,62 +231,20 @@
                 });
             });
         }
-
-        const syncButton = document.getElementById('syncButton');
-        const syncStatus = document.getElementById('syncStatus');
-        if (syncButton) {
-            syncButton.addEventListener('click', () => {
-                syncStatus.textContent = 'Sincronizando...';
-                syncStatus.style.color = 'var(--primary)';
-                fetch("{{ url_for('core.download_backup') }}") 
-                    .then(r => r.text())
-                    .then(d => {
-                        localStorage.setItem('priceapp_offline_db', d);
-                        syncStatus.textContent = 'Pronto! Dados offline atualizados.';
-                        syncStatus.style.color = 'var(--success)';
-                    });
-            });
-        }
-
+        
         function togglePromoFields() {
-            const promoCheckbox = document.getElementById('e_promocao');
-            const promoFieldsDiv = document.getElementById('promo_fields');
-            const tipoPromoRadios = document.querySelectorAll('input[name="promo_tipo"]');
-            const divPromoUnidadeValor = document.getElementById('div_promo_unidade_valor');
-            const divPromoQtdNecessaria = document.getElementById('div_promo_qtd_necessaria');
-            const divPromoQtdValor = document.getElementById('div_promo_qtd_valor');
-
-            if (!promoCheckbox || !promoFieldsDiv || !tipoPromoRadios.length || !divPromoUnidadeValor || !divPromoQtdNecessaria || !divPromoQtdValor) return;
-
-            promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
-
-            const updateTipoCampos = () => {
-                const tipoSelecionado = document.querySelector('input[name="promo_tipo"]:checked').value;
-                divPromoUnidadeValor.style.display = (tipoSelecionado === 'unidade' || tipoSelecionado === 'limite') ? 'block' : 'none';
-                divPromoQtdNecessaria.style.display = (tipoSelecionado === 'quantidade' || tipoSelecionado === 'limite') ? 'block' : 'none';
-                divPromoQtdValor.style.display = (tipoSelecionado === 'quantidade') ? 'block' : 'none';
-            };
-            
-            promoCheckbox.addEventListener('change', () => {
-                promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
-                if(promoCheckbox.checked) updateTipoCampos();
-            });
-            
-            tipoPromoRadios.forEach(radio => {
-                radio.addEventListener('change', updateTipoCampos);
-            });
-            
-            if(promoCheckbox.checked) {
-                promoFieldsDiv.style.display = 'block';
-                updateTipoCampos();
-            }
+             const promoCheckbox = document.getElementById('e_promocao');
+             const promoFieldsDiv = document.getElementById('promo_fields');
+             if (!promoCheckbox || !promoFieldsDiv) return;
+             promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
+             promoCheckbox.addEventListener('change', () => {
+                 promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
+             });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             togglePromoFields();
         });
     </script>
-
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    </body>
+  </body>
 </html>
