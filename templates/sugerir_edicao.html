@@ -11,7 +11,7 @@
                 <option value="" disabled selected>-- Selecione o tipo --</option>
                 <option value="produto">Produto</option>
                 <option value="supermercado">Supermercado</option>
-                <option value="marca">Marca</option>
+                <option value="categoria">Categoria</option>
             </select>
 
             <div id="div_produto" class="item_dropdown" style="display: none;">
@@ -38,13 +38,13 @@
                 </select>
             </div>
             
-            <div id="div_marca" class="item_dropdown" style="display: none;">
-                <label for="item_id_marca">2. Qual Marca?</label>
-                <input type="text" id="marca_filtro" placeholder="Filtrar marca...">
-                <select name="item_id_marca" id="item_id_marca">
-                    <option value="" disabled selected>-- Selecione uma marca --</option>
-                    {% for marca in marcas %}
-                        <option value="{{ marca.id }}">{{ marca.nome }}</option>
+            <div id="div_categoria" class="item_dropdown" style="display: none;">
+                <label for="item_id_categoria">2. Qual Categoria?</label>
+                <input type="text" id="categoria_filtro" placeholder="Filtrar categoria...">
+                <select name="item_id_categoria" id="item_id_categoria">
+                    <option value="" disabled selected>-- Selecione uma categoria --</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -75,19 +75,19 @@
         const dropdowns = {
             produto: document.getElementById('div_produto'),
             supermercado: document.getElementById('div_supermercado'),
-            marca: document.getElementById('div_marca')
+            categoria: document.getElementById('div_categoria')
         };
         
         const selects = {
             produto: document.getElementById('item_id_produto'),
             supermercado: document.getElementById('item_id_supermercado'),
-            marca: document.getElementById('item_id_marca')
+            categoria: document.getElementById('item_id_categoria')
         }
 
         const campos = {
             produto: [{value: 'nome', text: 'Nome do Produto'}, {value: 'medida', text: 'Medida'}, {value: 'unidade', text: 'Unidade'}],
             supermercado: [{value: 'nome', text: 'Nome do Supermercado'}, {value: 'endereço', text: 'Endereço'}],
-            marca: [{value: 'nome', text: 'Nome da Marca'}]
+            categoria: [{value: 'nome', text: 'Nome da Categoria'}]
         };
 
         tipoItemSelect.addEventListener('change', () => {
@@ -118,7 +118,8 @@
 
         setupSelectFilter('produto_filtro', 'item_id_produto');
         setupSelectFilter('supermercado_filtro', 'item_id_supermercado');
-        setupSelectFilter('marca_filtro', 'item_id_marca');
+        setupSelectFilter('categoria_filtro', 'item_id_categoria');
     });
     </script>
 {% endblock %}
+
