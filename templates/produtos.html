@@ -13,29 +13,32 @@
 
             <div style="display: flex; gap: 10px;">
                 <div style="flex: 1;">
-                    <label for="medida">Medida (Opcional):</label>
-                    <input type="number" step="0.01" name="medida" id="medida" placeholder="Ex: 1.5, 500">
+                    <label for="medida">Medida:</label>
+                    <input type="number" step="0.01" name="medida" id="medida" placeholder="Ex: 1.5">
                 </div>
                 <div style="flex: 1;">
                     <label for="unidade">Unidade:</label>
                     <select name="unidade" id="unidade">
                         <option value="">-- Nenhuma --</option>
-                        <option value="kg">kg (Quilograma)</option>
-                        <option value="g">g (Grama)</option>
-                        <option value="L">L (Litro)</option>
-                        <option value="ml">ml (Mililitro)</option>
-                        <option value="un">un (Unidade)</option>
-                        <option value="pct">pct (Pacote)</option>
-                        <option value="cx">cx (Caixa)</option>
+                        <option value="kg">kg</option>
+                        <option value="g">g</option>
+                        <option value="L">L</option>
+                        <option value="ml">ml</option>
+                        <option value="un">un</option>
+                        <option value="pct">pct</option>
+                        <option value="cx">cx</option>
                     </select>
                 </div>
             </div>
 
             <label for="codigo_barras">Código de Barras (EAN):</label>
-            <input type="text" name="codigo_barras" id="codigo_barras" placeholder="Escaneie ou digite o código da embalagem">
+            <input type="text" name="codigo_barras" id="codigo_barras" placeholder="Escaneie ou digite">
+            
+            <label for="imagem_url">URL da Imagem (Foto):</label>
+            <input type="url" name="imagem_url" id="imagem_url" placeholder="https://...">
 
-            <label for="detalhes">Detalhes Adicionais:</label>
-            <textarea name="detalhes" id="detalhes" rows="2" placeholder="Ex: Sem glúten, Picante, Diet..."></textarea>
+            <label for="detalhes">Detalhes:</label>
+            <textarea name="detalhes" id="detalhes" rows="2"></textarea>
 
             <button type="submit">Adicionar Produto</button>
         </form>
@@ -48,7 +51,7 @@
     <table class="tabela-cards">
         <thead>
             <tr>
-                <th>Nome</th>
+                <th>Produto</th>
                 <th>Info</th>
                 <th>Ações</th>
             </tr>
@@ -56,11 +59,19 @@
         <tbody>
             {% for produto in produtos %}
             <tr>
-                <td data-label="Nome">
-                    <strong>{{ produto.nome }}</strong>
-                    {% if produto.codigo_barras %}
-                        <br><small style="color: var(--text-sec); font-family: monospace;">📟 {{ produto.codigo_barras }}</small>
+                <td data-label="Produto" style="display: flex; align-items: center; gap: 10px;">
+                    {% if produto.imagem_url %}
+                        <img src="{{ produto.imagem_url }}" alt="Foto" style="width: 50px; height: 50px; object-fit: contain; border-radius: 4px; border: 1px solid var(--border-color);">
+                    {% else %}
+                        <div style="width: 50px; height: 50px; background: var(--icon-bg); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">📦</div>
                     {% endif %}
+                    
+                    <div>
+                        <strong>{{ produto.nome }}</strong>
+                        {% if produto.codigo_barras %}
+                            <br><small style="color: var(--text-sec); font-family: monospace;">{{ produto.codigo_barras }}</small>
+                        {% endif %}
+                    </div>
                 </td>
                 <td data-label="Info">
                     {% if produto.medida %}
