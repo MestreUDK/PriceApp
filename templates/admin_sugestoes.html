@@ -9,7 +9,7 @@
             <thead>
                 <tr>
                     <th>Produto</th>
-                    <th>Marca</th> 
+                    <th>Categoria</th>
                     <th>Supermercado</th>
                     <th>Valor (R$)</th>
                     <th>Sugerido por</th>
@@ -29,11 +29,11 @@
                             <span title="Preço Promocional">⚡</span>
                         {% endif %}
                     </td>
-                    <td data-label="Marca">
-                        {% if sugestao.marca %}
-                            {{ sugestao.marca.nome }}
+                    <td data-label="Categoria">
+                        {% if sugestao.categoria %}
+                            {{ sugestao.categoria.nome }}
                         {% else %}
-                            Sem marca
+                            Sem categoria
                         {% endif %}
                     </td>
                     <td data-label="Supermercado">{{ sugestao.supermercado.nome }}</td>
