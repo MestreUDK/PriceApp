@@ -21,7 +21,7 @@
             <thead>
                 <tr>
                     <th>Supermercado</th>
-                    <th>Marca</th>
+                    <th>Categoria</th>
                     <th>Preço Unit. (Efetivo)</th>
                     <th>Detalhe Promoção</th>
                     <th>Registrado em</th>
@@ -33,11 +33,11 @@
                 <tr style="{% if loop.first %}background-color: rgba(40, 167, 69, 0.1); font-weight: bold;{% endif %}">
                     <td data-label="Supermercado">{{ preco.supermercado.nome }}</td>
                     
-                    <td data-label="Marca">
-                        {% if preco.marca %}
-                             {{ preco.marca.nome }}
+                    <td data-label="Categoria">
+                        {% if preco.categoria %}
+                            {{ preco.categoria.nome }}
                         {% else %}
-                            <span style="color: var(--text-sec); font-style: italic;">Sem marca</span>
+                            <span style="color: var(--text-sec); font-style: italic;">Sem categoria</span>
                         {% endif %}
                     </td>
                     
@@ -72,9 +72,10 @@
                         <a href="{{ url_for('prices.ver_historico', 
                                           produto_id=preco.produto_id, 
                                           supermercado_id=preco.supermercado_id,
-                                          marca_str=preco.marca.nome if preco.marca else 'sem-marca') }}" 
+                                          categoria_str=preco.categoria.nome if preco.categoria else 'sem-categoria') }}" 
                            style="text-decoration: none; padding: 0.5rem 1rem;
-                                  background-color: #17a2b8; color: white; border-radius: 4px; font-size: 0.9em;">
+                                  background-color: #17a2b8; color: white;
+                                  border-radius: 4px; font-size: 0.9em;">
                             Histórico
                         </a>
                     </td>
