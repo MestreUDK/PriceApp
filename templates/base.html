@@ -182,6 +182,46 @@
                     });
             });
         }
+
+        function togglePromoFields() {
+            const promoCheckbox = document.getElementById('e_promocao');
+            const promoFieldsDiv = document.getElementById('promo_fields');
+            const tipoPromoRadios = document.querySelectorAll('input[name="promo_tipo"]');
+            const divPromoUnidadeValor = document.getElementById('div_promo_unidade_valor');
+            const divPromoQtdNecessaria = document.getElementById('div_promo_qtd_necessaria');
+            const divPromoQtdValor = document.getElementById('div_promo_qtd_valor');
+
+            if (!promoCheckbox || !promoFieldsDiv || !tipoPromoRadios.length || !divPromoUnidadeValor || !divPromoQtdNecessaria || !divPromoQtdValor) return;
+
+            promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
+
+            const updateTipoCampos = () => {
+                const tipoSelecionado = document.querySelector('input[name="promo_tipo"]:checked').value;
+                divPromoUnidadeValor.style.display = (tipoSelecionado === 'unidade' || tipoSelecionado === 'limite') ? 'block' : 'none';
+                divPromoQtdNecessaria.style.display = (tipoSelecionado === 'quantidade' || tipoSelecionado === 'limite') ? 'block' : 'none';
+                divPromoQtdValor.style.display = (tipoSelecionado === 'quantidade') ? 'block' : 'none';
+            };
+            
+            promoCheckbox.addEventListener('change', () => {
+                promoFieldsDiv.style.display = promoCheckbox.checked ? 'block' : 'none';
+                if(promoCheckbox.checked) updateTipoCampos();
+            });
+            
+            tipoPromoRadios.forEach(radio => {
+                radio.addEventListener('change', updateTipoCampos);
+            });
+            
+            if(promoCheckbox.checked) {
+                promoFieldsDiv.style.display = 'block';
+                updateTipoCampos();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            togglePromoFields();
+        });
     </script>
-  </body>
+
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    </body>
 </html>
