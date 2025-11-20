@@ -11,7 +11,11 @@
         {% if produto.medida %}
             <span style="color: var(--text-sec); font-size: 0.8em;">({{ produto.medida }}{{ produto.unidade }})</span>
         {% endif %}
-        {% if marca %}({{ marca.nome }}){% else %}<span style="font-weight:normal; font-size:0.8em;">(Sem marca)</span>{% endif %}
+        {% if categoria %}
+            ({{ categoria.nome }})
+        {% else %}
+            <span style="font-weight:normal; font-size:0.8em;">(Sem categoria)</span>
+        {% endif %}
     </h3>
     
     <h4>Em: {{ supermercado.nome }}
