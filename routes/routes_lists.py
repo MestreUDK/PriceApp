@@ -3,7 +3,7 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-from models import Produto, Lista, ListaItem, Supermercado, Preco
+from models import Produto, Lista, ListaItem, Supermercado, Preco, Categoria
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError 
 from sqlalchemy import or_
@@ -264,7 +264,8 @@ def comparar_lista(lista_id):
                 "preco_unit": preco_unit_efetivo, # Preço unitário efetivo
                 "total_item": res["total_cost"],
                 "mercado": res["best_price"].supermercado.nome,
-                "marca": res["best_price"].marca.nome if res["best_price"].marca else "Sem marca"
+                # MUDANÇA: Categoria em vez de Marca
+                "marca": res["best_price"].categoria.nome if res["best_price"].categoria else "Sem categoria"
             })
         else:
              resultados_json_list.append({
