@@ -40,11 +40,14 @@ class Supermercado(db.Model):
 
 class Produto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(200), nullable=False) # Removi unique=True global para permitir nomes iguais com medidas diferentes se quiser, mas o ideal é tratar na lógica
+    nome = db.Column(db.String(200), nullable=False)
     
-    # --- INÍCIO DA MUDANÇA (ETAPA 23 - Medidas) ---
-    medida = db.Column(db.Float, nullable=True) # Ex: 1.5, 500, 1
-    unidade = db.Column(db.String(10), nullable=True) # Ex: 'kg', 'g', 'L', 'ml', 'un'
+    medida = db.Column(db.Float, nullable=True) 
+    unidade = db.Column(db.String(10), nullable=True) 
+    
+    # --- INÍCIO DA MUDANÇA (ETAPA 2.5) ---
+    codigo_barras = db.Column(db.String(100), unique=True, nullable=True) # Novo campo EAN
+    detalhes = db.Column(db.Text, nullable=True) # Novo campo Detalhes
     # --- FIM DA MUDANÇA ---
 
     precos = db.relationship('Preco', backref='produto', lazy=True)
