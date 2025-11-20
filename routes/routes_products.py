@@ -5,7 +5,7 @@ from flask import (
 from extensions import db
 from models import Produto
 from flask_login import login_required, current_user 
-from sqlalchemy.exc import IntegrityError # Importante para tratar código duplicado
+from sqlalchemy.exc import IntegrityError
 
 products_bp = Blueprint('products', __name__, template_folder='../templates')
 
@@ -19,21 +19,20 @@ def gerenciar_produtos():
         nome_produto = request.form.get('nome')
         medida = request.form.get('medida')
         unidade = request.form.get('unidade')
-        
-        # --- INÍCIO DA MUDANÇA (ETAPA 2.5) ---
         codigo_barras = request.form.get('codigo_barras')
         detalhes = request.form.get('detalhes')
+        # --- NOVA MUDANÇA ---
+        imagem_url = request.form.get('imagem_url')
         
-        # Trata campos vazios
         if medida and medida.strip() == "": medida = None
         if codigo_barras and codigo_barras.strip() == "": codigo_barras = None
         if detalhes and detalhes.strip() == "": detalhes = None
+        if imagem_url and imagem_url.strip() == "": imagem_url = None
         
-        # Verifica se já existe um produto com esse código de barras
         if codigo_barras:
             prod_existente = Produto.query.filter_by(codigo_barras=codigo_barras).first()
             if prod_existente:
-                flash(f'Já existe um produto com este código de barras: {prod_existente.nome}', 'error')
+                flash(f'Já existe um produto com este código: {prod_existente.nome}', 'error')
                 return redirect(url_for('products.gerenciar_produtos'))
 
         novo_produto = Produto(
@@ -42,6 +41,7 @@ def gerenciar_produtos():
             unidade=unidade if unidade else None,
             codigo_barras=codigo_barras,
             detalhes=detalhes,
+            imagem_url=imagem_url, # Salva a URL
             criado_por_id=current_user.id
         )
         
@@ -51,8 +51,7 @@ def gerenciar_produtos():
             flash('Produto adicionado com sucesso!', 'success')
         except IntegrityError:
             db.session.rollback()
-            flash('Erro: Produto duplicado ou código inválido.', 'error')
-        # --- FIM DA MUDANÇA ---
+            flash('Erro ao cadastrar produto.', 'error')
         
         return redirect(url_for('products.gerenciar_produtos'))
 
@@ -80,13 +79,14 @@ def edit_produto(produto_id):
         else:
              produto.medida = None
 
-        # --- INÍCIO DA MUDANÇA (ETAPA 2.5) ---
         codigo_barras = request.form.get('codigo_barras')
         detalhes = request.form.get('detalhes')
+        # --- NOVA MUDANÇA ---
+        imagem_url = request.form.get('imagem_url')
         
         produto.codigo_barras = codigo_barras if codigo_barras and codigo_barras.strip() else None
         produto.detalhes = detalhes if detalhes and detalhes.strip() else None
-        # --- FIM DA MUDANÇA ---
+        produto.imagem_url = imagem_url if imagem_url and imagem_url.strip() else None
         
         produto.editado_por_id = current_user.id
         
@@ -95,12 +95,13 @@ def edit_produto(produto_id):
             flash('Produto atualizado com sucesso!', 'success')
         except IntegrityError:
             db.session.rollback()
-            flash('Erro: Código de barras já está em uso por outro produto.', 'error')
+            flash('Erro: Código de barras já está em uso.', 'error')
             
         return redirect(url_for('products.gerenciar_produtos'))
 
     return render_template('edit_produto.html', produto=produto)
 
+# ... (Mantenha a rota delete_produto igual) ...
 @products_bp.route('/delete-produto/<int:produto_id>', methods=['POST'])
 @login_required 
 def delete_produto(produto_id):
