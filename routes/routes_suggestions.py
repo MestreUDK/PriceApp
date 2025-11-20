@@ -3,7 +3,7 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 from extensions import db
-from models import Supermercado, Produto, SugestaoPreco, Preco, Marca
+from models import Supermercado, Produto, SugestaoPreco, Preco, Categoria
 from datetime import datetime 
 from flask_login import login_required, current_user
 
@@ -19,25 +19,24 @@ def sugerir_preco():
     if request.method == 'POST':
         produto_id = request.form.get('produto')
         supermercado_id = request.form.get('supermercado')
-        # --- INÍCIO DA MUDANÇA (ETAPA 20) ---
         valor = request.form.get('valor') # Valor BASE
-        
-        marca_id = request.form.get('marca')
-        if marca_id == "":
-            marca_id = None
-        
+
+        categoria_id = request.form.get('categoria')
+        if categoria_id == "":
+            categoria_id = None
+
         e_promocao = request.form.get('e_promocao') == 'on' # Checkbox 'on'
-        
+
         data_expiracao_str = request.form.get('data_expiracao')
         data_expiracao = None
-        
+
         if data_expiracao_str:
             try:
                 data_expiracao = datetime.strptime(data_expiracao_str, '%Y-%m-%d')
             except ValueError:
                 flash('Formato de data de expiração inválido.', 'error')
                 return redirect(url_for('suggestions.sugerir_preco'))
-        
+
         if e_promocao and not data_expiracao:
             flash('Promoções devem ter uma data de expiração obrigatória.', 'error')
             return redirect(url_for('suggestions.sugerir_preco'))
@@ -51,7 +50,7 @@ def sugerir_preco():
         nova_sugestao = SugestaoPreco(
             produto_id=produto_id,
             supermercado_id=supermercado_id,
-            marca_id=marca_id, 
+            categoria_id=categoria_id, 
             valor=float(valor),
             sugerido_por_id=current_user.id,
             status='pendente',
@@ -62,7 +61,6 @@ def sugerir_preco():
             promo_qtd_necessaria=int(promo_qtd_necessaria) if e_promocao and promo_tipo == 'quantidade' and promo_qtd_necessaria else None,
             promo_qtd_valor=float(promo_qtd_valor) if e_promocao and promo_tipo == 'quantidade' and promo_qtd_valor else None
         )
-        # --- FIM DA MUDANÇA ---
         
         db.session.add(nova_sugestao)
         db.session.commit()
@@ -72,11 +70,11 @@ def sugerir_preco():
 
     produtos = Produto.query.order_by(Produto.nome).all()
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
-    marcas = Marca.query.order_by(Marca.nome).all()
+    categorias = Categoria.query.order_by(Categoria.nome).all()
     return render_template('sugerir_preco.html', 
                            produtos=produtos, 
                            supermercados=supermercados,
-                           marcas=marcas) 
+                           categorias=categorias) 
 
 @suggestions_bp.route('/admin/sugestoes')
 @login_required
@@ -99,11 +97,10 @@ def aprovar_sugestao(sugestao_id):
         flash('Sugestão não encontrada ou já processada.', 'error')
         return redirect(url_for('suggestions.admin_sugestoes'))
     
-    # --- INÍCIO DA MUDANÇA (ETAPA 20) ---
     novo_preco = Preco(
         produto_id=sugestao.produto_id,
         supermercado_id=sugestao.supermercado_id,
-        marca_id=sugestao.marca_id, 
+        categoria_id=sugestao.categoria_id, 
         valor=sugestao.valor,
         criado_por_id=sugestao.sugerido_por_id,
         data_cadastro=sugestao.data_sugestao,
@@ -115,7 +112,6 @@ def aprovar_sugestao(sugestao_id):
         promo_qtd_necessaria=sugestao.promo_qtd_necessaria,
         promo_qtd_valor=sugestao.promo_qtd_valor
     )
-    # --- FIM DA MUDANÇA ---
     
     sugestao.status = 'aprovado'
     
