@@ -5,6 +5,7 @@ from flask import (
 from extensions import db
 from models import Produto
 from flask_login import login_required, current_user 
+from sqlalchemy.exc import IntegrityError # Importante para tratar código duplicado
 
 products_bp = Blueprint('products', __name__, template_folder='../templates')
 
@@ -16,31 +17,43 @@ def gerenciar_produtos():
             abort(403)
             
         nome_produto = request.form.get('nome')
-        # --- INÍCIO DA MUDANÇA ---
         medida = request.form.get('medida')
         unidade = request.form.get('unidade')
         
-        # Trata medida vazia
-        if medida and medida.strip() == "":
-            medida = None
+        # --- INÍCIO DA MUDANÇA (ETAPA 2.5) ---
+        codigo_barras = request.form.get('codigo_barras')
+        detalhes = request.form.get('detalhes')
         
-        # Verifica duplicidade considerando nome E medida
-        # Ex: Pode ter "Arroz" (5kg) e "Arroz" (1kg)
-        filtro = Produto.query.filter_by(nome=nome_produto, medida=medida, unidade=unidade).first()
+        # Trata campos vazios
+        if medida and medida.strip() == "": medida = None
+        if codigo_barras and codigo_barras.strip() == "": codigo_barras = None
+        if detalhes and detalhes.strip() == "": detalhes = None
         
-        if filtro:
-            flash('Este produto (com esta medida) já está cadastrado.', 'error')
-        else:
-            novo_produto = Produto(
-                nome=nome_produto,
-                medida=float(medida) if medida else None,
-                unidade=unidade if unidade else None,
-                criado_por_id=current_user.id
-            )
+        # Verifica se já existe um produto com esse código de barras
+        if codigo_barras:
+            prod_existente = Produto.query.filter_by(codigo_barras=codigo_barras).first()
+            if prod_existente:
+                flash(f'Já existe um produto com este código de barras: {prod_existente.nome}', 'error')
+                return redirect(url_for('products.gerenciar_produtos'))
+
+        novo_produto = Produto(
+            nome=nome_produto,
+            medida=float(medida) if medida else None,
+            unidade=unidade if unidade else None,
+            codigo_barras=codigo_barras,
+            detalhes=detalhes,
+            criado_por_id=current_user.id
+        )
+        
+        try:
             db.session.add(novo_produto)
             db.session.commit()
             flash('Produto adicionado com sucesso!', 'success')
+        except IntegrityError:
+            db.session.rollback()
+            flash('Erro: Produto duplicado ou código inválido.', 'error')
         # --- FIM DA MUDANÇA ---
+        
         return redirect(url_for('products.gerenciar_produtos'))
 
     produtos = Produto.query.order_by(Produto.nome).all()
@@ -59,7 +72,6 @@ def edit_produto(produto_id):
     if request.method == 'POST':
         produto.nome = request.form.get('nome')
         
-        # --- INÍCIO DA MUDANÇA ---
         medida = request.form.get('medida')
         produto.unidade = request.form.get('unidade')
         
@@ -67,12 +79,24 @@ def edit_produto(produto_id):
              produto.medida = float(medida)
         else:
              produto.medida = None
+
+        # --- INÍCIO DA MUDANÇA (ETAPA 2.5) ---
+        codigo_barras = request.form.get('codigo_barras')
+        detalhes = request.form.get('detalhes')
+        
+        produto.codigo_barras = codigo_barras if codigo_barras and codigo_barras.strip() else None
+        produto.detalhes = detalhes if detalhes and detalhes.strip() else None
         # --- FIM DA MUDANÇA ---
         
         produto.editado_por_id = current_user.id
         
-        db.session.commit()
-        flash('Produto atualizado com sucesso!', 'success')
+        try:
+            db.session.commit()
+            flash('Produto atualizado com sucesso!', 'success')
+        except IntegrityError:
+            db.session.rollback()
+            flash('Erro: Código de barras já está em uso por outro produto.', 'error')
+            
         return redirect(url_for('products.gerenciar_produtos'))
 
     return render_template('edit_produto.html', produto=produto)
