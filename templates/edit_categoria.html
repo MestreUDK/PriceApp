@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <a href="{{ url_for('categories.gerenciar_categorias') }}" style="text-decoration: none; color: var(--primary); margin-bottom: 1rem; display: inline-block;">
+        &larr; Voltar para Categorias
+    </a>
+    <h2>Editando Categoria</h2>
+
+    <div class="card-form">
+        <form method="POST">
+            <label for="nome">Nome da Categoria:</label>
+            <input type="text" name="nome" id="nome" value="{{ categoria.nome }}" required>
+            <button type="submit" style="background-color: var(--success);">Salvar Alterações</button>
+        </form>
+    </div>
+
+    <hr style="margin: 2rem 0;">
+
+    <h2>Zona de Perigo</h2>
+    <form method="POST" action="{{ url_for('categories.delete_categoria', categoria_id=categoria.id) }}" onsubmit="return confirm('ATENÇÃO: Isso NÃO excluirá os preços, mas irá desvincular esta categoria deles. Tem certeza?');">
+        <p>Esta ação não pode ser desfeita.</p>
+        <button type="submit" style="background-color: var(--danger);">Excluir Permanentemente esta Categoria</button>
+    </form>
+    
+{% endblock %}
+
