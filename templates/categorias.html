@@ -1,18 +1,20 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h2>Gerenciar Marcas</h2>
+    <h2>Gerenciar Categorias</h2>
 
     {% if current_user.role == 'admin' %}
+    <div class="card-form">
         <form method="POST">
-            <h3>Adicionar Nova Marca</h3>
-            <input type="text" name="nome" placeholder="Nome da Marca (Ex: Tio João)" required>
-            <button type="submit">Adicionar Marca</button>
+            <h3 style="margin-top: 0;">Adicionar Nova Categoria</h3>
+            <input type="text" name="nome" placeholder="Nome da Categoria (Ex: Refrigerantes, Limpeza)" required>
+            <button type="submit">Adicionar Categoria</button>
         </form>
-        <hr>
+    </div>
+    <hr>
     {% endif %}
 
-    <h2>Marcas Cadastradas</h2>
+    <h2>Categorias Cadastradas</h2>
     
     <table class="tabela-cards">
         <thead>
@@ -25,12 +27,12 @@
             </tr>
         </thead>
         <tbody>
-            {% for marca in marcas %}
+            {% for categoria in categorias %}
             <tr>
-                <td data-label="Nome">{{ marca.nome }}</td>
+                <td data-label="Nome">{{ categoria.nome }}</td>
                 <td data-label="Criado por">
-                    {% if marca.criado_por %}
-                        {{ marca.criado_por.username }}
+                    {% if categoria.criado_por %}
+                        {{ categoria.criado_por.username }}
                     {% else %}
                          N/D
                     {% endif %}
@@ -38,7 +40,7 @@
                 
                 {% if current_user.role == 'admin' %}
                     <td class="actions-cell">
-                        <a href="{{ url_for('brands.edit_marca', marca_id=marca.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: #ffc107; color: black; border-radius: 4px; font-size: 0.9em;">
+                        <a href="{{ url_for('categories.edit_categoria', categoria_id=categoria.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: var(--warning); color: black; border-radius: 4px; font-size: 0.9em;">
                             ✏️ Editar
                         </a>
                     </td>
@@ -47,10 +49,11 @@
             {% else %}
             <tr>
                 <td colspan="{% if current_user.role == 'admin' %}3{% else %}2{% endif %}">
-                    Nenhuma marca cadastrada ainda.
+                    Nenhuma categoria cadastrada ainda.
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 {% endblock %}
+
