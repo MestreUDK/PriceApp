@@ -31,6 +31,12 @@
                 </div>
             </div>
 
+            <label for="codigo_barras">Código de Barras (EAN):</label>
+            <input type="text" name="codigo_barras" id="codigo_barras" value="{{ produto.codigo_barras or '' }}" placeholder="Escaneie ou digite">
+
+            <label for="detalhes">Detalhes Adicionais:</label>
+            <textarea name="detalhes" id="detalhes" rows="2">{{ produto.detalhes or '' }}</textarea>
+
             <button type="submit" style="margin-top: 10px;">Salvar Alterações</button>
         </form>
     </div>
