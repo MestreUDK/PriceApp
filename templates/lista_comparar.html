@@ -61,7 +61,12 @@
                                 <span title="Preço Promocional">⚡</span>
                             {% endif %}
                         </td>
-                        <td data-label="Mercado">{{ res.best_price.supermercado.nome }}</td>
+                        <td data-label="Mercado">
+                            {{ res.best_price.supermercado.nome }}
+                            {% if res.best_price.categoria %}
+                                <br><small>({{ res.best_price.categoria.nome }})</small>
+                            {% endif %}
+                        </td>
                         <td data-label="Promoção">
                             {% if res.best_price.e_promocao %}
                                 {% if res.best_price.promo_tipo == 'unidade' %}
@@ -111,11 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         clipboardText += `❌ ${item.qtde}x ${item.nome}\n`;
                         clipboardText += `    (Item não encontrado)\n\n`;
                     } else {
-                        // INÍCIO DA MUDANÇA (ETAPA 20)
-                        const itemLine = `✅ ${item.qtde}x ${item.nome} (${item.marca})\n`;
-                        // Mostra o preço unitário efetivo
+                        const itemLine = `✅ ${item.qtde}x ${item.nome} ${item.marca !== 'Sem marca' ? '(' + item.marca + ')' : ''}\n`;
                         const priceLine = `    @ ${item.mercado} (R$ ${item.preco_unit.toFixed(2)}/un) .... Total: R$ ${item.total_item.toFixed(2)}\n\n`;
-                        // FIM DA MUDANÇA
                         clipboardText += itemLine + priceLine;
                     }
                 });
