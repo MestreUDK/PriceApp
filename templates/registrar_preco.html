@@ -10,16 +10,18 @@
             <select name="produto" id="produto" required>
                 <option value="" disabled selected>-- Selecione um produto --</option>
                 {% for produto in produtos %}
-                    <option value="{{ produto.id }}">{{ produto.nome }}</option>
+                    <option value="{{ produto.id }}">
+                        {{ produto.nome }} {% if produto.medida %}({{ produto.medida }}{{ produto.unidade }}){% endif %}
+                    </option>
                 {% endfor %}
             </select>
 
-            <label for="marca">2. Marca (Opcional):</label>
-            <input type="text" id="marca_filtro" placeholder="Filtrar marca...">
-            <select name="marca" id="marca">
-                <option value="">-- Sem marca --</option>
-                {% for marca in marcas %}
-                    <option value="{{ marca.id }}">{{ marca.nome }}</option>
+            <label for="categoria">2. Categoria (Opcional):</label>
+            <input type="text" id="categoria_filtro" placeholder="Filtrar categoria...">
+            <select name="categoria" id="categoria">
+                <option value="">-- Sem categoria --</option>
+                {% for categoria in categorias %}
+                    <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
                 {% endfor %}
             </select>
             
@@ -68,7 +70,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             setupSelectFilter('produto_filtro', 'produto');
-            setupSelectFilter('marca_filtro', 'marca');
+            setupSelectFilter('categoria_filtro', 'categoria');
             setupSelectFilter('supermercado_filtro', 'supermercado');
             
             // Lógica de Toggle (Injetada pelo base.html, só chamamos se precisar de algo extra)
@@ -81,3 +83,4 @@
         });
     </script>
 {% endblock %}
+
