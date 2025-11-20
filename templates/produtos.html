@@ -13,26 +13,36 @@
 
             <div style="display: flex; gap: 10px;">
                 <div style="flex: 1;">
-                    <label for="medida">Medida:</label>
-                    <input type="number" step="0.01" name="medida" id="medida" placeholder="Ex: 1.5">
+                    <label for="medida">Medida (Opcional):</label>
+                    <input type="number" step="0.01" name="medida" id="medida" placeholder="Ex: 1.5, 500">
                 </div>
                 <div style="flex: 1;">
                     <label for="unidade">Unidade:</label>
                     <select name="unidade" id="unidade">
                         <option value="">-- Nenhuma --</option>
-                        <option value="kg">kg</option>
-                        <option value="g">g</option>
-                        <option value="L">L</option>
-                        <option value="ml">ml</option>
-                        <option value="un">un</option>
-                        <option value="pct">pct</option>
-                        <option value="cx">cx</option>
+                        <option value="kg">kg (Quilograma)</option>
+                        <option value="g">g (Grama)</option>
+                        <option value="L">L (Litro)</option>
+                        <option value="ml">ml (Mililitro)</option>
+                        <option value="un">un (Unidade)</option>
+                        <option value="pct">pct (Pacote)</option>
+                        <option value="cx">cx (Caixa)</option>
                     </select>
                 </div>
             </div>
 
+            <div id="leitor-camera" style="display: none; margin-bottom: 15px; text-align: center;">
+                <div id="reader" style="width: 100%; max-width: 400px; margin: 0 auto; border: 2px solid var(--primary); border-radius: 8px;"></div>
+                <button type="button" onclick="pararScanner()" style="background-color: var(--danger); margin-top: 10px;">Fechar Câmera</button>
+            </div>
+
             <label for="codigo_barras">Código de Barras (EAN):</label>
-            <input type="text" name="codigo_barras" id="codigo_barras" placeholder="Escaneie ou digite">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" name="codigo_barras" id="codigo_barras" placeholder="Escaneie ou digite" style="flex-grow: 1;">
+                <button type="button" onclick="iniciarScanner()" style="width: auto; background-color: var(--primary); padding: 10px 15px;">
+                    📷
+                </button>
+            </div>
             
             <label for="imagem_url">URL da Imagem (Foto):</label>
             <input type="url" name="imagem_url" id="imagem_url" placeholder="https://...">
@@ -40,7 +50,7 @@
             <label for="detalhes">Detalhes:</label>
             <textarea name="detalhes" id="detalhes" rows="2"></textarea>
 
-            <button type="submit">Adicionar Produto</button>
+            <button type="submit" style="width: 100%; margin-top: 10px;">Adicionar Produto</button>
         </form>
     </div>
     <hr>
@@ -61,7 +71,7 @@
             <tr>
                 <td data-label="Produto" style="display: flex; align-items: center; gap: 10px;">
                     {% if produto.imagem_url %}
-                        <img src="{{ produto.imagem_url }}" alt="Foto" style="width: 50px; height: 50px; object-fit: contain; border-radius: 4px; border: 1px solid var(--border-color);">
+                        <img src="{{ produto.imagem_url }}" alt="Foto" style="width: 50px; height: 50px; object-fit: contain; border-radius: 4px; border: 1px solid var(--border-color); background: white;">
                     {% else %}
                         <div style="width: 50px; height: 50px; background: var(--icon-bg); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">📦</div>
                     {% endif %}
@@ -111,4 +121,54 @@
             font-size: 0.9em;
         }
     </style>
+
+    <script>
+        let html5QrcodeScanner = null;
+
+        function iniciarScanner() {
+            const readerDiv = document.getElementById('leitor-camera');
+            readerDiv.style.display = 'block';
+
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            
+            const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+            
+            // Tenta usar a câmera traseira ("environment")
+            html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess)
+            .catch(err => {
+                console.error("Erro ao iniciar câmera", err);
+                alert("Erro ao abrir câmera: " + err);
+            });
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // 1. Preenche o input
+            document.getElementById('codigo_barras').value = decodedText;
+            
+            // 2. Toca um bipe (opcional, feedback sonoro)
+            // const audio = new Audio('https://www.soundjay.com/button/beep-07.wav');
+            // audio.play();
+
+            // 3. Para o scanner e fecha a div
+            pararScanner();
+            
+            // 4. (Opcional) Aqui poderíamos chamar a API OpenFoodFacts para preencher o nome e foto!
+            // buscarDadosProduto(decodedText); 
+        }
+
+        function pararScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    document.getElementById('leitor-camera').style.display = 'none';
+                    html5QrcodeScanner.clear();
+                }).catch(err => console.log(err));
+            } else {
+                document.getElementById('leitor-camera').style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupSelectFilter('produto_filtro', 'produto');
+        });
+    </script>
 {% endblock %}
