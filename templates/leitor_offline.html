@@ -26,12 +26,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let DB_OFFLINE = { usuarios: [], produtos: [], supermercados: [], precos: [], marcas: [] };
+        let DB_OFFLINE = { usuarios: [], produtos: [], supermercados: [], precos: [], categorias: [] }; // MUDANÇA
         let myChart_offline = null;
         let userMap_offline = new Map();
         let produtoMap_offline = new Map();
         let mercadoMap_offline = new Map();
-        let marcaMap_offline = new Map(); 
+        let categoriaMap_offline = new Map(); // MUDANÇA
 
         const statusEl_offline = document.getElementById('status_offline');
         const appEl_offline = document.getElementById('app_offline');
@@ -48,31 +48,33 @@
             const jsonData = localStorage.getItem('priceapp_offline_db');
             if (!jsonData) {
                 statusEl_offline.textContent = 'Erro: Nenhum dado sincronizado. Vá para a página inicial e clique em "Sincronizar para Offline".';
-                statusEl_offline.style.color = 'red';
+                statusEl_offline.style.color = 'var(--danger)';
                 return;
             }
             try {
                 const data = JSON.parse(jsonData);
-                if (data.produtos && data.supermercados && data.precos && data.marcas && 
-                    (data.precos.length === 0 || data.precos[0].hasOwnProperty('e_promocao'))) { 
+                // Verifica se tem categorias ou marcas (retrocompatibilidade)
+                const cats = data.categorias || data.marcas || [];
+                
+                if (data.produtos && data.supermercados && data.precos) { 
                     
                     DB_OFFLINE = data;
                     
                     userMap_offline = new Map(DB_OFFLINE.usuarios.map(u => [u.id, u.username]));
                     produtoMap_offline = new Map(DB_OFFLINE.produtos.map(p => [p.id, p]));
                     mercadoMap_offline = new Map(DB_OFFLINE.supermercados.map(m => [m.id, m]));
-                    marcaMap_offline = new Map(DB_OFFLINE.marcas.map(m => [m.id, m])); 
+                    categoriaMap_offline = new Map(cats.map(c => [c.id, c])); // MUDANÇA
                     
-                    statusEl_offline.textContent = `Dados carregados! (${DB_OFFLINE.produtos.length} produtos, ${DB_OFFLINE.marcas.length} marcas)`;
-                    statusEl_offline.style.color = 'green';
+                    statusEl_offline.textContent = `Dados carregados! (${DB_OFFLINE.produtos.length} produtos, ${cats.length} categorias)`;
+                    statusEl_offline.style.color = 'var(--success)';
                     appEl_offline.classList.remove('hidden');
                     renderSearchResults_offline('');
                 } else {
-                    throw new Error("Dados sincronizados estão corrompidos ou em formato antigo (sem dados de promoção). Sincronize novamente.");
+                    throw new Error("Dados sincronizados incompletos.");
                 }
             } catch (error) {
                 statusEl_offline.textContent = `Erro ao ler dados: ${error.message}`;
-                statusEl_offline.style.color = 'red';
+                statusEl_offline.style.color = 'var(--danger)';
             }
         });
 
@@ -102,7 +104,7 @@
                     <tr>
                         <td data-label="Produto">${p.nome}</td>
                         <td class="actions-cell">
-                            <button onclick="showComparison_offline(${p.id})">Ver Preços</button>
+                            <button onclick="showComparison_offline(${p.id})" style="background-color: var(--success);">Ver Preços</button>
                         </td>
                     </tr>
                 `;
@@ -121,12 +123,14 @@
             const agora = new Date(); 
             
             precosProduto.forEach(preco => {
+                // MUDANÇA: Suporte a categoria_id ou marca_id
+                const catId = preco.categoria_id || preco.marca_id;
                 
                 if (preco.e_promocao && preco.data_expiracao && new Date(preco.data_expiracao) < agora) {
                     return; 
                 }
                 
-                const key = `${preco.supermercado_id}-${preco.marca_id}`; 
+                const key = `${preco.supermercado_id}-${catId}`; 
                 if (!precosRecentesMap.has(key) || new Date(preco.data_cadastro) > new Date(precosRecentesMap.get(key).data_cadastro)) {
                     precosRecentesMap.set(key, preco);
                 }
@@ -137,25 +141,27 @@
             if (precosRecentes.length === 0) {
                 html += "<p>Nenhum preço registrado para este produto.</p>";
             } else {
-                html += `<table class="tabela-cards"><thead><tr><th>Supermercado</th><th>Marca</th><th>Preço (R$)</th><th>Registrado em</th><th>Ações</th></tr></thead><tbody>`;
+                html += `<table class="tabela-cards"><thead><tr><th>Supermercado</th><th>Categoria</th><th>Preço (R$)</th><th>Registrado em</th><th>Ações</th></tr></thead><tbody>`;
                 precosRecentes.forEach((preco, index) => {
                     const mercado = mercadoMap_offline.get(preco.supermercado_id) || { nome: 'Desconhecido' };
-                    const marca = marcaMap_offline.get(preco.marca_id) || null; 
+                    // MUDANÇA: Categoria
+                    const catId = preco.categoria_id || preco.marca_id;
+                    const categoria = categoriaMap_offline.get(catId) || null; 
+                    
                     const dataFormatada = new Date(preco.data_cadastro).toLocaleDateString('pt-BR');
-                    const style = (index === 0) ? 'background-color: #d4edda; font-weight: bold;' : '';
+                    const style = (index === 0) ? 'background-color: rgba(40, 167, 69, 0.1); font-weight: bold;' : '';
                     
-                    const marca_str = marca ? marca.nome : 'sem-marca';
-                    
+                    const cat_str = categoria ? categoria.nome : 'sem-categoria';
                     const promoEmoji = preco.e_promocao ? ` <span title="Preço Promocional">⚡</span>` : '';
                     
                     html += `
                         <tr style="${style}">
                             <td data-label="Supermercado">${mercado.nome}</td>
-                            <td data-label="Marca">${marca ? marca.nome : 'Sem marca'}</td>
+                            <td data-label="Categoria">${categoria ? categoria.nome : 'Sem categoria'}</td>
                             <td data-label="Preço">R$ ${preco.valor.toFixed(2)}${promoEmoji}</td>
                             <td data-label="Data">${dataFormatada}</td>
                             <td class="actions-cell">
-                                <button onclick="showHistory_offline(${produtoId}, ${preco.supermercado_id}, '${marca_str}')">Histórico</button>
+                                <button onclick="showHistory_offline(${produtoId}, ${preco.supermercado_id}, '${cat_str}')" style="background-color: var(--primary);">Histórico</button>
                             </td>
                         </tr>
                     `;
@@ -166,18 +172,18 @@
             comparisonEl_offline.classList.remove('hidden');
         }
 
-        window.showHistory_offline = function(produtoId, supermercadoId, marca_str) {
+        window.showHistory_offline = function(produtoId, supermercadoId, cat_str) {
             const produto = produtoMap_offline.get(produtoId);
             const supermercado = mercadoMap_offline.get(supermercadoId);
             if (!produto || !supermercado) return;
 
-            let marca_id = null;
-            let marca = null;
-            if (marca_str !== 'sem-marca') {
-                for (const [id, m] of marcaMap_offline.entries()) {
-                    if (m.nome === marca_str) {
-                        marca_id = id;
-                        marca = m;
+            let cat_id = null;
+            let categoria = null;
+            if (cat_str !== 'sem-categoria') {
+                for (const [id, c] of categoriaMap_offline.entries()) {
+                    if (c.nome === cat_str) {
+                        cat_id = id;
+                        categoria = c;
                         break;
                     }
                 }
@@ -186,7 +192,7 @@
             const precosHistorico = DB_OFFLINE.precos.filter(p => 
                 p.produto_id === produtoId && 
                 p.supermercado_id === supermercadoId &&
-                p.marca_id === marca_id 
+                (p.categoria_id === cat_id || p.marca_id === cat_id) // Compatibilidade
             ).sort((a, b) => new Date(a.data_cadastro) - new Date(b.data_cadastro));
             
             const labels = precosHistorico.map(p => new Date(p.data_cadastro).toLocaleDateString('pt-BR'));
@@ -198,7 +204,6 @@
                 precosHistorico.forEach(preco => {
                     const dataFormatada = new Date(preco.data_cadastro).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                     const criadoPor = userMap_offline.get(preco.criado_por_id) || 'N/D';
-                    
                     const promoEmoji = preco.e_promocao ? ` <span title="Preço Promocional">⚡</span>` : '';
                     
                     tableHtml += `
@@ -214,7 +219,7 @@
             historyTableEl_offline.innerHTML = tableHtml;
             
             historyTitleEl_offline.textContent = `Histórico de Preço para: ${produto.nome}`;
-            historySubtitleEl_offline.textContent = `Em: ${supermercado.nome} (${marca ? marca.nome : 'Sem marca'})`;
+            historySubtitleEl_offline.textContent = `Em: ${supermercado.nome} (${categoria ? categoria.nome : 'Sem categoria'})`;
 
             if (myChart_offline) myChart_offline.destroy();
             myChart_offline = new Chart(chartCanvas_offline, {
