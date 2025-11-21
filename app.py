@@ -17,6 +17,15 @@ def create_app():
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///local_test.db' 
 
+    # --- CORREÇÃO DE CONEXÃO (ADICIONADO) ---
+    # Isso ajuda a evitar que o Render derrube a conexão com o Supabase
+    # e cause o "Internal Server Error"
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "pool_pre_ping": True,  # O Flask testa se o banco está respondendo antes de fazer a consulta
+        "pool_recycle": 300,    # Renova a conexão a cada 5 minutos para não ficar velha
+    }
+    # ----------------------------------------
+
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
