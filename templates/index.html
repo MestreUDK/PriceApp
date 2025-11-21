@@ -4,28 +4,33 @@
     <h1>Bem-vindo, {{ current_user.username }}!</h1>
     <p>Use o menu de navegação para gerenciar seus dados.</p>
     
-    {% if current_user.role == 'admin' %}
-        <a href="{{ url_for('prices.registrar_preco') }}" style="display: inline-block; padding: 1rem; background-color: var(--primary); color: white; text-decoration: none; border-radius: 5px; margin-right: 10px; margin-bottom: 10px;">
-            + Registrar um Novo Preço
-        </a>
-    {% elif current_user.role == 'user' %}
-        <a href="{{ url_for('suggestions.sugerir_preco') }}" style="display: inline-block; padding: 1rem; background-color: var(--primary); color: white; text-decoration: none; border-radius: 5px; margin-right: 10px; margin-bottom: 10px;">
-            + Sugerir um Novo Preço
-        </a>
-    {% endif %}
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+        {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('prices.registrar_preco') }}" style="padding: 0.8rem; background-color: var(--primary); color: white; text-decoration: none; border-radius: 5px;">
+                + Registrar Preço
+            </a>
+        {% elif current_user.role == 'user' %}
+            <a href="{{ url_for('suggestions.sugerir_preco') }}" style="padding: 0.8rem; background-color: var(--primary); color: white; text-decoration: none; border-radius: 5px;">
+                + Sugerir Preço
+            </a>
+        {% endif %}
 
-    <a href="{{ url_for('core.download_excel_backup') }}" style="display: inline-block; padding: 1rem; background-color: var(--success); color: white; text-decoration: none; border-radius: 5px; margin-bottom: 10px; margin-right: 10px;">
-        Baixar Backup (Excel)
-    </a>
-    <button id="syncButton" style="display: inline-block; padding: 1rem; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 10px; border: none; font-size: 0.9rem; font-family: sans-serif; cursor: pointer;">
-        Sincronizar para Offline
-    </button>
-    <p id="syncStatus" style="font-size: 0.9em; margin-top: 0;"></p>
+        <a href="{{ url_for('core.download_excel_backup') }}" style="padding: 0.8rem; background-color: var(--success); color: white; text-decoration: none; border-radius: 5px;">
+            📥 Baixar Excel
+        </a>
+        
+        <button id="syncButton" style="padding: 0.8rem; background-color: #17a2b8; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem;">
+            🔄 Sincronizar Offline
+        </button>
+    </div>
+
+    <p id="syncStatus" style="font-weight: bold; margin-top: 10px; min-height: 20px;"></p>
 
     <hr>
     <h3>Últimos Preços Registrados</h3>
     {% if ultimos_precos %}
-         <table class="tabela-cards"> <thead>
+         <table class="tabela-cards"> 
+            <thead>
                 <tr>
                     <th>Produto</th>
                     <th>Supermercado</th>
@@ -40,10 +45,10 @@
                     <td data-label="Produto">
                         {{ preco.produto.nome }}
                         {% if preco.produto.medida %}
-                            <small>({{ preco.produto.medida }}{{ preco.produto.unidade }})</small>
+                             <small>({{ preco.produto.medida }}{{ preco.produto.unidade }})</small>
                         {% endif %}
                         {% if preco.categoria %}
-                             <br><small style="color: var(--text-sec);">{{ preco.categoria.nome }}</small>
+                            <br><small style="color: var(--text-sec);">{{ preco.categoria.nome }}</small>
                         {% endif %}
                     </td>
                     <td data-label="Supermercado">{{ preco.supermercado.nome }}</td>
@@ -68,5 +73,49 @@
     {% else %}
         <p>Nenhum preço registrado ainda.</p>
     {% endif %}
+
+    <script>
+        document.getElementById('syncButton').addEventListener('click', async function() {
+            const statusEl = document.getElementById('syncStatus');
+            const btn = document.getElementById('syncButton');
+            
+            // 1. Feedback visual de início
+            statusEl.innerText = "⏳ Baixando dados do servidor... aguarde.";
+            statusEl.style.color = "var(--primary)";
+            btn.disabled = true;
+            btn.style.opacity = "0.6";
+
+            try {
+                // 2. Chama a rota que gera o JSON completo
+                // O arquivo routes_core.py tem a rota 'download_backup' que serve JSON
+                const response = await fetch("{{ url_for('core.download_backup') }}");
+                
+                if (!response.ok) {
+                    throw new Error("Erro na resposta do servidor.");
+                }
+
+                // 3. Pega os dados
+                const data = await response.json();
+
+                // 4. Salva no LocalStorage do navegador
+                localStorage.setItem('priceapp_offline_db', JSON.stringify(data));
+
+                // 5. Sucesso
+                statusEl.innerText = "✅ Sincronização concluída com sucesso! O Leitor Offline está atualizado.";
+                statusEl.style.color = "var(--success)";
+                
+                // Vibra o celular se possível (feedback tátil)
+                try { navigator.vibrate(200); } catch(e){}
+
+            } catch (error) {
+                console.error(error);
+                statusEl.innerText = "❌ Erro ao sincronizar: " + error.message;
+                statusEl.style.color = "var(--danger)";
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }
+        });
+    </script>
 
 {% endblock %}
