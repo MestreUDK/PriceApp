@@ -7,3 +7,4 @@ Flask-Bcrypt
 openpyxl
 Flask-Migrate
 thefuzz
+python-Levenshtein
