@@ -255,6 +255,33 @@ def ver_historico(produto_id, supermercado_id, categoria_str):
                            promo_effective_price=promo_effective_price
                            )
 
+@prices_bp.route('/delete-preco/<int:preco_id>', methods=['POST'])
+@login_required 
+def delete_preco(preco_id):
+    if current_user.role != 'admin':
+        abort(403)
+        
+    preco = db.session.get(Preco, preco_id)
+    if not preco:
+        abort(404)
+    
+    # Guardamos os dados para redirecionar de volta para a mesma página de histórico
+    produto_id = preco.produto_id
+    supermercado_id = preco.supermercado_id
+    categoria_str = preco.categoria.nome if preco.categoria else 'sem-categoria'
+    
+    try:
+        db.session.delete(preco)
+        db.session.commit()
+        flash('Preço excluído com sucesso.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir preço: {e}', 'error')
+        
+    return redirect(url_for('prices.ver_historico', 
+                            produto_id=produto_id, 
+                            supermercado_id=supermercado_id,
+                            categoria_str=categoria_str))
 
 @prices_bp.route('/edit-preco/<int:preco_id>', methods=['GET', 'POST'])
 @login_required
