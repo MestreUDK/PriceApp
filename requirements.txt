@@ -6,3 +6,4 @@ Flask-Login
 Flask-Bcrypt
 openpyxl
 Flask-Migrate
+thefuzz
