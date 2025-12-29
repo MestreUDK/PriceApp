@@ -92,4 +92,23 @@
         {% endif %}
     {% endif %}
 
+{% if produtos_similares %}
+    <hr style="margin: 2rem 0;">
+    <h3>🔍 Produtos Relacionados (Sugestão Inteligente)</h3>
+    <p>Encontramos outros produtos com nomes parecidos. Talvez você queira comparar com eles:</p>
+    
+    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        {% for prod_similiar in produtos_similares %}
+        <a href="{{ url_for('prices.comparar_produto', produto_id=prod_similiar.id) }}" 
+           style="text-decoration: none; color: var(--text-main); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; background-color: var(--bg-card); box-shadow: var(--shadow); flex: 1; min-width: 200px;">
+            <div style="font-weight: bold;">{{ prod_similiar.nome }}</div>
+            {% if prod_similiar.medida %}
+                <small style="color: var(--text-sec);">{{ prod_similiar.medida }}{{ prod_similiar.unidade }}</small>
+            {% endif %}
+            <div style="color: var(--primary); font-size: 0.9em; margin-top: 5px;">Ver Comparação &rarr;</div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
 {% endblock %}
