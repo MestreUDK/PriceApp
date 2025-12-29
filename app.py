@@ -9,7 +9,7 @@ def create_app():
 
     # --- NOVO: Defina a versão do seu App aqui ---
     # Altere este valor sempre que fizer uma atualização importante
-    APP_VERSION = 'v3.1.2' 
+    APP_VERSION = 'v3.1.3' 
     # ---------------------------------------------
 
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chave-padrao-apenas-para-testes-locais')
