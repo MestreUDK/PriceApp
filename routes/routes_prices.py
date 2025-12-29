@@ -6,7 +6,7 @@ from flask import (
 from extensions import db
 from models import Supermercado, Produto, Preco, Categoria
 from sqlalchemy import func, desc, and_, or_
-from datetime import datetime 
+from datetime import datetime, date  # Adicione 'date' aqui
 from flask_login import login_required, current_user 
 import json
 
@@ -48,14 +48,27 @@ def registrar_preco():
     if request.method == 'POST':
         produto_id = request.form.get('produto')
         supermercado_id = request.form.get('supermercado')
-        valor = request.form.get('valor') # Este é o valor BASE
+        valor = request.form.get('valor')
+        
+        # --- NOVO: Lógica da Data de Registro ---
+        data_registro_str = request.form.get('data_registro')
+        
+        if data_registro_str:
+            # Se o usuário escolheu uma data, pegamos ela e adicionamos a hora atual
+            # para manter a ordem cronológica correta no histórico
+            data_obj = datetime.strptime(data_registro_str, '%Y-%m-%d')
+            agora = datetime.now()
+            data_cadastro = data_obj.replace(hour=agora.hour, minute=agora.minute, second=agora.second)
+        else:
+            # Se não escolheu, usa o padrão
+            data_cadastro = datetime.utcnow()
+        # ----------------------------------------
 
-        # MUDANÇA: Categoria em vez de Marca
         categoria_id = request.form.get('categoria')
         if categoria_id == "": 
             categoria_id = None
 
-        e_promocao = request.form.get('e_promocao') == 'on' # Checkbox 'on'
+        e_promocao = request.form.get('e_promocao') == 'on'
 
         data_expiracao_str = request.form.get('data_expiracao')
         data_expiracao = None
@@ -71,7 +84,6 @@ def registrar_preco():
             flash('Promoções devem ter uma data de expiração obrigatória.', 'error')
             return redirect(url_for('prices.registrar_preco'))
 
-        # Lógica para salvar os novos campos de promoção
         promo_tipo = request.form.get('promo_tipo')
         promo_unidade_valor = request.form.get('promo_unidade_valor')
         promo_qtd_necessaria = request.form.get('promo_qtd_necessaria')
@@ -80,20 +92,17 @@ def registrar_preco():
         novo_preco = Preco(
             produto_id=produto_id,
             supermercado_id=supermercado_id,
-            categoria_id=categoria_id, # MUDANÇA
+            categoria_id=categoria_id,
             valor=float(valor),
             criado_por_id=current_user.id,
+            
+            data_cadastro=data_cadastro, # USAMOS A VARIÁVEL NOVA AQUI
+            
             e_promocao=e_promocao,
             data_expiracao=data_expiracao,
             promo_tipo=promo_tipo if e_promocao else 'unidade',
-
-            # Salva promo_unidade_valor se for 'unidade' OU 'limite'
             promo_unidade_valor=float(promo_unidade_valor) if e_promocao and (promo_tipo == 'unidade' or promo_tipo == 'limite') and promo_unidade_valor else None,
-
-            # Salva promo_qtd_necessaria se for 'quantidade' OU 'limite'
             promo_qtd_necessaria=int(promo_qtd_necessaria) if e_promocao and (promo_tipo == 'quantidade' or promo_tipo == 'limite') and promo_qtd_necessaria else None,
-
-            # Salva promo_qtd_valor APENAS se for 'quantidade'
             promo_qtd_valor=float(promo_qtd_valor) if e_promocao and promo_tipo == 'quantidade' and promo_qtd_valor else None
         )
 
@@ -105,13 +114,16 @@ def registrar_preco():
 
     produtos = Produto.query.order_by(Produto.nome).all()
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
-    # MUDANÇA: Categorias
     categorias = Categoria.query.order_by(Categoria.nome).all()
+    
+    # Passamos a data de hoje para o template preencher o campo por padrão
+    hoje = date.today().strftime('%Y-%m-%d')
     
     return render_template('registrar_preco.html', 
                            produtos=produtos, 
                            supermercados=supermercados,
-                           categorias=categorias)
+                           categorias=categorias,
+                           hoje=hoje) # Passamos a variável 'hoje'
 
 @prices_bp.route('/comparar/<int:produto_id>')
 @login_required 
