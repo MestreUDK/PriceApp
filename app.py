@@ -7,6 +7,11 @@ from models import User
 def create_app():
     app = Flask(__name__)
 
+    # --- NOVO: Defina a versão do seu App aqui ---
+    # Altere este valor sempre que fizer uma atualização importante
+    APP_VERSION = 'v3.1.2' 
+    # ---------------------------------------------
+
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chave-padrao-apenas-para-testes-locais')
 
     DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -36,6 +41,13 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Por favor, faça login para acessar esta página.'
     login_manager.login_message_category = 'error' 
+
+    # --- NOVO: Injetar versão em todos os templates ---
+    # Isso faz a variável {{ app_version }} estar disponível em todos os arquivos HTML
+    @app.context_processor
+    def inject_version():
+        return dict(app_version=APP_VERSION)
+    # --------------------------------------------------
 
     from routes.routes_core import core_bp
     from routes.routes_products import products_bp
