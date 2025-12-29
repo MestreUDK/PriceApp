@@ -6,36 +6,30 @@ from flask import (
 from extensions import db
 from models import Supermercado, Produto, Preco, Categoria
 from sqlalchemy import func, desc, and_, or_
-from datetime import datetime, date  # Adicione 'date' aqui
+from datetime import datetime, date 
 from flask_login import login_required, current_user 
 import json
+from thefuzz import process # <--- ADICIONE ISTO (Importante para a comparação inteligente)
 
 prices_bp = Blueprint('prices', __name__, template_folder='../templates')
 
 # --- FUNÇÃO AUXILIAR (PREÇO EFETIVO) ---
 def get_effective_unit_price(preco_obj):
     """Calcula o preço unitário efetivo de um item para COMPARAÇÃO."""
-
-    # Se não for promoção ou se estiver expirada
     if not preco_obj.e_promocao or preco_obj.data_expiracao < datetime.utcnow():
         return preco_obj.valor
 
-    # Promoção de unidade (preço reduzido) OU Limite (preço unitário reduzido)
     if (preco_obj.promo_tipo == 'unidade' or preco_obj.promo_tipo == 'limite') and preco_obj.promo_unidade_valor:
         return preco_obj.promo_unidade_valor
 
-    # Promoção de quantidade (ex: 3 por R$10)
     if (preco_obj.promo_tipo == 'quantidade' and 
         preco_obj.promo_qtd_necessaria and 
         preco_obj.promo_qtd_valor):
-
         try:
-            # Retorna o preço unitário da promoção
             return float(preco_obj.promo_qtd_valor) / int(preco_obj.promo_qtd_necessaria)
         except (ValueError, TypeError, ZeroDivisionError):
-             return preco_obj.valor # Fallback
+             return preco_obj.valor 
 
-    # Fallback para promoções antigas ou mal formatadas
     return preco_obj.valor
 
 
@@ -49,20 +43,17 @@ def registrar_preco():
         produto_id = request.form.get('produto')
         supermercado_id = request.form.get('supermercado')
         valor = request.form.get('valor')
-        
-        # --- NOVO: Lógica da Data de Registro ---
+
+        # --- Lógica da Data de Registro ---
         data_registro_str = request.form.get('data_registro')
-        
+
         if data_registro_str:
-            # Se o usuário escolheu uma data, pegamos ela e adicionamos a hora atual
-            # para manter a ordem cronológica correta no histórico
             data_obj = datetime.strptime(data_registro_str, '%Y-%m-%d')
             agora = datetime.now()
             data_cadastro = data_obj.replace(hour=agora.hour, minute=agora.minute, second=agora.second)
         else:
-            # Se não escolheu, usa o padrão
             data_cadastro = datetime.utcnow()
-        # ----------------------------------------
+        # ----------------------------------
 
         categoria_id = request.form.get('categoria')
         if categoria_id == "": 
@@ -95,9 +86,7 @@ def registrar_preco():
             categoria_id=categoria_id,
             valor=float(valor),
             criado_por_id=current_user.id,
-            
-            data_cadastro=data_cadastro, # USAMOS A VARIÁVEL NOVA AQUI
-            
+            data_cadastro=data_cadastro, # Data personalizada
             e_promocao=e_promocao,
             data_expiracao=data_expiracao,
             promo_tipo=promo_tipo if e_promocao else 'unidade',
@@ -116,14 +105,13 @@ def registrar_preco():
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
     categorias = Categoria.query.order_by(Categoria.nome).all()
     
-    # Passamos a data de hoje para o template preencher o campo por padrão
     hoje = date.today().strftime('%Y-%m-%d')
-    
+
     return render_template('registrar_preco.html', 
                            produtos=produtos, 
                            supermercados=supermercados,
                            categorias=categorias,
-                           hoje=hoje) # Passamos a variável 'hoje'
+                           hoje=hoje)
 
 @prices_bp.route('/comparar/<int:produto_id>')
 @login_required 
@@ -132,10 +120,10 @@ def comparar_produto(produto_id):
     if not produto:
         abort(404) 
 
-    # Subquery para pegar apenas o preço mais recente de cada combinação (mercado + categoria)
+    # --- LÓGICA DE PREÇOS DO PRODUTO ATUAL ---
     subquery = db.session.query(
         Preco.supermercado_id,
-        Preco.categoria_id, # MUDANÇA
+        Preco.categoria_id,
         func.max(Preco.data_cadastro).label('max_data')
     ).filter(
         Preco.produto_id == produto_id,
@@ -145,7 +133,7 @@ def comparar_produto(produto_id):
         )
     ).group_by(
         Preco.supermercado_id,
-        Preco.categoria_id # MUDANÇA
+        Preco.categoria_id
     ).subquery()
 
     precos_recentes_db = db.session.query(Preco).join(
@@ -154,10 +142,10 @@ def comparar_produto(produto_id):
             Preco.supermercado_id == subquery.c.supermercado_id,
             Preco.data_cadastro == subquery.c.max_data,
             or_(
-                Preco.categoria_id == subquery.c.categoria_id, # MUDANÇA
+                Preco.categoria_id == subquery.c.categoria_id,
                 and_(
-                    Preco.categoria_id.is_(None), # MUDANÇA
-                    subquery.c.categoria_id.is_(None) # MUDANÇA
+                    Preco.categoria_id.is_(None),
+                    subquery.c.categoria_id.is_(None)
                 )
             )
         )
@@ -165,7 +153,6 @@ def comparar_produto(produto_id):
         Preco.produto_id == produto_id
     ).all()
 
-    # Agora, calculamos o preço efetivo e ordenamos em Python
     precos_calculados = []
     for preco in precos_recentes_db:
         preco.effective_price = get_effective_unit_price(preco)
@@ -176,16 +163,34 @@ def comparar_produto(produto_id):
         key=lambda p: p.effective_price
     )
 
-    return render_template('comparar.html', produto=produto, precos=precos_recentes_ordenados)
+    # === NOVA LÓGICA INTELIGENTE (Fuzzy Matching) ===
+    # 1. Pega todos os nomes de produtos (menos o atual)
+    todos_produtos = Produto.query.filter(Produto.id != produto_id).all()
+    nomes_produtos = {p.nome: p for p in todos_produtos} 
+
+    # 2. Usa o Fuzzy para achar os 5 mais parecidos
+    produtos_similares = []
+    
+    # Se houver outros produtos, faz a comparação
+    if nomes_produtos:
+        resultados_fuzzy = process.extract(produto.nome, nomes_produtos.keys(), limit=5)
+        for nome, score in resultados_fuzzy:
+            if score >= 70: # Mostra se tiver 70% ou mais de semelhança
+                produtos_similares.append(nomes_produtos[nome])
+    # ================================================
+
+    return render_template('comparar.html', 
+                           produto=produto, 
+                           precos=precos_recentes_ordenados,
+                           produtos_similares=produtos_similares) # Passa para o template
 
 
 @prices_bp.route('/historico/<int:produto_id>/<int:supermercado_id>/<categoria_str>')
 @login_required 
-def ver_historico(produto_id, supermercado_id, categoria_str): # MUDANÇA no parâmetro
+def ver_historico(produto_id, supermercado_id, categoria_str):
     produto = db.session.get(Produto, produto_id)
     supermercado = db.session.get(Supermercado, supermercado_id)
 
-    # MUDANÇA: Lógica de Categoria
     categoria = None
     if categoria_str == "sem-categoria":
         categoria_id = None
@@ -199,44 +204,39 @@ def ver_historico(produto_id, supermercado_id, categoria_str): # MUDANÇA no par
     if not produto or not supermercado:
         abort(404)
 
-    # 1. Busca de promoções ativas (para este item/mercado/categoria)
     active_promo = Preco.query.filter(
         Preco.produto_id == produto_id,
         Preco.supermercado_id == supermercado_id,
-        Preco.categoria_id == categoria_id, # MUDANÇA
+        Preco.categoria_id == categoria_id,
         Preco.e_promocao == True,
         Preco.data_expiracao > datetime.utcnow()
     ).order_by(
         Preco.data_cadastro.desc()
     ).first()
 
-    # 2. Busca o preço normal mais recente (para comparar)
     normal_price_obj = None
     if active_promo: 
         normal_price_obj = Preco.query.filter(
             Preco.produto_id == produto_id,
             Preco.supermercado_id == supermercado_id,
-            Preco.categoria_id == categoria_id, # MUDANÇA
+            Preco.categoria_id == categoria_id,
             Preco.e_promocao == False 
         ).order_by(
             Preco.data_cadastro.desc()
         ).first()
 
-    # 3. Calcula o preço unitário efetivo da promoção (se existir)
     promo_effective_price = None
     if active_promo:
         promo_effective_price = get_effective_unit_price(active_promo)
 
-    # 4. Busca o histórico de preços (como já fazia)
     precos_historico = Preco.query.filter_by(
         produto_id=produto_id,
         supermercado_id=supermercado_id,
-        categoria_id=categoria_id # MUDANÇA
+        categoria_id=categoria_id
     ).order_by(
         Preco.data_cadastro.asc()
     ).all()
 
-    # O gráfico continua mostrando o valor BASE
     labels = [preco.data_cadastro.strftime('%d/%m/%Y') for preco in precos_historico]
     valores = [preco.valor for preco in precos_historico]
 
@@ -246,7 +246,7 @@ def ver_historico(produto_id, supermercado_id, categoria_str): # MUDANÇA no par
     return render_template('historico.html',
                            produto=produto,
                            supermercado=supermercado,
-                           categoria=categoria, # MUDANÇA (usar 'categoria' no template em vez de 'marca')
+                           categoria=categoria,
                            precos=precos_historico,
                            labels_json=labels_json,
                            valores_json=valores_json,
@@ -267,11 +267,9 @@ def edit_preco(preco_id):
         abort(404)
 
     if request.method == 'POST':
-        # Pega todos os dados do formulário
         preco.produto_id = request.form.get('produto')
         preco.supermercado_id = request.form.get('supermercado')
 
-        # MUDANÇA: Categoria
         categoria_id = request.form.get('categoria')
         preco.categoria_id = categoria_id if categoria_id else None
 
@@ -299,7 +297,6 @@ def edit_preco(preco_id):
             flash('Promoções devem ter uma data de expiração obrigatória.', 'error')
             return redirect(url_for('prices.edit_preco', preco_id=preco.id))
 
-        # Lógica para salvar os novos campos de promoção
         promo_tipo = request.form.get('promo_tipo')
         promo_unidade_valor = request.form.get('promo_unidade_valor')
         promo_qtd_necessaria = request.form.get('promo_qtd_necessaria')
@@ -314,17 +311,14 @@ def edit_preco(preco_id):
         db.session.commit()
         flash('Registro de preço atualizado com sucesso!', 'success')
 
-        # MUDANÇA: URL de redirecionamento usa categoria
         categoria_str = preco.categoria.nome if preco.categoria else 'sem-categoria'
         return redirect(url_for('prices.ver_historico', 
                                 produto_id=preco.produto_id, 
                                 supermercado_id=preco.supermercado_id,
                                 categoria_str=categoria_str))
 
-    # GET
     produtos = Produto.query.order_by(Produto.nome).all()
     supermercados = Supermercado.query.order_by(Supermercado.nome).all()
-    # MUDANÇA: Categorias
     categorias = Categoria.query.order_by(Categoria.nome).all()
 
     return render_template('edit_preco.html',
