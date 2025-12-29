@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Versão](https://img.shields.io/badge/version-v8.10.2-blue.svg)
+![Versão](https://img.shields.io/badge/version-v3.1.3-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python)
 ![Flask](https://img.shields.io/badge/Flask-2.x-black?logo=flask)
 ![Database](https://img.shields.io/badge/Database-Supabase-green?logo=supabase)
