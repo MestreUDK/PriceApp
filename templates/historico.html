@@ -114,12 +114,20 @@
                         {% else %}
                             N/D
                         {% endif %}
-                    </td>
-                    {% if current_user.role == 'admin' %}
+                    </td> {% if current_user.role == 'admin' %}
                     <td class="actions-cell">
-                        <a href="{{ url_for('prices.edit_preco', preco_id=preco.id) }}" style="text-decoration: none; padding: 0.5rem 1rem; background-color: var(--warning); color: black; border-radius: 4px; font-size: 0.9em;">
+                        <a href="{{ url_for('prices.edit_preco', preco_id=preco.id) }}" style="text-decoration: none;
+                           padding: 0.5rem 1rem; background-color: var(--warning); color: black; border-radius: 4px; font-size: 0.9em;">
                             ✏️ Editar
                         </a>
+
+                        <form method="POST" action="{{ url_for('prices.delete_preco', preco_id=preco.id) }}" style="display: inline-block; margin-left: 5px;" 
+                              onsubmit="return confirm('Tem certeza que deseja apagar este preço do histórico?');">
+                            <button type="submit" style="background-color: var(--danger); color: white; border: none; 
+                                    padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
+                                🗑️ Excluir
+                            </button>
+                        </form>
                     </td>
                     {% endif %}
                 </tr>
